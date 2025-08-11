@@ -45,9 +45,9 @@ const restaurants: Restaurant[] = [
     name: 'Naru',
     slug: 'naru',
     emoji: '🍱',
-    position: { x: 60, y: 55 },
+    position: { x: 50, y: 35 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'HSR Layout'
+    neighborhood: 'Koramangala'
   }
 ]
 
@@ -163,40 +163,51 @@ export default function ExploreRestaurants() {
               }}
             >
               {/* Bengaluru Map Illustration */}
-              <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-blue-100 to-emerald-100">
-                {/* Major Roads */}
-                <div className="absolute top-1/4 left-1/6 w-3/5 h-2 bg-gray-300 rounded opacity-80 shadow-sm"></div>
-                <div className="absolute top-1/2 left-1/4 w-1/2 h-2 bg-gray-300 rounded opacity-80 shadow-sm"></div>
-                <div className="absolute top-3/4 left-1/5 w-3/5 h-2 bg-gray-300 rounded opacity-80 shadow-sm"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 border-2 border-gray-200">
+                {/* Major Roads - More visible */}
+                <div className="absolute top-1/4 left-1/6 w-3/5 h-3 bg-gray-400 rounded opacity-90 shadow-lg"></div>
+                <div className="absolute top-1/2 left-1/4 w-1/2 h-3 bg-gray-400 rounded opacity-90 shadow-lg"></div>
+                <div className="absolute top-3/4 left-1/5 w-3/5 h-3 bg-gray-400 rounded opacity-90 shadow-lg"></div>
                 
-                {/* Ring Roads */}
+                {/* Outer Ring Road - More prominent */}
+                <div className="absolute top-1/6 left-1/6 w-2/3 h-2/3 border-6 border-gray-500 rounded-full opacity-70 shadow-lg"></div>
+                
+                {/* Inner Ring Road */}
                 <div className="absolute top-1/3 left-1/3 w-1/3 h-1/3 border-4 border-gray-400 rounded-full opacity-60"></div>
                 
-                {/* Area backgrounds */}
-                <div className="absolute top-1/4 left-1/3 w-24 h-24 bg-blue-200 rounded-full opacity-40"></div>
-                <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-green-200 rounded-full opacity-40"></div>
-                <div className="absolute bottom-1/4 left-1/4 w-28 h-28 bg-yellow-200 rounded-full opacity-40"></div>
-                <div className="absolute top-1/3 left-1/6 w-20 h-20 bg-purple-200 rounded-full opacity-40"></div>
+                {/* Area backgrounds - More distinct */}
+                <div className="absolute top-1/5 left-2/5 w-28 h-28 bg-blue-300 rounded-full opacity-50 shadow-md"></div>
+                <div className="absolute top-2/5 right-1/5 w-36 h-36 bg-green-300 rounded-full opacity-50 shadow-md"></div>
+                <div className="absolute bottom-1/5 left-1/4 w-32 h-32 bg-yellow-300 rounded-full opacity-50 shadow-md"></div>
+                <div className="absolute top-1/4 left-1/8 w-24 h-24 bg-purple-300 rounded-full opacity-50 shadow-md"></div>
                 
                 {/* Area labels with better visibility */}
-                <div className="absolute top-1/4 left-1/4 bg-white rounded-lg px-3 py-1 text-xs text-gray-700 font-semibold shadow-md border">
+                <div className="absolute top-1/5 left-1/3 bg-white rounded-lg px-3 py-2 text-sm text-gray-800 font-bold shadow-lg border-2 border-blue-200">
                   Indiranagar
                 </div>
-                <div className="absolute top-1/2 right-1/4 bg-white rounded-lg px-3 py-1 text-xs text-gray-700 font-semibold shadow-md border">
+                <div className="absolute top-2/5 right-1/6 bg-white rounded-lg px-3 py-2 text-sm text-gray-800 font-bold shadow-lg border-2 border-green-200">
                   Koramangala
                 </div>
-                <div className="absolute bottom-1/4 left-1/3 bg-white rounded-lg px-3 py-1 text-xs text-gray-700 font-semibold shadow-md border">
+                <div className="absolute bottom-1/5 left-1/3 bg-white rounded-lg px-3 py-2 text-sm text-gray-800 font-bold shadow-lg border-2 border-yellow-200">
                   HSR Layout
                 </div>
-                <div className="absolute top-1/3 left-1/6 bg-white rounded-lg px-3 py-1 text-xs text-gray-700 font-semibold shadow-md border">
+                <div className="absolute top-1/4 left-1/8 bg-white rounded-lg px-3 py-2 text-sm text-gray-800 font-bold shadow-lg border-2 border-purple-200">
                   UB City
                 </div>
 
-                {/* Central Business District */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gray-400 rounded opacity-60"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg px-2 py-1 text-xs text-gray-700 font-semibold shadow-md border">
+                {/* Central Business District - More prominent */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gray-500 rounded shadow-lg"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg px-3 py-2 text-sm text-gray-800 font-bold shadow-lg border-2">
                   CBD
                 </div>
+
+                {/* Lakes for visual reference */}
+                <div className="absolute top-1/3 right-1/3 w-12 h-8 bg-blue-400 rounded-full opacity-70 shadow-md"></div>
+                <div className="absolute bottom-1/3 left-1/2 w-10 h-6 bg-blue-400 rounded-full opacity-70 shadow-md"></div>
+                
+                {/* Parks */}
+                <div className="absolute top-3/5 left-2/5 w-8 h-8 bg-green-500 rounded opacity-60"></div>
+                <div className="absolute top-1/5 right-2/5 w-6 h-6 bg-green-500 rounded opacity-60"></div>
               </div>
 
               {/* Restaurant Markers */}
