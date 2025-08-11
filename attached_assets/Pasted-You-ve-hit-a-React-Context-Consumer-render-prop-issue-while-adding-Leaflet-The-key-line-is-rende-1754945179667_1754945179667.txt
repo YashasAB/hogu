@@ -1,0 +1,71 @@
+You’ve hit a React Context.Consumer “render prop” issue while adding Leaflet. The key line is:
+render2 is not a function ... 'render2' is an instance of Array
+That happens when a <Context.Consumer>’s child isn’t a function (you likely wrapped your map inside a ...Consumer and returned JSX directly or an array).
+Fix the context usage
+If you have something like:
+<ThemeContext.Consumer>
+  <MapContainer>...</MapContainer>   // ❌ child is JSX, not a function
+</ThemeContext.Consumer>
+change it to:
+<ThemeContext.Consumer>
+  {value => (                         // ✅ child is a function
+    <MapContainer>...</MapContainer>
+  )}
+</ThemeContext.Consumer>
+Or—simpler—just use the hook:
+const theme = useContext(ThemeContext); // ✅ no Consumer wrapper needed
+return <MapContainer>...</MapContainer>;
+Make sure Leaflet itself is wired correctly
+A lot of “map not visible” issues are just setup. Here’s a minimal, known-good React + Vite + react-leaflet snippet that should show an OpenStreetMap Bengaluru map with one marker:
+Install:
+pnpm add react-leaflet leaflet
+Import Leaflet CSS once (e.g., in main.tsx or your app root):
+import 'leaflet/dist/leaflet.css';
+Ensure the map container has a height (Tailwind or CSS). Without height, it renders “invisible”:
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+
+const center: [number, number] = [12.9716, 77.5946]; // Bengaluru
+
+// (Optional) Fix default marker icons with Vite
+const DefaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+export default function BlrMap() {
+  return (
+    <div className="h-[60vh] rounded-2xl overflow-hidden">
+      <MapContainer center={center} zoom={12} className="h-full w-full">
+        <TileLayer
+          attribution='&copy; OpenStreetMap'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={[12.9716, 77.5946]}>
+          <Popup>Central Bengaluru</Popup>
+        </Marker>
+      </MapContainer>
+    </div>
+  );
+}
+If you’re in a monorepo / pnpm workspace
+Context can also break if you accidentally have two copies of React. In Vite, dedupe just in case:
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { dedupe: ['react', 'react-dom'] }
+});
+Quick checklist
+Don’t wrap <MapContainer> directly inside a <...Consumer> unless the child is {value => (...)}.
+Only one React in the tree (pnpm ls react react-dom should show a single version).
+Import leaflet/dist/leaflet.css.
+Give the map container a fixed height.
+Use a valid tile URL (the OSM one above is fine).
+If you paste the small component where you render the map (plus any surrounding ...Consumer), I’ll mark the exact line that triggers the error.
