@@ -8,7 +8,7 @@ import restaurantRouter from './routes/restaurants';
 import reservationsRouter from './routes/reservations';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT) || 8080;
 
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
