@@ -159,7 +159,10 @@ export default function Home() {
       </section>
 
       {/* WHAT PROBLEMS WE SOLVE */}
-      <section id="why" className="relative overflow-hidden rounded-2xl text-white">
+      <section
+        id="why"
+        className="relative overflow-hidden rounded-2xl text-white"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
         <div className="relative z-10 px-5 py-8 sm:px-8">
           <div className="grid gap-4 sm:grid-cols-3">
@@ -177,8 +180,8 @@ export default function Home() {
                 "I hate refreshing for cancels."
               </div>
               <div className="opacity-90 text-sm">
-                <strong>Notify</strong> pings you instantly and auto-holds a table
-                for a short window.
+                <strong>Notify</strong> pings you instantly and auto-holds a
+                table for a short window.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
@@ -186,8 +189,8 @@ export default function Home() {
                 "Last-minute plans? Forget it."
               </div>
               <div className="opacity-90 text-sm">
-                <strong>Tonight Near You</strong> shows live inventory for the next
-                few hours.
+                <strong>Tonight Near You</strong> shows live inventory for the
+                next few hours.
               </div>
             </div>
           </div>
@@ -271,7 +274,7 @@ export default function Home() {
           Grab something within the next 4 hours — perfect for spontaneous
           plans.
         </div>
-        
+
         {/* Horizontal Carousel */}
         <div className="overflow-x-auto">
           <div className="flex gap-4 pb-4">
@@ -305,14 +308,14 @@ export default function Home() {
             ))}
           </div>
         </div>
-        
+
         {/* Explore More Button */}
         <div className="flex justify-center mt-4">
           <Link to="/explore-tonight" className="btn btn-primary">
             Explore More Tonight
           </Link>
         </div>
-        
+
         {!(tonight.now?.length || tonight.later?.length) && (
           <div className="text-muted text-sm">
             No live inventory in the next few hours. Check back soon or explore
@@ -322,7 +325,10 @@ export default function Home() {
       </section>
 
       {/* FEATURES GRID — everything Hogu offers */}
-      <section id="features" className="relative overflow-hidden rounded-2xl text-white">
+      <section
+        id="features"
+        className="relative overflow-hidden rounded-2xl text-white"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
         <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
           <h2 className="text-xl font-semibold">Why Hogu works</h2>
@@ -330,42 +336,43 @@ export default function Home() {
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Fair Access (No Bots)</div>
               <div className="opacity-90 text-sm">
-                Verified identity, device checks, and rate-limits stop hoarding &
-                resale. Everyone gets a fair shot.
+                Verified identity, device checks, and rate-limits stop hoarding
+                & resale. Everyone gets a fair shot.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Drops You Can Trust</div>
               <div className="opacity-90 text-sm">
-                Transparent release windows. Join once; we'll notify you in order.
-                No constant refreshing.
+                Transparent release windows. Join once; we'll notify you in
+                order. No constant refreshing.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Instant Notifies</div>
               <div className="opacity-90 text-sm">
-                When cancels happen, we ping you immediately and auto-hold a table
-                for a short window.
+                When cancels happen, we ping you immediately and auto-hold a
+                table for a short window.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Card Holds & Deposits</div>
               <div className="opacity-90 text-sm">
-                Restaurants reduce no-shows; diners get more real availability, not
-                ghost slots.
+                Restaurants reduce no-shows; diners get more real availability,
+                not ghost slots.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Plan the Entire Week</div>
               <div className="opacity-90 text-sm">
-                Browse day-by-day inventory and lock plans with friends in minutes.
+                Browse day-by-day inventory and lock plans with friends in
+                minutes.
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="font-medium mb-1">Tonight Inventory</div>
               <div className="opacity-90 text-sm">
-                See what's actually available right now — counters, bar seats, and
-                last-minute releases.
+                See what's actually available right now — counters, bar seats,
+                and last-minute releases.
               </div>
             </div>
           </div>
@@ -373,7 +380,10 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS — 1-2-3 */}
-      <section id="how" className="relative overflow-hidden rounded-2xl text-white">
+      <section
+        id="how"
+        className="relative overflow-hidden rounded-2xl text-white"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
         <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
           <h2 className="text-xl font-semibold">How it works</h2>
@@ -410,8 +420,8 @@ export default function Home() {
                 <div className="font-medium">Get Notified</div>
               </div>
               <div className="opacity-90 text-sm">
-                Join Notifies for sold-out times. If a table opens, we'll ping you
-                instantly.
+                Join Notifies for sold-out times. If a table opens, we'll ping
+                you instantly.
               </div>
             </div>
           </div>
