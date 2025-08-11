@@ -236,48 +236,46 @@ export default function ExploreRestaurants() {
           </p>
         </div>
 
-            {/* Restaurant Popup */}
-            {selectedRestaurant && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="card max-w-sm mx-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-brand">{selectedRestaurant.name}</h3>
-                    <button
-                      onClick={closePopup}
-                      className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  
-                  <img
-                    src={selectedRestaurant.image}
-                    alt={selectedRestaurant.name}
-                    className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-                  />
-                  
-                  <p className="text-muted mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
-                  
-                  <div className="flex gap-3">
-                    <Link
-                      to={`/r/${selectedRestaurant.slug}`}
-                      className="btn btn-primary flex-1"
-                      onClick={closePopup}
-                    >
-                      Reserve Now
-                    </Link>
-                    <button
-                      onClick={closePopup}
-                      className="btn btn-secondary"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
+        {/* Restaurant Popup */}
+        {selectedRestaurant && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="card max-w-sm mx-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-brand">{selectedRestaurant.name}</h3>
+                <button
+                  onClick={closePopup}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                >
+                  ×
+                </button>
               </div>
-            )}
+              
+              <img
+                src={selectedRestaurant.image}
+                alt={selectedRestaurant.name}
+                className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
+              />
+              
+              <p className="text-muted mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
+              
+              <div className="flex gap-3">
+                <Link
+                  to={`/r/${selectedRestaurant.slug}`}
+                  className="btn btn-primary flex-1"
+                  onClick={closePopup}
+                >
+                  Reserve Now
+                </Link>
+                <button
+                  onClick={closePopup}
+                  className="btn btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* Restaurant List - Mobile Fallback */}
