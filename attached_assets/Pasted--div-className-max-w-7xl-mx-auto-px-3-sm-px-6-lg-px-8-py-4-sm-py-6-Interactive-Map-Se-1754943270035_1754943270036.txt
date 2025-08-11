@@ -1,0 +1,99 @@
+<div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Interactive Map Section */}
+        <div className="hordu-card p-6 mb-6">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+            Bengaluru Auto Charging Map
+          </h3>
+          <div className="rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600 shadow-lg">
+            <div
+              ref={mapRef}
+              className="w-full h-80 sm:h-96"
+              style={{
+                minHeight: "320px",
+                zIndex: 1,
+                position: "relative",
+              }}
+            />
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 font-medium">
+            📍 Interactive map showing EV auto charging hubs across Bengaluru.
+            Click markers for details.
+          </p>
+        </div>
+
+        {/* Available Lots */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+            Available Charging Hubs
+          </h3>
+
+          {lots.map((lot) => (
+            <div key={lot.id} className="hordu-card p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                    {lot.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 font-medium">
+                    {lot.location}
+                  </p>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-700 dark:text-gray-200 font-medium">
+                      📍{" "}
+                      <span className="hordu-distance font-semibold text-purple-600 dark:text-purple-400">
+                        {lot.distance}
+                      </span>{" "}
+                      away
+                    </span>
+                    <span
+                      className={
+                        lot.available > 5
+                          ? "hordu-status-good"
+                          : lot.available > 0
+                            ? "hordu-status-bad"
+                            : "hordu-status-bad"
+                      }
+                    >
+                      {lot.available} / {lot.total} available
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {lot.available}
+                    </div>
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                      Autos Ready
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleLotSelect(lot.id)}
+                    disabled={lot.available === 0}
+                    className="hordu-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="mr-2">🛺</span>
+                    Schedule Auto
+                  </button>
+                </div>
+              </div>
+
+              {/* Lot Features */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center">
+                  <span className="text-lg">⚡</span>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    Fast Charging
+                  </p>
+                </div>
+                <div className="text-center">
+                  <span className="text-lg">📱</span>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                    App Unlock
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
