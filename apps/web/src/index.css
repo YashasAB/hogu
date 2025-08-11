@@ -37,12 +37,16 @@
     @apply bg-[var(--paper-alt)] text-[var(--ink)] hover:bg-gray-200 focus:ring-gray-300;
   }
   
+  .btn-accent {
+    @apply bg-[var(--accent)] text-white hover:bg-[#e54349] focus:ring-[var(--accent)];
+  }
+  
   .input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent;
   }
   
   .pill {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border;
   }
   
   .pill-available {
@@ -59,6 +63,32 @@
   
   .text-muted {
     color: var(--ink-muted);
+  }
+  
+  .text-brand {
+    color: var(--brand);
+  }
+  
+  .bg-brand {
+    background-color: var(--brand);
+  }
+  
+  .border-brand {
+    border-color: var(--brand);
+  }
+  
+  .border-ink {
+    border-color: var(--ink);
+  }
+  
+  .from-brand {
+    --tw-gradient-from: var(--brand);
+    --tw-gradient-to: rgb(15 23 42 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .to-brand\/80 {
+    --tw-gradient-to: rgb(15 23 42 / 0.8);
   }
   
   .hero-overlay {
