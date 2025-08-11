@@ -69,7 +69,7 @@ export default function Home() {
 
   // --- UI ---
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mx-4 sm:mx-6 lg:mx-8">
       {/* HERO — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
