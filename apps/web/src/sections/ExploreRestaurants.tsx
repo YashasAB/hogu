@@ -17,12 +17,12 @@ type Restaurant = {
 const restaurants: Restaurant[] = [
   {
     id: '1',
-    name: 'ZLB',
+    name: 'ZLB 23 (at The Leela Palace)',
     slug: 'zlb',
     emoji: '🍸',
-    position: { lat: 12.9716, lng: 77.5946 },
+    position: { lat: 12.960695, lng: 77.648663 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Indiranagar',
+    neighborhood: 'UB City',
     category: 'cocktails',
     hot: true
   },
@@ -31,7 +31,7 @@ const restaurants: Restaurant[] = [
     name: 'Soka',
     slug: 'soka',
     emoji: '🍸',
-    position: { lat: 12.9352, lng: 77.6245 },
+    position: { lat: 12.965215, lng: 77.638143 },
     image: '/api/placeholder/200/150',
     neighborhood: 'Koramangala',
     category: 'cocktails',
@@ -39,10 +39,10 @@ const restaurants: Restaurant[] = [
   },
   {
     id: '3',
-    name: 'Spirit Forward',
+    name: 'Bar Spirit Forward',
     slug: 'spirit-forward',
     emoji: '🥃',
-    position: { lat: 12.9698, lng: 77.5991 },
+    position: { lat: 12.975125, lng: 77.602870 },
     image: '/api/placeholder/200/150',
     neighborhood: 'UB City',
     category: 'cocktails',
@@ -50,22 +50,22 @@ const restaurants: Restaurant[] = [
   },
   {
     id: '4',
-    name: 'Naru',
+    name: 'Naru Noodle Bar',
     slug: 'naru',
     emoji: '🍱',
-    position: { lat: 12.9372, lng: 77.6263 },
+    position: { lat: 12.958431, lng: 77.592895 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Koramangala',
+    neighborhood: 'UB City',
     category: 'dinner',
     hot: false
   },
   
   {
     id: '8',
-    name: 'Pizza 4P\'s',
+    name: 'Pizza 4P\'s (Indiranagar)',
     slug: 'pizza-4ps',
     emoji: '🍕',
-    position: { lat: 12.9716, lng: 77.6414 },
+    position: { lat: 12.969968, lng: 77.636089 },
     image: '/api/placeholder/200/150',
     neighborhood: 'Indiranagar',
     category: 'pizza',
@@ -73,12 +73,12 @@ const restaurants: Restaurant[] = [
   },
   {
     id: '9',
-    name: 'Dali and Gala',
+    name: 'Dali & Gala',
     slug: 'dali-and-gala',
     emoji: '🍸',
-    position: { lat: 12.9352, lng: 77.6275 },
+    position: { lat: 12.975125, lng: 77.602870 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Koramangala',
+    neighborhood: 'UB City',
     category: 'cocktails',
     hot: false
   }
