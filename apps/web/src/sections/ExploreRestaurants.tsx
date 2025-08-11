@@ -1,10 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-
-// Import Leaflet CSS
-import 'leaflet/dist/leaflet.css'
 
 type Restaurant = {
   id: string
@@ -14,6 +10,8 @@ type Restaurant = {
   position: { lat: number; lng: number }
   image: string
   neighborhood: string
+  category: string
+  hot?: boolean
 }
 
 const restaurants: Restaurant[] = [
@@ -22,90 +20,125 @@ const restaurants: Restaurant[] = [
     name: 'ZLB',
     slug: 'zlb',
     emoji: '🍸',
-    position: { lat: 12.9716, lng: 77.5946 }, // Indiranagar
+    position: { lat: 12.9716, lng: 77.5946 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Indiranagar'
+    neighborhood: 'Indiranagar',
+    category: 'cocktails',
+    hot: true
   },
   {
     id: '2',
     name: 'Soka',
     slug: 'soka',
     emoji: '🍸',
-    position: { lat: 12.9352, lng: 77.6245 }, // Koramangala
+    position: { lat: 12.9352, lng: 77.6245 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Koramangala'
+    neighborhood: 'Koramangala',
+    category: 'cocktails',
+    hot: false
   },
   {
     id: '3',
     name: 'Spirit Forward',
     slug: 'spirit-forward',
     emoji: '🥃',
-    position: { lat: 12.9698, lng: 77.5991 }, // UB City
+    position: { lat: 12.9698, lng: 77.5991 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'UB City'
+    neighborhood: 'UB City',
+    category: 'cocktails',
+    hot: true
   },
   {
     id: '4',
     name: 'Naru',
     slug: 'naru',
     emoji: '🍱',
-    position: { lat: 12.9372, lng: 77.6263 }, // Koramangala
+    position: { lat: 12.9372, lng: 77.6263 },
     image: '/api/placeholder/200/150',
-    neighborhood: 'Koramangala'
+    neighborhood: 'Koramangala',
+    category: 'dinner',
+    hot: false
   }
 ]
 
-// Create custom icon with emoji
-const createEmojiIcon = (emoji: string) => {
-  return L.divIcon({
-    html: `<div style="background: white; border: 2px solid #e11d48; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">${emoji}</div>`,
-    className: '',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-  })
-}
-
-// Fix for default markers in React-Leaflet
-// Reference: https://react-leaflet.js.org/docs/example-customicon
-// By default, Leaflet uses a default icon that is not found in the bundle.
-// We can either import it globally or specify the icon in the Marker component.
-// Here, we're importing the default icon from a CDN.
-const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-})
-
-L.Marker.prototype.options.icon = DefaultIcon
-
 export default function ExploreRestaurants() {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<L.Map | null>(null)
+  const [selectedFilter, setSelectedFilter] = useState('all')
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
 
-  const handleRestaurantClick = (restaurant: Restaurant) => {
-    setSelectedRestaurant(restaurant)
-  }
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return
+
+    // Initialize map
+    const map = L.map(mapRef.current, {
+      center: [12.9716, 77.5946],
+      zoom: 13,
+      scrollWheelZoom: true,
+      zoomControl: true
+    })
+
+    mapInstanceRef.current = map
+
+    // Add dark tile layer (matching the neon theme)
+    const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    })
+    darkTiles.addTo(map)
+
+    // Create emoji marker function (matching the HTML example)
+    const createEmojiMarker = (restaurant: Restaurant) => {
+      const html = `
+        <div class="pin ${restaurant.hot ? 'pin--hot' : ''}">
+          <span class="pulse"></span>
+          <span class="pin__emoji">${restaurant.emoji}</span>
+        </div>
+      `
+      const icon = L.divIcon({
+        className: '',
+        html,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -14]
+      })
+      return L.marker([restaurant.position.lat, restaurant.position.lng], { icon })
+    }
+
+    // Add restaurant markers
+    restaurants.forEach(restaurant => {
+      const marker = createEmojiMarker(restaurant)
+      marker.bindPopup(`
+        <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
+          <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
+          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
+          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
+        </div>
+      `)
+      marker.addTo(map)
+      
+      marker.on('click', () => {
+        setSelectedRestaurant(restaurant)
+      })
+    })
+
+    // Fit bounds to markers
+    const latlngs = restaurants.map(r => [r.position.lat, r.position.lng] as [number, number])
+    if (latlngs.length) {
+      map.fitBounds(latlngs, { padding: [28, 28] })
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+    }
+  }, [])
 
   const closePopup = () => {
     setSelectedRestaurant(null)
   }
-
-  const Spark = () => (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      className="inline-block align-[-2px]"
-    >
-      <path
-        d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z"
-        fill="currentColor"
-      />
-    </svg>
-  )
 
   return (
     <div className="space-y-8">
@@ -114,7 +147,8 @@ export default function ExploreRestaurants() {
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
         <div className="relative z-10 px-5 py-8 sm:px-8">
           <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
-            <Spark /> <span>Explore Tonight in Bengaluru</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-400 shadow-lg shadow-violet-400/30"></div>
+            <span>Explore Tonight in Bengaluru</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold leading-tight mb-2">
             Find Tables on the Map
@@ -134,102 +168,100 @@ export default function ExploreRestaurants() {
         </div>
       </section>
 
-      {/* Interactive Map Section */}
-      <section id="map" className="space-y-4">
-        <div className="relative overflow-hidden rounded-2xl text-white">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
-          <div className="relative z-10 px-5 py-6 sm:px-8">
-            <h2 className="text-xl font-semibold mb-2">Interactive Bengaluru Map</h2>
-            <p className="opacity-90 text-sm">
-              Click on restaurant markers to see details and make reservations.
+      {/* Neon Map Section */}
+      <section id="map" className="max-w-5xl mx-auto">
+        <div className="bg-slate-900/80 border border-slate-400/12 rounded-3xl shadow-2xl backdrop-blur-sm overflow-hidden">
+          {/* Map Header */}
+          <div className="relative p-5 bg-gradient-to-r from-violet-600/30 via-transparent to-cyan-500/20">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-400 shadow-lg shadow-violet-400/30"></div>
+              <h2 className="text-xl font-bold text-white tracking-wide">
+                Bengaluru Map <span className="opacity-60 font-semibold">• Neon</span>
+              </h2>
+            </div>
+            <p className="text-slate-400 text-sm">
+              Open‑source tiles, cute emoji pins, live location & quick filters. Scroll to zoom, drag to pan.
             </p>
+            
+            {/* Filter Chips */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[
+                { key: 'all', label: '✨ All', active: selectedFilter === 'all' },
+                { key: 'cocktails', label: '🍸 Cocktails', active: selectedFilter === 'cocktails' },
+                { key: 'dinner', label: '🍽️ Dinner', active: selectedFilter === 'dinner' },
+                { key: 'hot', label: '🔥 Hot Spots', active: selectedFilter === 'hot' }
+              ].map(filter => (
+                <button
+                  key={filter.key}
+                  onClick={() => setSelectedFilter(filter.key)}
+                  className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                    filter.active 
+                      ? 'bg-gradient-to-r from-violet-500/25 to-cyan-500/25 text-white border border-violet-400/30' 
+                      : 'bg-slate-800/60 text-slate-300 border border-slate-600/20 hover:bg-slate-700/60'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Map Container */}
+          <div className="p-4">
+            <div 
+              ref={mapRef}
+              className="h-[70vh] w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
+            />
+            <div className="text-xs text-slate-400 mt-2 opacity-85">
+              Tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">OpenStreetMap</a> contributors • 
+              Dark tiles © <a href="https://carto.com/" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">CARTO</a> • 
+              Built with <a href="https://leafletjs.com/" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">Leaflet</a>
+            </div>
           </div>
         </div>
 
-        {/* Map Container */}
-        <div className="mx-4 sm:mx-8">
-          <div
-            className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-lg border border-gray-200"
-            style={{ height: '600px' }}
-          >
-            <MapContainer
-              center={[12.9716, 77.5946]} // Bengaluru center
-              zoom={13}
-              style={{ height: '100%', width: '100%' }}
-              className="rounded-2xl"
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
+        {/* Restaurant Popup Modal */}
+        {selectedRestaurant && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
+            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">{selectedRestaurant.name}</h3>
+                  <button
+                    onClick={closePopup}
+                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none p-1"
+                  >
+                    ×
+                  </button>
+                </div>
 
-              {restaurants.map((restaurant) => (
-                <Marker
-                  key={restaurant.id}
-                  position={[restaurant.position.lat, restaurant.position.lng]}
-                  icon={createEmojiIcon(restaurant.emoji)}
-                  eventHandlers={{
-                    click: () => handleRestaurantClick(restaurant)
-                  }}
-                >
-                  <Popup>
-                    <div className="text-center">
-                      <h3 className="font-bold text-lg">{restaurant.name}</h3>
-                      <p className="text-gray-600">{restaurant.neighborhood}</p>
-                      <Link
-                        to={`/r/${restaurant.slug}`}
-                        className="inline-block mt-2 bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand/90"
-                      >
-                        Reserve Now
-                      </Link>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+                <img
+                  src={selectedRestaurant.image}
+                  alt={selectedRestaurant.name}
+                  className="w-full h-40 object-cover rounded-xl mb-4"
+                />
 
-            {/* Restaurant Popup Modal */}
-            {selectedRestaurant && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-                <div className="card max-w-sm mx-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-brand">{selectedRestaurant.name}</h3>
-                    <button
-                      onClick={closePopup}
-                      className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
+                <p className="text-gray-600 mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
 
-                  <img
-                    src={selectedRestaurant.image}
-                    alt={selectedRestaurant.name}
-                    className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-                  />
-
-                  <p className="text-muted mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
-
-                  <div className="flex gap-3">
-                    <Link
-                      to={`/r/${selectedRestaurant.slug}`}
-                      className="btn btn-primary flex-1"
-                      onClick={closePopup}
-                    >
-                      Reserve Now
-                    </Link>
-                    <button
-                      onClick={closePopup}
-                      className="btn btn-secondary"
-                    >
-                      Close
-                    </button>
-                  </div>
+                <div className="flex gap-3">
+                  <Link
+                    to={`/r/${selectedRestaurant.slug}`}
+                    className="btn btn-primary flex-1"
+                    onClick={closePopup}
+                  >
+                    Reserve Now
+                  </Link>
+                  <button
+                    onClick={closePopup}
+                    className="btn btn-secondary"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* Restaurant List - Mobile Fallback */}
