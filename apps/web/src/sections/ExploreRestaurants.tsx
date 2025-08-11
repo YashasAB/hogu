@@ -58,6 +58,50 @@ const restaurants: Restaurant[] = [
     neighborhood: 'Koramangala',
     category: 'dinner',
     hot: false
+  },
+  {
+    id: '5',
+    name: 'The Dive',
+    slug: 'the-dive',
+    emoji: '🍸',
+    position: { lat: 12.9735, lng: 77.6411 },
+    image: '/api/placeholder/200/150',
+    neighborhood: 'Indiranagar',
+    category: 'cocktails',
+    hot: false
+  },
+  {
+    id: '6',
+    name: 'Biergarten',
+    slug: 'biergarten',
+    emoji: '🍺',
+    position: { lat: 12.9729, lng: 77.6402 },
+    image: '/api/placeholder/200/150',
+    neighborhood: 'Indiranagar',
+    category: 'beer',
+    hot: false
+  },
+  {
+    id: '7',
+    name: 'Drinkery',
+    slug: 'drinkery',
+    emoji: '🍸',
+    position: { lat: 12.9748, lng: 77.6000 },
+    image: '/api/placeholder/200/150',
+    neighborhood: 'Indiranagar',
+    category: 'cocktails',
+    hot: true
+  },
+  {
+    id: '8',
+    name: 'Pizza 4P\'s',
+    slug: 'pizza-4ps',
+    emoji: '🍕',
+    position: { lat: 12.9716, lng: 77.6414 },
+    image: '/api/placeholder/200/150',
+    neighborhood: 'Indiranagar',
+    category: 'pizza',
+    hot: false
   }
 ]
 
@@ -116,7 +160,7 @@ export default function ExploreRestaurants() {
         </div>
       `)
       marker.addTo(map)
-      
+
       marker.on('click', () => {
         setSelectedRestaurant(restaurant)
       })
@@ -139,6 +183,12 @@ export default function ExploreRestaurants() {
   const closePopup = () => {
     setSelectedRestaurant(null)
   }
+
+  const filteredRestaurants = restaurants.filter(restaurant => {
+    if (selectedFilter === 'all') return true
+    if (selectedFilter === 'hot') return restaurant.hot
+    return restaurant.category === selectedFilter
+  })
 
   return (
     <div className="space-y-8">
@@ -182,7 +232,7 @@ export default function ExploreRestaurants() {
             <p className="text-slate-400 text-sm">
               Open‑source tiles, cute emoji pins, live location & quick filters. Scroll to zoom, drag to pan.
             </p>
-            
+
             {/* Filter Chips */}
             <div className="flex flex-wrap gap-2 mt-3">
               {[
@@ -195,8 +245,8 @@ export default function ExploreRestaurants() {
                   key={filter.key}
                   onClick={() => setSelectedFilter(filter.key)}
                   className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
-                    filter.active 
-                      ? 'bg-gradient-to-r from-violet-500/25 to-cyan-500/25 text-white border border-violet-400/30' 
+                    filter.active
+                      ? 'bg-gradient-to-r from-violet-500/25 to-cyan-500/25 text-white border border-violet-400/30'
                       : 'bg-slate-800/60 text-slate-300 border border-slate-600/20 hover:bg-slate-700/60'
                   }`}
                 >
@@ -208,13 +258,13 @@ export default function ExploreRestaurants() {
 
           {/* Map Container */}
           <div className="p-4">
-            <div 
+            <div
               ref={mapRef}
               className="h-[70vh] w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
             />
             <div className="text-xs text-slate-400 mt-2 opacity-85">
-              Tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">OpenStreetMap</a> contributors • 
-              Dark tiles © <a href="https://carto.com/" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">CARTO</a> • 
+              Tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">OpenStreetMap</a> contributors •
+              Dark tiles © <a href="https://carto.com/" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">CARTO</a> •
               Built with <a href="https://leafletjs.com/" target="_blank" rel="noreferrer" className="text-violet-300 hover:text-violet-200">Leaflet</a>
             </div>
           </div>
@@ -275,7 +325,7 @@ export default function ExploreRestaurants() {
         </div>
 
         <div className="grid gap-4">
-          {restaurants.map((restaurant) => (
+          {filteredRestaurants.map((restaurant) => (
             <Link
               key={restaurant.id}
               to={`/r/${restaurant.slug}`}
