@@ -1,34 +1,133 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import PhotoCarousel from '../components/media/PhotoCarousel'
-import InstagramLink from '../components/InstagramLink'
-import AvailabilityGrid from '../components/AvailabilityGrid'
+import { Link } from 'react-router-dom'
 
 type Restaurant = {
   id: string
   name: string
   slug: string
-  neighborhood?: string | null
+  emoji: string
+  position: { lat: number; lng: number }
+  image: string
+  neighborhood: string
+  category: string
+  hot?: boolean
   instagramUrl?: string | null
   heroImageUrl?: string | null
   website?: string | null
   cuisineTags?: string[]
 }
 
-type Photo = {
+type TimeSlot = {
   id: string
-  url: string
-  alt?: string | null
-  width?: number | null
-  height?: number | null
+  time: string
+  available: boolean
+}
+
+// Local restaurant data (matching ExploreRestaurants)
+const restaurants: Restaurant[] = [
+  {
+    id: "1",
+    name: "ZLB 23 (at The Leela Palace)",
+    slug: "zlb",
+    emoji: "🍸",
+    position: { lat: 12.960695, lng: 77.648663 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "UB City",
+    category: "cocktails",
+    hot: true,
+    instagramUrl: "https://instagram.com/zlb23",
+    website: "https://theleela.com",
+    cuisineTags: ["Cocktails", "Fine Dining", "Rooftop"]
+  },
+  {
+    id: "2",
+    name: "Soka",
+    slug: "soka",
+    emoji: "🍸",
+    position: { lat: 12.965215, lng: 77.638143 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "Koramangala",
+    category: "cocktails",
+    hot: false,
+    instagramUrl: "https://instagram.com/soka",
+    cuisineTags: ["Cocktails", "Asian Fusion"]
+  },
+  {
+    id: "3",
+    name: "Bar Spirit Forward",
+    slug: "spirit-forward",
+    emoji: "🥃",
+    position: { lat: 12.975125, lng: 77.60287 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "UB City",
+    category: "cocktails",
+    hot: true,
+    instagramUrl: "https://instagram.com/spiritforward",
+    cuisineTags: ["Cocktails", "Whiskey", "Bar"]
+  },
+  {
+    id: "4",
+    name: "Naru Noodle Bar",
+    slug: "naru",
+    emoji: "🍱",
+    position: { lat: 12.958431, lng: 77.592895 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "UB City",
+    category: "dinner",
+    hot: false,
+    instagramUrl: "https://instagram.com/naru",
+    cuisineTags: ["Japanese", "Noodles", "Asian"]
+  },
+  {
+    id: "8",
+    name: "Pizza 4P's (Indiranagar)",
+    slug: "pizza-4ps",
+    emoji: "🍕",
+    position: { lat: 12.969968, lng: 77.636089 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "Indiranagar",
+    category: "pizza",
+    hot: false,
+    instagramUrl: "https://instagram.com/pizza4ps",
+    cuisineTags: ["Pizza", "Italian", "Cheese"]
+  },
+  {
+    id: "9",
+    name: "Dali & Gala",
+    slug: "dali-and-gala",
+    emoji: "🍸",
+    position: { lat: 12.975125, lng: 77.60287 },
+    image: "/api/placeholder/400/300",
+    neighborhood: "UB City",
+    category: "cocktails",
+    hot: false,
+    instagramUrl: "https://instagram.com/daligala",
+    cuisineTags: ["Cocktails", "Art", "Modern"]
+  },
+]
+
+// Generate demo time slots
+const generateTimeSlots = (): TimeSlot[] => {
+  const slots: TimeSlot[] = []
+  const times = ['6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM']
+  
+  times.forEach((time, index) => {
+    slots.push({
+      id: `slot-${index}`,
+      time,
+      available: Math.random() > 0.3 // 70% chance of being available
+    })
+  })
+  
+  return slots
 }
 
 export default function RestaurantDetail() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
-  const [photos, setPhotos] = useState<Photo[]>([])
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState(() => {
     const tomorrow = new Date()
@@ -36,66 +135,40 @@ export default function RestaurantDetail() {
     return tomorrow.toISOString().split('T')[0]
   })
   const [partySize, setPartySize] = useState(2)
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchRestaurant = async () => {
-      if (!slug) return
-      setLoading(true)
-      try {
-        const [restaurantResponse, photosResponse] = await Promise.all([
-          fetch(`/api/restaurants/${slug}`),
-          fetch(`/api/restaurants/${slug}/photos`)
-        ])
-
-        if (restaurantResponse.ok) {
-          const restaurantData = await restaurantResponse.json()
-          setRestaurant(restaurantData)
-          
-          if (photosResponse.ok) {
-            const photosData = await photosResponse.json()
-            setPhotos(photosData)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch restaurant:', error)
-      } finally {
-        setLoading(false)
-      }
+    if (!slug) return
+    
+    setLoading(true)
+    // Find restaurant from local data
+    const foundRestaurant = restaurants.find(r => r.slug === slug)
+    if (foundRestaurant) {
+      setRestaurant(foundRestaurant)
     }
-
-    fetchRestaurant()
+    setLoading(false)
   }, [slug])
 
-  const handleSlotSelect = async (slotId: string) => {
-    const token = localStorage.getItem('hogu_token')
-    if (!token) {
-      navigate('/login')
+  useEffect(() => {
+    // Generate new time slots when date or party size changes
+    setTimeSlots(generateTimeSlots())
+    setSelectedSlot(null)
+  }, [date, partySize])
+
+  const handleSlotSelect = (slotId: string) => {
+    setSelectedSlot(slotId)
+  }
+
+  const handleReserveNow = () => {
+    if (!selectedSlot) {
+      alert('Please select a time slot')
       return
     }
 
-    try {
-      const response = await fetch('/api/reservations/hold', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurantId: restaurant!.id,
-          slotId,
-          partySize,
-          userId: 'demo-user' // In real app, decode from JWT
-        })
-      })
-
-      const data = await response.json()
-      if (!response.ok) {
-        alert(data.error || 'Hold failed')
-        return
-      }
-
-      navigate(`/r/${restaurant!.slug}/hold/${data.reservationId}`)
-    } catch (error) {
-      console.error('Failed to hold reservation:', error)
-      alert('Failed to hold reservation')
-    }
+    // For demo purposes, just show an alert
+    const slot = timeSlots.find(s => s.id === selectedSlot)
+    alert(`Reservation request for ${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? 'person' : 'people'}`)
   }
 
   if (loading) {
@@ -112,50 +185,69 @@ export default function RestaurantDetail() {
 
   if (!restaurant) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-semibold mb-2">Restaurant not found</h1>
-        <p className="text-muted">The restaurant you're looking for doesn't exist.</p>
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-semibold mb-2">Restaurant not found</h1>
+          <p className="text-muted">The restaurant you're looking for doesn't exist.</p>
+          <Link to="/explore-tonight" className="btn btn-primary mt-4">
+            ← Back to Explore
+          </Link>
+        </div>
       </div>
     )
   }
 
-  // Combine hero image with photos for carousel
-  const allPhotos = [
-    ...(restaurant.heroImageUrl ? [{
-      id: 'hero',
-      url: restaurant.heroImageUrl,
-      alt: `${restaurant.name} hero image`
-    }] : []),
-    ...photos
-  ]
-
   return (
     <div className="space-y-6">
+      {/* Back Navigation */}
+      <div className="flex items-center gap-2">
+        <Link to="/explore-tonight" className="btn btn-secondary">
+          ← Back to Map
+        </Link>
+      </div>
+
       {/* Hero Section */}
       <div className="relative">
-        {allPhotos.length > 0 ? (
-          <PhotoCarousel photos={allPhotos} />
-        ) : (
-          <div className="aspect-[3/2] bg-gray-200 rounded-2xl flex items-center justify-center">
-            <span className="text-muted">No photos available</span>
-          </div>
-        )}
+        <div className="aspect-[3/2] bg-gray-200 rounded-2xl overflow-hidden">
+          <img 
+            src={restaurant.image} 
+            alt={restaurant.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
         
         {/* Overlay Content */}
-        <div className="absolute bottom-0 left-0 right-0 hero-overlay rounded-b-2xl p-6 text-white">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl p-6 text-white">
           <div className="flex items-end justify-between">
             <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">{restaurant.emoji}</span>
+                {restaurant.hot && (
+                  <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
+                    🔥 HOT
+                  </span>
+                )}
+              </div>
               <h1 className="text-3xl font-bold mb-1">{restaurant.name}</h1>
-              <p className="text-lg opacity-90">{restaurant.neighborhood || 'Bengaluru'}</p>
+              <p className="text-lg opacity-90">{restaurant.neighborhood}</p>
             </div>
             <div className="flex gap-2">
-              <InstagramLink url={restaurant.instagramUrl} />
+              {restaurant.instagramUrl && (
+                <a
+                  href={restaurant.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 bg-white bg-opacity-20 text-white hover:bg-opacity-30 rounded-lg font-medium text-sm"
+                >
+                  Instagram
+                </a>
+              )}
               {restaurant.website && (
                 <a
                   href={restaurant.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="pill bg-white bg-opacity-20 text-white hover:bg-opacity-30"
+                  className="px-3 py-2 bg-white bg-opacity-20 text-white hover:bg-opacity-30 rounded-lg font-medium text-sm"
                 >
                   Website
                 </a>
@@ -169,7 +261,7 @@ export default function RestaurantDetail() {
       {restaurant.cuisineTags && restaurant.cuisineTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {restaurant.cuisineTags.map((tag) => (
-            <span key={tag} className="pill bg-gray-100 text-gray-700">
+            <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
               {tag}
             </span>
           ))}
@@ -208,13 +300,39 @@ export default function RestaurantDetail() {
           </div>
         </div>
 
-        {/* Availability Grid */}
-        <AvailabilityGrid
-          restaurantId={restaurant.id}
-          date={date}
-          partySize={partySize}
-          onSlotSelect={handleSlotSelect}
-        />
+        {/* Available Time Slots */}
+        <div>
+          <h3 className="text-lg font-medium mb-3">Available Times</h3>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {timeSlots.map((slot) => (
+              <button
+                key={slot.id}
+                onClick={() => slot.available && handleSlotSelect(slot.id)}
+                disabled={!slot.available}
+                className={`p-3 text-sm font-medium rounded-lg border transition-all ${
+                  selectedSlot === slot.id
+                    ? 'bg-brand text-white border-brand'
+                    : slot.available
+                    ? 'bg-white text-gray-900 border-gray-200 hover:border-brand hover:bg-brand/5'
+                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                }`}
+              >
+                {slot.time}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Reserve Button */}
+        <button
+          onClick={handleReserveNow}
+          disabled={!selectedSlot}
+          className={`btn w-full py-4 text-lg ${
+            selectedSlot ? 'btn-primary' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          {selectedSlot ? 'Reserve Now' : 'Select a Time Slot'}
+        </button>
       </div>
 
       {/* Restaurant Info */}
@@ -223,13 +341,17 @@ export default function RestaurantDetail() {
         <div className="space-y-3">
           <div className="flex justify-between py-2 border-b border-gray-100">
             <span className="font-medium">Location</span>
-            <span className="text-muted">{restaurant.neighborhood || 'Bengaluru'}</span>
+            <span className="text-muted">{restaurant.neighborhood}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-gray-100">
             <span className="font-medium">Cuisine</span>
             <span className="text-muted">
-              {restaurant.cuisineTags?.join(', ') || 'Multiple'}
+              {restaurant.cuisineTags?.join(', ') || restaurant.category}
             </span>
+          </div>
+          <div className="flex justify-between py-2 border-b border-gray-100">
+            <span className="font-medium">Category</span>
+            <span className="text-muted capitalize">{restaurant.category}</span>
           </div>
         </div>
       </div>
