@@ -59,39 +59,7 @@ const restaurants: Restaurant[] = [
     category: 'dinner',
     hot: false
   },
-  {
-    id: '5',
-    name: 'The Dive',
-    slug: 'the-dive',
-    emoji: '🍸',
-    position: { lat: 12.9735, lng: 77.6411 },
-    image: '/api/placeholder/200/150',
-    neighborhood: 'Indiranagar',
-    category: 'cocktails',
-    hot: false
-  },
-  {
-    id: '6',
-    name: 'Biergarten',
-    slug: 'biergarten',
-    emoji: '🍺',
-    position: { lat: 12.9729, lng: 77.6402 },
-    image: '/api/placeholder/200/150',
-    neighborhood: 'Indiranagar',
-    category: 'beer',
-    hot: false
-  },
-  {
-    id: '7',
-    name: 'Drinkery',
-    slug: 'drinkery',
-    emoji: '🍸',
-    position: { lat: 12.9748, lng: 77.6000 },
-    image: '/api/placeholder/200/150',
-    neighborhood: 'Indiranagar',
-    category: 'cocktails',
-    hot: true
-  },
+  
   {
     id: '8',
     name: 'Pizza 4P\'s',
