@@ -70,6 +70,17 @@ const restaurants: Restaurant[] = [
     neighborhood: 'Indiranagar',
     category: 'pizza',
     hot: false
+  },
+  {
+    id: '9',
+    name: 'Dali and Gala',
+    slug: 'dali-and-gala',
+    emoji: '🍸',
+    position: { lat: 12.9352, lng: 77.6275 },
+    image: '/api/placeholder/200/150',
+    neighborhood: 'Koramangala',
+    category: 'cocktails',
+    hot: false
   }
 ]
 
