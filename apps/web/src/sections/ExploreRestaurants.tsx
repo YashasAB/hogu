@@ -154,7 +154,7 @@ export default function ExploreRestaurants() {
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
           >
-            {/* Simple Map Background */}
+            {/* SVG Map */}
             <div 
               className="absolute inset-0 transition-transform duration-200"
               style={{
@@ -162,30 +162,32 @@ export default function ExploreRestaurants() {
                 transformOrigin: 'center center'
               }}
             >
-              {/* Bengaluru Map */}
-              <div className="absolute inset-0 bg-green-50">
-                {/* Neighborhoods as colored areas */}
-                <div className="absolute top-1/6 left-1/3 w-32 h-32 bg-blue-200 rounded-lg opacity-70 border-2 border-blue-300"></div>
-                <div className="absolute top-1/6 left-1/3 mt-2 ml-2 text-xs font-bold text-blue-800">Indiranagar</div>
-                
-                <div className="absolute top-2/5 right-1/6 w-36 h-36 bg-green-200 rounded-lg opacity-70 border-2 border-green-300"></div>
-                <div className="absolute top-2/5 right-1/6 mt-2 ml-2 text-xs font-bold text-green-800">Koramangala</div>
-                
-                <div className="absolute bottom-1/5 left-1/4 w-32 h-32 bg-yellow-200 rounded-lg opacity-70 border-2 border-yellow-300"></div>
-                <div className="absolute bottom-1/5 left-1/4 mt-2 ml-2 text-xs font-bold text-yellow-800">HSR Layout</div>
-                
-                <div className="absolute top-1/4 left-1/8 w-24 h-24 bg-purple-200 rounded-lg opacity-70 border-2 border-purple-300"></div>
-                <div className="absolute top-1/4 left-1/8 mt-2 ml-2 text-xs font-bold text-purple-800">UB City</div>
-
-                {/* Major roads */}
-                <div className="absolute top-1/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
-                <div className="absolute top-2/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
-                <div className="absolute left-1/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
-                <div className="absolute left-2/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
+              <svg width="100%" height="100%" viewBox="0 0 800 600" className="absolute inset-0">
+                {/* Background */}
+                <rect width="800" height="600" fill="#f0f9ff" />
                 
                 {/* Outer Ring Road */}
-                <div className="absolute top-1/8 left-1/8 w-3/4 h-3/4 border-4 border-gray-700 rounded-full opacity-60"></div>
-              </div>
+                <circle cx="400" cy="300" r="280" fill="none" stroke="#6b7280" strokeWidth="8" opacity="0.6"/>
+                
+                {/* Major Roads */}
+                <line x1="0" y1="200" x2="800" y2="200" stroke="#6b7280" strokeWidth="6" opacity="0.7"/>
+                <line x1="0" y1="400" x2="800" y2="400" stroke="#6b7280" strokeWidth="6" opacity="0.7"/>
+                <line x1="200" y1="0" x2="200" y2="600" stroke="#6b7280" strokeWidth="6" opacity="0.7"/>
+                <line x1="600" y1="0" x2="600" y2="600" stroke="#6b7280" strokeWidth="6" opacity="0.7"/>
+
+                {/* Neighborhoods */}
+                <rect x="280" y="120" width="120" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" opacity="0.8"/>
+                <text x="340" y="155" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#1e40af">Indiranagar</text>
+                
+                <rect x="480" y="220" width="130" height="90" rx="12" fill="#dcfce7" stroke="#22c55e" strokeWidth="2" opacity="0.8"/>
+                <text x="545" y="260" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#166534">Koramangala</text>
+                
+                <rect x="180" y="400" width="120" height="80" rx="12" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2" opacity="0.8"/>
+                <text x="240" y="435" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#92400e">HSR Layout</text>
+                
+                <rect x="80" y="180" width="100" height="70" rx="12" fill="#e9d5ff" stroke="#a855f7" strokeWidth="2" opacity="0.8"/>
+                <text x="130" y="210" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#7c3aed">UB City</text>
+              </svg>
 
               {/* Restaurant Markers */}
               {restaurants.map((restaurant) => (
