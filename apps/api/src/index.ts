@@ -3,9 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
-import authRouter from './routes/auth.js';
-import restaurantRouter from './routes/restaurants.js';
-import reservationsRouter from './routes/reservations.js';
+import authRouter from './routes/auth';
+import restaurantRouter from './routes/restaurants';
+import reservationsRouter from './routes/reservations';
 
 const prisma = new PrismaClient();
 const app = express();
