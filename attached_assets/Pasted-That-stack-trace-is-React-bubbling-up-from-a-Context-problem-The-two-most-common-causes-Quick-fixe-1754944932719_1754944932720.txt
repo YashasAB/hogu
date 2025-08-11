@@ -1,0 +1,62 @@
+That stack trace is React bubbling up from a Context problem. The two most common causes:
+Quick fixes to try (in order)
+Your component is using a context without a Provider above it
+Somewhere you call useContext(XyzContext) or use <XyzContext.Consumer>, but there’s no <XyzContext.Provider> wrapping your tree.
+Make sure your app root looks like:
+// main.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { XyzProvider } from "./xyz-context";
+import App from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <XyzProvider>  {/* This must provide the same context you're consuming */}
+    <App />
+  </XyzProvider>
+);
+And your consumer uses the same context symbol:
+import { XyzContext } from "./xyz-context";
+const value = React.useContext(XyzContext);
+Two copies of React are being loaded (classic Vite + monorepo/pnpm issue)
+If the Provider was created with React copy A and the Consumer with React copy B, contexts break in exactly this way.
+How to dedupe:
+Ensure only one React in your graph:
+pnpm ls react react-dom
+You should see a single version at the workspace root. If not, align versions in all package.jsons.
+In a Vite app, add this to vite.config.ts:
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { dedupe: ['react', 'react-dom'] }
+})
+If you’re using pnpm workspaces, make sure consumers depend on react/react-dom via the workspace (no nested copies). Avoid installing React inside a linked package’s node_modules. If you’re npm/yarn link-ing a local package that also lists react as a dep, mark them as peerDependencies in that package:
+{
+  "name": "your-shared-lib",
+  "peerDependencies": {
+    "react": "^18",
+    "react-dom": "^18"
+  }
+}
+Mismatched import targets
+Use react-dom/client (not legacy react-dom) consistently:
+import ReactDOM from 'react-dom/client';
+Don’t import from a built bundle (dist) of a local library during development; import source (with proper peer deps) to avoid bundling its own React.
+Provider value is undefined due to runtime logic
+If your Provider computes a value asynchronously, ensure it still provides a stable object (or guards null):
+<XyzContext.Provider value={value ?? defaultValue}>
+  {children}
+</XyzContext.Provider>
+How to pinpoint it fast
+Search your codebase for createContext( and list all Providers. Verify each consumer (useContext(...)) is rendered under the right Provider in the tree.
+Temporarily log:
+const v = useContext(XyzContext);
+console.log('XyzContext value', v);
+If it’s undefined (and shouldn’t be), your Provider isn’t wrapping that branch—or you have duplicate React.
+Turn on better stack traces:
+// vite.config.ts
+export default defineConfig({
+  build: { sourcemap: true }
+})
+If you paste your xyz-context.tsx (where you call createContext) and your main.tsx/root layout, I’ll point to the exact line that’s causing this.
