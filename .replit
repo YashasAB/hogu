@@ -22,3 +22,11 @@ args = "cd apps/api && npm run dev"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd apps/web && npm run dev"
+
+[[ports]]
+localPort = 5173
+externalPort = 5173
+exposeLocalhost = true
+
+[[ports]]
+localPort = 5174
