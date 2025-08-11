@@ -1,8 +1,5 @@
-
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth';
 import restaurantRouter from './routes/restaurants';
 import reservationsRouter from './routes/reservations';
@@ -10,17 +7,10 @@ import reservationsRouter from './routes/reservations';
 const app = express();
 const PORT = Number(process.env.PORT) || 3002;
 
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
 
-app.get('/', (_req, res) => {
-  res.redirect('http://0.0.0.0:5000');
-});
-
-app.get('/health', (_req, res) => res.json({ ok: true }));
-
-// Use the route modules
+// Routes
 app.use('/auth', authRouter);
 app.use('/restaurants', restaurantRouter);
 app.use('/reservations', reservationsRouter);
