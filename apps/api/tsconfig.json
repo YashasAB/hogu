@@ -2,8 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "emitDecoratorMetadata": false,
-    "experimentalDecorators": false
+    "module": "CommonJS",
+    "target": "ES2020"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "ts-node": {
+    "esm": false,
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
 }
