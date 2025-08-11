@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 type Restaurant = {
@@ -53,109 +53,9 @@ const restaurants: Restaurant[] = [
 
 export default function ExploreRestaurants() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
-  const mapRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (mapRef.current) {
-      initializeMap()
-    }
-  }, [])
-
-  const initializeMap = () => {
-    if (!mapRef.current) return
-
-    // Clear any existing content
-    mapRef.current.innerHTML = ''
-
-    // Create SVG map
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.setAttribute('width', '100%')
-    svg.setAttribute('height', '100%')
-    svg.setAttribute('viewBox', '0 0 800 600')
-    svg.style.backgroundColor = '#f0f9ff'
-
-    // Add Bengaluru map elements
-    const mapElements = `
-      <!-- Outer Ring Road -->
-      <circle cx="400" cy="300" r="280" fill="none" stroke="#6b7280" stroke-width="8" opacity="0.6"/>
-      
-      <!-- Major Roads -->
-      <line x1="0" y1="200" x2="800" y2="200" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="0" y1="400" x2="800" y2="400" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="200" y1="0" x2="200" y2="600" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="600" y1="0" x2="600" y2="600" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-
-      <!-- Neighborhoods -->
-      <rect x="280" y="120" width="120" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" opacity="0.8"/>
-      <text x="340" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e40af">Indiranagar</text>
-      
-      <rect x="480" y="220" width="130" height="90" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2" opacity="0.8"/>
-      <text x="545" y="260" text-anchor="middle" font-size="14" font-weight="bold" fill="#166534">Koramangala</text>
-      
-      <rect x="180" y="400" width="120" height="80" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" opacity="0.8"/>
-      <text x="240" y="435" text-anchor="middle" font-size="14" font-weight="bold" fill="#92400e">HSR Layout</text>
-      
-      <rect x="80" y="180" width="100" height="70" rx="12" fill="#e9d5ff" stroke="#a855f7" stroke-width="2" opacity="0.8"/>
-      <text x="130" y="210" text-anchor="middle" font-size="12" font-weight="bold" fill="#7c3aed">UB City</text>
-    `
-    svg.innerHTML = mapElements
-
-    // Add restaurant markers
-    restaurants.forEach((restaurant, index) => {
-      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-      marker.style.cursor = 'pointer'
-      
-      // Calculate position based on neighborhood
-      let x = 400, y = 300 // default center
-      if (restaurant.neighborhood === 'Indiranagar') { x = 340; y = 160 }
-      else if (restaurant.neighborhood === 'Koramangala') { x = 545; y = 265 }
-      else if (restaurant.neighborhood === 'HSR Layout') { x = 240; y = 440 }
-      else if (restaurant.neighborhood === 'UB City') { x = 130; y = 215 }
-
-      // Create marker background
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-      circle.setAttribute('cx', x.toString())
-      circle.setAttribute('cy', y.toString())
-      circle.setAttribute('r', '25')
-      circle.setAttribute('fill', 'white')
-      circle.setAttribute('stroke', '#dc2626')
-      circle.setAttribute('stroke-width', '3')
-      circle.style.filter = 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
-
-      // Create emoji text
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      text.setAttribute('x', x.toString())
-      text.setAttribute('y', (y + 6).toString())
-      text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('font-size', '20')
-      text.textContent = restaurant.emoji
-
-      marker.appendChild(circle)
-      marker.appendChild(text)
-
-      // Add click handler
-      marker.addEventListener('click', () => {
-        setSelectedRestaurant(restaurant)
-      })
-
-      // Add hover effects
-      marker.addEventListener('mouseenter', () => {
-        circle.setAttribute('r', '30')
-        circle.setAttribute('stroke', '#dc2626')
-        text.setAttribute('font-size', '24')
-      })
-
-      marker.addEventListener('mouseleave', () => {
-        circle.setAttribute('r', '25')
-        circle.setAttribute('stroke', '#dc2626')
-        text.setAttribute('font-size', '20')
-      })
-
-      svg.appendChild(marker)
-    })
-
-    mapRef.current.appendChild(svg)
-  }
+  const [mapTransform, setMapTransform] = useState({ scale: 1, x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant)
@@ -163,6 +63,31 @@ export default function ExploreRestaurants() {
 
   const closePopup = () => {
     setSelectedRestaurant(null)
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - mapTransform.x, y: e.clientY - mapTransform.y })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    setMapTransform(prev => ({
+      ...prev,
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    }))
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1
+    const newScale = Math.max(0.5, Math.min(3, mapTransform.scale * scaleFactor))
+    setMapTransform(prev => ({ ...prev, scale: newScale }))
   }
 
   const Spark = () => (
@@ -220,62 +145,132 @@ export default function ExploreRestaurants() {
 
         {/* Map Container with proper margins */}
         <div className="mx-4 sm:mx-8">
-          <div className="rounded-2xl overflow-hidden border-2 border-gray-200 shadow-lg">
-            <div
-              ref={mapRef}
-              className="w-full h-96 sm:h-[500px]"
+          <div 
+            className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-lg border border-gray-200 cursor-grab select-none"
+            style={{ height: '600px' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+          >
+            {/* Simple Map Background */}
+            <div 
+              className="absolute inset-0 transition-transform duration-200"
               style={{
-                minHeight: "400px",
-                zIndex: 1,
-                position: "relative",
+                transform: `translate(${mapTransform.x}px, ${mapTransform.y}px) scale(${mapTransform.scale})`,
+                transformOrigin: 'center center'
               }}
-            />
-          </div>
-          <p className="text-sm text-gray-600 mt-3 font-medium text-center">
-            📍 Interactive map showing restaurants across Bengaluru. Click markers for details.
-          </p>
-        </div>
+            >
+              {/* Bengaluru Map */}
+              <div className="absolute inset-0 bg-green-50">
+                {/* Neighborhoods as colored areas */}
+                <div className="absolute top-1/6 left-1/3 w-32 h-32 bg-blue-200 rounded-lg opacity-70 border-2 border-blue-300"></div>
+                <div className="absolute top-1/6 left-1/3 mt-2 ml-2 text-xs font-bold text-blue-800">Indiranagar</div>
+                
+                <div className="absolute top-2/5 right-1/6 w-36 h-36 bg-green-200 rounded-lg opacity-70 border-2 border-green-300"></div>
+                <div className="absolute top-2/5 right-1/6 mt-2 ml-2 text-xs font-bold text-green-800">Koramangala</div>
+                
+                <div className="absolute bottom-1/5 left-1/4 w-32 h-32 bg-yellow-200 rounded-lg opacity-70 border-2 border-yellow-300"></div>
+                <div className="absolute bottom-1/5 left-1/4 mt-2 ml-2 text-xs font-bold text-yellow-800">HSR Layout</div>
+                
+                <div className="absolute top-1/4 left-1/8 w-24 h-24 bg-purple-200 rounded-lg opacity-70 border-2 border-purple-300"></div>
+                <div className="absolute top-1/4 left-1/8 mt-2 ml-2 text-xs font-bold text-purple-800">UB City</div>
 
-        {/* Restaurant Popup */}
-        {selectedRestaurant && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="card max-w-sm mx-4">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-brand">{selectedRestaurant.name}</h3>
-                <button
-                  onClick={closePopup}
-                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                >
-                  ×
-                </button>
+                {/* Major roads */}
+                <div className="absolute top-1/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
+                <div className="absolute top-2/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
+                <div className="absolute left-1/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
+                <div className="absolute left-2/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
+                
+                {/* Outer Ring Road */}
+                <div className="absolute top-1/8 left-1/8 w-3/4 h-3/4 border-4 border-gray-700 rounded-full opacity-60"></div>
               </div>
-              
-              <img
-                src={selectedRestaurant.image}
-                alt={selectedRestaurant.name}
-                className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-              />
-              
-              <p className="text-muted mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
-              
-              <div className="flex gap-3">
-                <Link
-                  to={`/r/${selectedRestaurant.slug}`}
-                  className="btn btn-primary flex-1"
-                  onClick={closePopup}
-                >
-                  Reserve Now
-                </Link>
+
+              {/* Restaurant Markers */}
+              {restaurants.map((restaurant) => (
                 <button
-                  onClick={closePopup}
-                  className="btn btn-secondary"
+                  key={restaurant.id}
+                  onClick={() => handleRestaurantClick(restaurant)}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 text-3xl hover:scale-125 transition-all duration-300 bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:shadow-xl border-2 border-white hover:border-brand z-10"
+                  style={{
+                    left: `${restaurant.position.x}%`,
+                    top: `${restaurant.position.y}%`
+                  }}
+                  title={restaurant.name}
                 >
-                  Close
+                  {restaurant.emoji}
                 </button>
-              </div>
+              ))}
             </div>
+
+            {/* Map Controls */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+              <button
+                onClick={() => setMapTransform(prev => ({ ...prev, scale: Math.min(3, prev.scale * 1.2) }))}
+                className="btn btn-secondary w-10 h-10 p-0 text-lg"
+                title="Zoom In"
+              >
+                +
+              </button>
+              <button
+                onClick={() => setMapTransform(prev => ({ ...prev, scale: Math.max(0.5, prev.scale * 0.8) }))}
+                className="btn btn-secondary w-10 h-10 p-0 text-lg"
+                title="Zoom Out"
+              >
+                −
+              </button>
+              <button
+                onClick={() => setMapTransform({ scale: 1, x: 0, y: 0 })}
+                className="btn btn-secondary px-2 py-1 text-xs"
+                title="Reset View"
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Restaurant Popup */}
+            {selectedRestaurant && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="card max-w-sm mx-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-brand">{selectedRestaurant.name}</h3>
+                    <button
+                      onClick={closePopup}
+                      className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <img
+                    src={selectedRestaurant.image}
+                    alt={selectedRestaurant.name}
+                    className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
+                  />
+                  
+                  <p className="text-muted mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
+                  
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/r/${selectedRestaurant.slug}`}
+                      className="btn btn-primary flex-1"
+                      onClick={closePopup}
+                    >
+                      Reserve Now
+                    </Link>
+                    <button
+                      onClick={closePopup}
+                      className="btn btn-secondary"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
 
       {/* Restaurant List - Mobile Fallback */}
