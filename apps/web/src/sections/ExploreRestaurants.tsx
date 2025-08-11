@@ -26,7 +26,7 @@ const restaurants: Restaurant[] = [
     id: '2',
     name: 'Soka',
     slug: 'soka',
-    emoji: '🍜',
+    emoji: '🍸',
     position: { x: 55, y: 45 },
     image: '/api/placeholder/200/150',
     neighborhood: 'Koramangala'
