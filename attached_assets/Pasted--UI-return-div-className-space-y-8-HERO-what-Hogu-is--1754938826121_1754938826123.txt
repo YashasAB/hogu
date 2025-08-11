@@ -1,0 +1,78 @@
+
+  // --- UI ---
+  return (
+    <div className="space-y-8">
+      {/* HERO — what Hogu is */}
+      <section className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8">
+          <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
+            <Spark /> <span>Now live in Bengaluru</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold leading-tight">
+            Plan your week in BLR — guaranteed.
+          </h1>
+          <p className="mt-2 max-w-2xl opacity-90">
+            Hogu finds you real, bookable tables at the city's hardest spots. Fair access, stress-free planning, and
+            protection against bots & fake accounts.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href="#tonight" className="btn btn-accent">Find a table tonight</a>
+            <a href="#week" className="btn bg-white text-brand">Plan the week</a>
+            {!token && <Link to="/login" className="btn btn-primary">Log in</Link>}
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm opacity-95">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Fair drops & notifies</div>
+              <div className="opacity-90">Structured releases & instant pings. No FOMO refresh wars.</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">No-bot protection</div>
+              <div className="opacity-90">Verified identities & throttling keep access clean.</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Card holds & deposits</div>
+              <div className="opacity-90">Reduces no-shows so more real seats are available.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QUICK FILTERS / PARTY SIZE + DATE (kept minimal) */}
+      <section className="card -mt-10 relative z-[1] grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <select className="input" value={party} onChange={e=>setParty(parseInt(e.target.value))} aria-label="Party size">
+          {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} {n===1?'person':'people'}</option>)}
+        </select>
+        <input className="input" type="date" value={today} readOnly aria-label="Date" />
+        <div className="hidden sm:flex items-center text-muted text-sm">City: Bengaluru</div>
+        {!token
+          ? <Link to="/login" className="btn btn-primary justify-self-end">Log in</Link>
+          : <Link to="/me" className="btn justify-self-end">My reservations</Link>}
+      </section>
+
+      {/* WHAT PROBLEMS WE SOLVE */}
+      <section id="why" className="grid gap-4 sm:grid-cols-3">
+        <div className="card">
+          <div className="font-medium mb-1">"Everything sells out in minutes."</div>
+          <div className="text-muted text-sm">We run timed <strong>drops</strong> & fair queues. No spam, no scalpers.</div>
+        </div>
+        <div className="card">
+          <div className="font-medium mb-1">"I hate refreshing for cancels."</div>
+          <div className="text-muted text-sm"><strong>Notify</strong> pings you instantly and auto-holds a table for a short window.</div>
+        </div>
+        <div className="card">
+          <div className="font-medium mb-1">"Last-minute plans? Forget it."</div>
+          <div className="text-muted text-sm"><strong>Tonight Near You</strong> shows live inventory for the next few hours.</div>
+        </div>
+      </section>
+
+      {/* PLAN YOUR WEEK */}
+      <section id="week" className="space-y-3">
+        <SectionTitle>Plan Your Week</SectionTitle>
+        <div className="text-muted text-sm">Today is <strong>{todayLabel}</strong>. Pick a day, browse seats, and lock plans with card-on-file.</div>
+
+        <div className="flex gap-2 overflow-x-auto snap-x">
+          {weekDays.map((d, i) => {
+            const day = new Date(d.date).toLocaleDat
