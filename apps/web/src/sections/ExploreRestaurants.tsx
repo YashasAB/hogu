@@ -139,10 +139,7 @@ export default function ExploreRestaurants() {
       `)
       marker.addTo(map)
 
-      marker.on('click', () => {
-        window.location.href = `/r/${restaurant.slug}`
       })
-    })
 
     // Fit bounds to markers
     const latlngs = restaurants.map(r => [r.position.lat, r.position.lng] as [number, number])
