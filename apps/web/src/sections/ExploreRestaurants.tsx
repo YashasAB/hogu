@@ -226,7 +226,7 @@ export default function ExploreRestaurants() {
             <div className="flex items-center gap-3 mb-1">
               <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-400 shadow-lg shadow-violet-400/30"></div>
               <h2 className="text-xl font-bold text-white tracking-wide">
-                Bengaluru Map <span className="opacity-60 font-semibold">• Neon</span>
+                Find Spots Tonight <span className="opacity-60 font-semibold">• Live Map</span>
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
