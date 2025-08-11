@@ -162,18 +162,29 @@ export default function ExploreRestaurants() {
                 transformOrigin: 'center center'
               }}
             >
-              {/* Simple Bengaluru Map */}
-              <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100">
-                {/* Main roads */}
-                <div className="absolute top-1/4 left-0 w-full h-1 bg-gray-300 opacity-60"></div>
-                <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-300 opacity-60"></div>
-                <div className="absolute top-3/4 left-0 w-full h-1 bg-gray-300 opacity-60"></div>
-                <div className="absolute left-1/4 top-0 w-1 h-full bg-gray-300 opacity-60"></div>
-                <div className="absolute left-1/2 top-0 w-1 h-full bg-gray-300 opacity-60"></div>
-                <div className="absolute left-3/4 top-0 w-1 h-full bg-gray-300 opacity-60"></div>
+              {/* Bengaluru Map */}
+              <div className="absolute inset-0 bg-green-50">
+                {/* Neighborhoods as colored areas */}
+                <div className="absolute top-1/6 left-1/3 w-32 h-32 bg-blue-200 rounded-lg opacity-70 border-2 border-blue-300"></div>
+                <div className="absolute top-1/6 left-1/3 mt-2 ml-2 text-xs font-bold text-blue-800">Indiranagar</div>
                 
-                {/* Outer ring road */}
-                <div className="absolute top-1/6 left-1/6 w-2/3 h-2/3 border-2 border-gray-400 rounded-full opacity-50"></div>
+                <div className="absolute top-2/5 right-1/6 w-36 h-36 bg-green-200 rounded-lg opacity-70 border-2 border-green-300"></div>
+                <div className="absolute top-2/5 right-1/6 mt-2 ml-2 text-xs font-bold text-green-800">Koramangala</div>
+                
+                <div className="absolute bottom-1/5 left-1/4 w-32 h-32 bg-yellow-200 rounded-lg opacity-70 border-2 border-yellow-300"></div>
+                <div className="absolute bottom-1/5 left-1/4 mt-2 ml-2 text-xs font-bold text-yellow-800">HSR Layout</div>
+                
+                <div className="absolute top-1/4 left-1/8 w-24 h-24 bg-purple-200 rounded-lg opacity-70 border-2 border-purple-300"></div>
+                <div className="absolute top-1/4 left-1/8 mt-2 ml-2 text-xs font-bold text-purple-800">UB City</div>
+
+                {/* Major roads */}
+                <div className="absolute top-1/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
+                <div className="absolute top-2/3 left-0 w-full h-2 bg-gray-600 opacity-80"></div>
+                <div className="absolute left-1/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
+                <div className="absolute left-2/3 top-0 w-2 h-full bg-gray-600 opacity-80"></div>
+                
+                {/* Outer Ring Road */}
+                <div className="absolute top-1/8 left-1/8 w-3/4 h-3/4 border-4 border-gray-700 rounded-full opacity-60"></div>
               </div>
 
               {/* Restaurant Markers */}
