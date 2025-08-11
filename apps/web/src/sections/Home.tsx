@@ -1,338 +1,257 @@
 
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+// apps/web/src/sections/Home.tsx
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
-type Restaurant = {
-  id: string
-  name: string
-  slug: string
-  neighborhood?: string | null
-  heroImageUrl?: string | null
-  cuisineTags?: string[]
+type Slot = { slot_id: string; time: string; party_size: number }
+type SlotSummary = {
+  restaurant: { id: string; name: string; slug: string; neighborhood?: string | null; hero_image_url?: string | null }
+  slots: Slot[]
 }
+type TonightRes = { now: SlotSummary[]; later: SlotSummary[] }
+type WeekDay = { date: string; available_count: number; picks: SlotSummary[] }
+type WeekRes = { days: WeekDay[] }
 
-export default function Home() {
-  const navigate = useNavigate()
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [cityFilter, setCityFilter] = useState('')
-  const [cuisineFilter, setCuisineFilter] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+export default function Home(){
+  // --- state ---
+  const [party, setParty] = useState(2)
+  const [city] = useState('BLR')
+  const [tonight, setTonight] = useState<TonightRes>({ now: [], later: [] })
+  const [week, setWeek] = useState<WeekRes>({ days: [] })
+  const [today] = useState(() => new Date().toISOString().slice(0,10))
+  const token = typeof window !== 'undefined' ? localStorage.getItem('hogu_token') : null
 
+  // --- data fetch ---
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('hogu_token')
-    setIsLoggedIn(!!token)
+    fetch(`/api/discover/tonight?city=${city}&party_size=${party}`).then(r => r.json()).then(setTonight).catch(()=>{})
+    fetch(`/api/discover/week?city=${city}&start=${today}&days=7&party_size=${party}`).then(r => r.json()).then(setWeek).catch(()=>{})
+  }, [city, party, today])
 
-    const fetchRestaurants = async () => {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        if (searchQuery) params.append('q', searchQuery)
-        if (cityFilter) params.append('city', cityFilter)
-        if (cuisineFilter) params.append('cuisine', cuisineFilter)
-        
-        const response = await fetch(`/api/restaurants?${params}`)
-        if (response.ok) {
-          const data = await response.json()
-          setRestaurants(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch restaurants:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const weekDays = week.days
+  const weekToday = weekDays[0]
+  const todayLabel = useMemo(() => new Date(today).toLocaleDateString(undefined, { weekday: 'long' }), [today])
 
-    fetchRestaurants()
-  }, [searchQuery, cityFilter, cuisineFilter])
+  // --- helpers ---
+  const SectionTitle = ({ children }: { children: React.ReactNode }) =>
+    <h2 className="text-xl font-semibold">{children}</h2>
 
-  const handleLogin = () => {
-    navigate('/login')
-  }
+  const Spark = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" className="inline-block align-[-2px]">
+      <path d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z" fill="currentColor" />
+    </svg>
+  )
 
+  // --- UI ---
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-brand to-purple-700 text-white rounded-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20" />
-        <div className="relative p-8 md:p-12 text-center space-y-6">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Welcome to Hogu
-            </h1>
-            <p className="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
-              Bengaluru's Fair Reservation Platform
-            </p>
-            <p className="text-lg opacity-80 max-w-2xl mx-auto">
-              Plan your week. Find tonight's spots. Skip the bots and fake accounts. 
-              Experience dining the way it should be.
-            </p>
+      {/* HERO — what Hogu is */}
+      <section className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8">
+          <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
+            <Spark /> <span>Now live in Bengaluru</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold leading-tight">
+            Plan your week in BLR — guaranteed.
+          </h1>
+          <p className="mt-2 max-w-2xl opacity-90">
+            Hogu finds you real, bookable tables at the city's hardest spots. Fair access, stress-free planning, and
+            protection against bots & fake accounts.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href="#tonight" className="btn btn-accent">Find a table tonight</a>
+            <a href="#week" className="btn bg-white text-brand">Plan the week</a>
+            {!token && <Link to="/login" className="btn btn-primary">Log in</Link>}
           </div>
 
-          {!isLoggedIn && (
-            <div className="pt-4">
-              <button
-                onClick={handleLogin}
-                className="btn bg-white text-brand hover:bg-gray-50 text-lg px-8 py-4 font-semibold shadow-xl"
-              >
-                Get Started
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm opacity-95">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Fair drops & notifies</div>
+              <div className="opacity-90">Structured releases & instant pings. No FOMO refresh wars.</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">No-bot protection</div>
+              <div className="opacity-90">Verified identities & throttling keep access clean.</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Card holds & deposits</div>
+              <div className="opacity-90">Reduces no-shows so more real seats are available.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QUICK FILTERS / PARTY SIZE + DATE (kept minimal) */}
+      <section className="card -mt-10 relative z-[1] grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <select className="input" value={party} onChange={e=>setParty(parseInt(e.target.value))} aria-label="Party size">
+          {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} {n===1?'person':'people'}</option>)}
+        </select>
+        <input className="input" type="date" value={today} readOnly aria-label="Date" />
+        <div className="hidden sm:flex items-center text-muted text-sm">City: Bengaluru</div>
+        {!token
+          ? <Link to="/login" className="btn btn-primary justify-self-end">Log in</Link>
+          : <Link to="/me" className="btn justify-self-end">My reservations</Link>}
+      </section>
+
+      {/* WHAT PROBLEMS WE SOLVE */}
+      <section id="why" className="grid gap-4 sm:grid-cols-3">
+        <div className="card">
+          <div className="font-medium mb-1">"Everything sells out in minutes."</div>
+          <div className="text-muted text-sm">We run timed <strong>drops</strong> & fair queues. No spam, no scalpers.</div>
+        </div>
+        <div className="card">
+          <div className="font-medium mb-1">"I hate refreshing for cancels."</div>
+          <div className="text-muted text-sm"><strong>Notify</strong> pings you instantly and auto-holds a table for a short window.</div>
+        </div>
+        <div className="card">
+          <div className="font-medium mb-1">"Last-minute plans? Forget it."</div>
+          <div className="text-muted text-sm"><strong>Tonight Near You</strong> shows live inventory for the next few hours.</div>
+        </div>
+      </section>
+
+      {/* PLAN YOUR WEEK */}
+      <section id="week" className="space-y-3">
+        <SectionTitle>Plan Your Week</SectionTitle>
+        <div className="text-muted text-sm">Today is <strong>{todayLabel}</strong>. Pick a day, browse seats, and lock plans with card-on-file.</div>
+
+        <div className="flex gap-2 overflow-x-auto snap-x">
+          {weekDays.map((d, i) => {
+            const day = new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })
+            return (
+              <button key={d.date} className={`pill snap-start ${i===0?'bg-brand text-white border-brand':'border-ink'}`} title={`${d.available_count} open slots`}>
+                <div className="text-sm">{i===0 ? `${day} (Today)` : day}</div>
+                <div className="text-xs opacity-70">{d.available_count} slots</div>
               </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Value Propositions */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="card text-center space-y-4 p-6 border-2 border-green-100 bg-green-50">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-semibold text-green-800">Guaranteed Reservations</h3>
-          <p className="text-green-700">
-            Plan your entire week with confidence. Our fair allocation system ensures real people get real tables.
-          </p>
+            )
+          })}
+          {!weekDays.length && <div className="text-muted text-sm">Loading week…</div>}
         </div>
 
-        <div className="card text-center space-y-4 p-6 border-2 border-blue-100 bg-blue-50">
-          <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-semibold text-blue-800">Bot-Free Environment</h3>
-          <p className="text-blue-700">
-            No more fighting bots or fake accounts. Our verified user system protects inventory for real diners.
-          </p>
-        </div>
-
-        <div className="card text-center space-y-4 p-6 border-2 border-purple-100 bg-purple-50">
-          <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-semibold text-purple-800">Last-Minute Magic</h3>
-          <p className="text-purple-700">
-            Find amazing spots for tonight with our real-time inventory drops and fair waitlist system.
-          </p>
-        </div>
-      </div>
-
-      {/* How It Works */}
-      <div className="card space-y-6 p-8 bg-gray-50">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">How Hogu Works</h2>
-          <p className="text-muted">Fair access to Bengaluru's best restaurants</p>
-        </div>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="text-center space-y-3">
-            <div className="w-12 h-12 bg-brand text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
-              1
-            </div>
-            <h4 className="font-semibold">Browse & Search</h4>
-            <p className="text-sm text-muted">Discover restaurants across Bengaluru's neighborhoods</p>
-          </div>
-
-          <div className="text-center space-y-3">
-            <div className="w-12 h-12 bg-brand text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
-              2
-            </div>
-            <h4 className="font-semibold">Book or Join Drops</h4>
-            <p className="text-sm text-muted">Reserve available slots or join exclusive drops for popular spots</p>
-          </div>
-
-          <div className="text-center space-y-3">
-            <div className="w-12 h-12 bg-brand text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
-              3
-            </div>
-            <h4 className="font-semibold">Secure Your Table</h4>
-            <p className="text-sm text-muted">Get confirmation and hold protection for your reservation</p>
-          </div>
-
-          <div className="text-center space-y-3">
-            <div className="w-12 h-12 bg-brand text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
-              4
-            </div>
-            <h4 className="font-semibold">Dine & Enjoy</h4>
-            <p className="text-sm text-muted">Show up and enjoy your guaranteed table</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Filters - Only show if logged in */}
-      {isLoggedIn && (
-        <>
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold text-brand">Discover Bengaluru</h2>
-            <p className="text-muted">Find and book the city's best restaurants</p>
-          </div>
-
-          <div className="card space-y-4">
-            <input
-              type="text"
-              placeholder="Search restaurants..."
-              className="input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="flex gap-3">
-              <select
-                className="input flex-1"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-              >
-                <option value="">All Areas</option>
-                <option value="Koramangala">Koramangala</option>
-                <option value="Indiranagar">Indiranagar</option>
-                <option value="Whitefield">Whitefield</option>
-                <option value="HSR Layout">HSR Layout</option>
-                <option value="Brigade Road">Brigade Road</option>
-                <option value="Church Street">Church Street</option>
-              </select>
-              <select
-                className="input flex-1"
-                value={cuisineFilter}
-                onChange={(e) => setCuisineFilter(e.target.value)}
-              >
-                <option value="">All Cuisines</option>
-                <option value="Indian">Indian</option>
-                <option value="South Indian">South Indian</option>
-                <option value="North Indian">North Indian</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Continental">Continental</option>
-                <option value="Italian">Italian</option>
-                <option value="Japanese">Japanese</option>
-                <option value="Thai">Thai</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Restaurant Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="aspect-[3/2] bg-gray-200 rounded-xl mb-4" />
-                  <div className="h-6 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {restaurants.map((restaurant) => (
-                <Link
-                  key={restaurant.id}
-                  to={`/r/${restaurant.slug}`}
-                  className="card hover:shadow-lg transition-shadow group"
-                >
-                  {restaurant.heroImageUrl ? (
-                    <div className="aspect-[3/2] bg-gray-200 rounded-xl mb-4 overflow-hidden">
-                      <img
-                        src={restaurant.heroImageUrl}
-                        alt={restaurant.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-[3/2] bg-gray-200 rounded-xl mb-4 flex items-center justify-center">
-                      <span className="text-muted">No image</span>
-                    </div>
-                  )}
-                  <h3 className="font-semibold text-lg mb-1">{restaurant.name}</h3>
-                  <p className="text-muted">{restaurant.neighborhood || 'Bengaluru'}</p>
-                  {restaurant.cuisineTags && restaurant.cuisineTags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {restaurant.cuisineTags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="pill bg-gray-100 text-gray-700 text-xs">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {!loading && restaurants.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted">No restaurants found matching your criteria</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Call to Action for Non-Logged In Users */}
-      {!isLoggedIn && (
-        <div className="card text-center space-y-6 p-8 bg-gradient-to-r from-brand to-purple-600 text-white">
-          <h2 className="text-2xl font-bold">Ready to Transform Your Dining Experience?</h2>
-          <p className="text-lg opacity-90 max-w-2xl mx-auto">
-            Join thousands of Bengaluru diners who've discovered the stress-free way to secure reservations at the city's best restaurants.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={handleLogin}
-              className="btn bg-white text-brand hover:bg-gray-50 text-lg px-8 py-3 font-semibold"
-            >
-              Sign In
-            </button>
-            <Link
-              to="/signup"
-              className="btn border-2 border-white text-white hover:bg-white hover:text-brand text-lg px-8 py-3 font-semibold transition-colors"
-            >
-              Create Account
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(weekToday?.picks || []).map(card => (
+            <Link to={`/r/${card.restaurant.slug}`} key={card.restaurant.id} className="card hover:shadow-lg transition">
+              {card.restaurant.hero_image_url && (
+                <img src={card.restaurant.hero_image_url} className="w-full h-36 object-cover rounded-2xl mb-2" alt={card.restaurant.name} />
+              )}
+              <div className="text-lg font-semibold">{card.restaurant.name}</div>
+              <div className="text-muted text-sm mb-2">{card.restaurant.neighborhood || 'Bengaluru'}</div>
+              <div className="flex flex-wrap gap-2">
+                {card.slots.map(s => <span key={s.slot_id} className="pill border-ink">{s.time}</span>)}
+              </div>
             </Link>
-          </div>
-          <div className="text-center mt-4">
-            <Link
-              to="/restaurant/login"
-              className="text-white text-sm hover:underline opacity-90"
-            >
-              Restaurant Owner? Sign in here →
+          ))}
+          {!!weekDays.length && !(weekToday?.picks?.length) && (
+            <div className="text-muted text-sm">No highlighted picks yet. Try a different party size.</div>
+          )}
+        </div>
+      </section>
+
+      {/* TONIGHT NEAR YOU */}
+      <section id="tonight" className="space-y-3">
+        <SectionTitle>Tonight Near You</SectionTitle>
+        <div className="text-muted text-sm">Grab something within the next 4 hours — perfect for spontaneous plans.</div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...(tonight.now||[]), ...(tonight.later||[])].map(card => (
+            <Link to={`/r/${card.restaurant.slug}`} key={card.restaurant.id} className="card hover:shadow-lg transition">
+              {card.restaurant.hero_image_url && (
+                <img src={card.restaurant.hero_image_url} className="w-full h-36 object-cover rounded-2xl mb-2" alt={card.restaurant.name} />
+              )}
+              <div className="text-lg font-semibold">{card.restaurant.name}</div>
+              <div className="text-muted text-sm mb-2">{card.restaurant.neighborhood || 'Bengaluru'}</div>
+              <div className="flex flex-wrap gap-2">
+                {card.slots.map(s => <span key={s.slot_id} className="pill border-ink">{s.time}</span>)}
+              </div>
             </Link>
-          </div>
+          ))}
         </div>
-      )}
+        {!(tonight.now?.length || tonight.later?.length) && (
+          <div className="text-muted text-sm">No live inventory in the next few hours. Check back soon or explore week planning above.</div>
+        )}
+      </section>
 
-      {/* Features for Logged In Users */}
-      {isLoggedIn && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Link to="/drops" className="card p-6 hover:shadow-lg transition-shadow group">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold group-hover:text-brand transition-colors">Restaurant Drops</h3>
-                <p className="text-muted text-sm">Exclusive access to coveted reservations</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/me" className="card p-6 hover:shadow-lg transition-shadow group">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold group-hover:text-brand transition-colors">My Reservations</h3>
-                <p className="text-muted text-sm">View and manage your bookings</p>
-              </div>
-            </div>
-          </Link>
+      {/* FEATURES GRID — everything Hogu offers */}
+      <section id="features" className="space-y-3">
+        <SectionTitle>Why Hogu works</SectionTitle>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Feature title="Fair Access (No Bots)">
+            Verified identity, device checks, and rate-limits stop hoarding & resale. Everyone gets a fair shot.
+          </Feature>
+          <Feature title="Drops You Can Trust">
+            Transparent release windows. Join once; we'll notify you in order. No constant refreshing.
+          </Feature>
+          <Feature title="Instant Notifies">
+            When cancels happen, we ping you immediately and auto-hold a table for a short window.
+          </Feature>
+          <Feature title="Card Holds & Deposits">
+            Restaurants reduce no-shows; diners get more real availability, not ghost slots.
+          </Feature>
+          <Feature title="Plan the Entire Week">
+            Browse day-by-day inventory and lock plans with friends in minutes.
+          </Feature>
+          <Feature title="Tonight Inventory">
+            See what's actually available right now — counters, bar seats, and last-minute releases.
+          </Feature>
         </div>
-      )}
+      </section>
+
+      {/* HOW IT WORKS — 1-2-3 */}
+      <section id="how" className="space-y-3">
+        <SectionTitle>How it works</SectionTitle>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Step n={1} title="Search & Pick">
+            Choose party size and the day — we show live inventory from top spots.
+          </Step>
+          <Step n={2} title="Hold & Confirm">
+            Tap a time to hold it. If a deposit's required, add a card and you're locked.
+          </Step>
+          <Step n={3} title="Get Notified">
+            Join Notifies for sold-out times. If a table opens, we'll ping you instantly.
+          </Step>
+        </div>
+      </section>
+
+      {/* TRUST / ANTI-SCAM */}
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-4">
+        <p className="font-medium">No bots. No fake accounts. No resale.</p>
+        <p className="text-sm mt-1">
+          Hogu verifies identities and uses queue fairness, throttling, and chargeable holds to keep things clean.
+          Your booking is yours — not a scalper's.
+        </p>
+      </section>
+
+      {/* CTA */}
+      <section className="flex flex-wrap gap-3">
+        <a href="#tonight" className="btn btn-accent">Find a table tonight</a>
+        <a href="#week" className="btn btn-primary">Plan the week</a>
+        {!token && <Link to="/login" className="btn">Log in</Link>}
+      </section>
+
+      {/* FOOTNOTE: separate restaurant endpoint */}
+      <footer className="text-muted text-xs">
+        Are you a restaurant? <Link to="/restaurant/login" className="underline">Sign in here</Link>.
+      </footer>
+    </div>
+  )
+}
+
+/** Inline components to keep this file drop-in friendly */
+function Feature({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="card">
+      <div className="font-medium mb-1">{title}</div>
+      <div className="text-muted text-sm">{children}</div>
+    </div>
+  )
+}
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="card">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm">{n}</div>
+        <div className="font-medium">{title}</div>
+      </div>
+      <div className="text-muted text-sm">{children}</div>
     </div>
   )
 }
