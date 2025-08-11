@@ -87,9 +87,9 @@ export default function Home() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <a href="#tonight" className="btn btn-accent">
+            <Link to="/explore-tonight" className="btn btn-accent">
               Find a table tonight
-            </a>
+            </Link>
             <a href="#week" className="btn bg-white text-brand">
               Plan the week
             </a>
@@ -271,36 +271,48 @@ export default function Home() {
           Grab something within the next 4 hours — perfect for spontaneous
           plans.
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...(tonight.now || []), ...(tonight.later || [])].map((card) => (
-            <Link
-              to={`/r/${card.restaurant.slug}`}
-              key={card.restaurant.id}
-              className="card hover:shadow-lg transition group"
-            >
-              {card.restaurant.hero_image_url && (
-                <img
-                  src={card.restaurant.hero_image_url}
-                  className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-                  alt={card.restaurant.name}
-                />
-              )}
-              <div className="text-xl font-bold text-brand mb-2">
-                {card.restaurant.name}
-              </div>
-              <div className="text-muted mb-4">
-                {card.restaurant.neighborhood || "Bengaluru"}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {card.slots.map((s) => (
-                  <span key={s.slot_id} className="pill border-ink">
-                    {s.time}
-                  </span>
-                ))}
-              </div>
-            </Link>
-          ))}
+        
+        {/* Horizontal Carousel */}
+        <div className="overflow-x-auto">
+          <div className="flex gap-4 pb-4">
+            {[...(tonight.now || []), ...(tonight.later || [])].map((card) => (
+              <Link
+                to={`/r/${card.restaurant.slug}`}
+                key={card.restaurant.id}
+                className="card hover:shadow-lg transition group flex-shrink-0 w-80"
+              >
+                {card.restaurant.hero_image_url && (
+                  <img
+                    src={card.restaurant.hero_image_url}
+                    className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
+                    alt={card.restaurant.name}
+                  />
+                )}
+                <div className="text-xl font-bold text-brand mb-2">
+                  {card.restaurant.name}
+                </div>
+                <div className="text-muted mb-4">
+                  {card.restaurant.neighborhood || "Bengaluru"}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {card.slots.map((s) => (
+                    <span key={s.slot_id} className="pill border-ink">
+                      {s.time}
+                    </span>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
+        
+        {/* Explore More Button */}
+        <div className="flex justify-center mt-4">
+          <Link to="/explore-tonight" className="btn btn-primary">
+            Explore More Tonight
+          </Link>
+        </div>
+        
         {!(tonight.now?.length || tonight.later?.length) && (
           <div className="text-muted text-sm">
             No live inventory in the next few hours. Check back soon or explore

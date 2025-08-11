@@ -9,6 +9,7 @@ import Profile from '../sections/Profile'
 import Drops from '../sections/Drops'
 import DropDetail from '../sections/DropDetail'
 import RestaurantLogin from '../sections/RestaurantLogin'
+import ExploreRestaurants from '../sections/ExploreRestaurants'
 
 export const router = createBrowserRouter([
   {
@@ -46,5 +47,9 @@ export const router = createBrowserRouter([
   {
     path: '/restaurant-login',
     element: <RestaurantLogin />
+  },
+  {
+    path: '/explore-tonight',
+    element: <ExploreRestaurants />
   }
 ])
