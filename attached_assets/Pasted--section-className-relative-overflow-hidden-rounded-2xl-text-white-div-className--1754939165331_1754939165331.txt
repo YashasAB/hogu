@@ -1,0 +1,51 @@
+      <section className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8">
+          <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
+            <Spark /> <span>Now live in Bengaluru</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold leading-tight">
+            Plan your week in BLR — guaranteed.
+          </h1>
+          <p className="mt-2 max-w-2xl opacity-90">
+            Hogu finds you real, bookable tables at the city's hardest spots.
+            Fair access, stress-free planning, and protection against bots &
+            fake accounts.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href="#tonight" className="btn btn-accent">
+              Find a table tonight
+            </a>
+            <a href="#week" className="btn bg-white text-brand">
+              Plan the week
+            </a>
+            {!token && (
+              <Link to="/login" className="btn btn-primary">
+                Log in
+              </Link>
+            )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm opacity-95">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Fair drops & notifies</div>
+              <div className="opacity-90">
+                Structured releases & instant pings. No FOMO refresh wars.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">No-bot protection</div>
+              <div className="opacity-90">
+                Verified identities & throttling keep access clean.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium">Card holds & deposits</div>
+              <div className="opacity-90">
+                Reduces no-shows so more real seats are available.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
