@@ -74,31 +74,7 @@ export default function ExploreRestaurants() {
     svg.setAttribute('viewBox', '0 0 800 600')
     svg.style.backgroundColor = '#f0f9ff'
 
-    // Add Bengaluru map elements
-    const mapElements = `
-      <!-- Outer Ring Road -->
-      <circle cx="400" cy="300" r="280" fill="none" stroke="#6b7280" stroke-width="8" opacity="0.6"/>
-      
-      <!-- Major Roads -->
-      <line x1="0" y1="200" x2="800" y2="200" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="0" y1="400" x2="800" y2="400" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="200" y1="0" x2="200" y2="600" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-      <line x1="600" y1="0" x2="600" y2="600" stroke="#6b7280" stroke-width="6" opacity="0.7"/>
-
-      <!-- Neighborhoods -->
-      <rect x="280" y="120" width="120" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" opacity="0.8"/>
-      <text x="340" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e40af">Indiranagar</text>
-      
-      <rect x="480" y="220" width="130" height="90" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2" opacity="0.8"/>
-      <text x="545" y="260" text-anchor="middle" font-size="14" font-weight="bold" fill="#166534">Koramangala</text>
-      
-      <rect x="180" y="400" width="120" height="80" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" opacity="0.8"/>
-      <text x="240" y="435" text-anchor="middle" font-size="14" font-weight="bold" fill="#92400e">HSR Layout</text>
-      
-      <rect x="80" y="180" width="100" height="70" rx="12" fill="#e9d5ff" stroke="#a855f7" stroke-width="2" opacity="0.8"/>
-      <text x="130" y="210" text-anchor="middle" font-size="12" font-weight="bold" fill="#7c3aed">UB City</text>
-    `
-    svg.innerHTML = mapElements
+    // No map styling elements - just empty background
 
     // Add restaurant markers
     restaurants.forEach((restaurant, index) => {
