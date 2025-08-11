@@ -10,6 +10,8 @@ import DropDetail from '../sections/DropDetail'
 import Profile from '../sections/Profile'
 import AdminProfile from '../sections/admin/AdminProfile'
 import AdminPhotos from '../sections/admin/AdminPhotos'
+import AdminDashboard from '../sections/admin/AdminDashboard'
+import RestaurantLogin from '../sections/RestaurantLogin'
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +26,8 @@ export const router = createBrowserRouter([
       { path: 'drops', element: <Drops /> },
       { path: 'drops/:id', element: <DropDetail /> },
       { path: 'me', element: <Profile /> },
+      { path: 'restaurant/login', element: <RestaurantLogin /> },
+      { path: 'admin/:restaurantId', element: <AdminDashboard /> },
       { path: 'admin/:restaurantId/profile', element: <AdminProfile /> },
       { path: 'admin/:restaurantId/photos', element: <AdminPhotos /> },
     ]

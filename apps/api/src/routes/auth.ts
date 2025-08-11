@@ -48,3 +48,58 @@ router.post('/login', async (req, res) => {
 });
 
 export default router;
+// Restaurant login endpoint
+router.post('/restaurant-login', async (req, res) => {
+  const { email, password } = req.body || {};
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  try {
+    // Find user with restaurant role
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        authProviders: true,
+        userRoles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check if user has restaurant role (STAFF or OWNER)
+    const restaurantRole = user.userRoles.find(ur => 
+      ur.role.name === 'STAFF' || ur.role.name === 'OWNER'
+    );
+
+    if (!restaurantRole || !restaurantRole.restaurantId) {
+      return res.status(401).json({ error: 'Not authorized for restaurant access' });
+    }
+
+    // Verify password (simplified for demo)
+    const authProvider = user.authProviders.find(ap => ap.provider === 'password');
+    if (!authProvider || authProvider.passwordHash !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate token (simplified for demo)
+    const token = `restaurant_${user.id}_${Date.now()}`;
+
+    res.json({ 
+      token, 
+      userId: user.id,
+      restaurantId: restaurantRole.restaurantId,
+      role: restaurantRole.role.name
+    });
+  } catch (error) {
+    console.error('Restaurant login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});

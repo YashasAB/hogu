@@ -290,6 +290,14 @@ export default function Home() {
               Create Account
             </Link>
           </div>
+          <div className="text-center mt-4">
+            <Link
+              to="/restaurant/login"
+              className="text-white text-sm hover:underline opacity-90"
+            >
+              Restaurant Owner? Sign in here →
+            </Link>
+          </div>
         </div>
       )}
 
