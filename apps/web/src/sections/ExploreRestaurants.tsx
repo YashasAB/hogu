@@ -88,7 +88,6 @@ export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const [selectedFilter, setSelectedFilter] = useState('all')
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
@@ -135,13 +134,13 @@ export default function ExploreRestaurants() {
         <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
           <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
           <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
-          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
+          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">View Details</a>
         </div>
       `)
       marker.addTo(map)
 
       marker.on('click', () => {
-        setSelectedRestaurant(restaurant)
+        window.location.href = `/r/${restaurant.slug}`
       })
     })
 
@@ -159,9 +158,7 @@ export default function ExploreRestaurants() {
     }
   }, [])
 
-  const closePopup = () => {
-    setSelectedRestaurant(null)
-  }
+  
 
   const filteredRestaurants = restaurants.filter(restaurant => {
     if (selectedFilter === 'all') return true
@@ -249,48 +246,7 @@ export default function ExploreRestaurants() {
           </div>
         </div>
 
-        {/* Restaurant Popup Modal */}
-        {selectedRestaurant && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-            <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">{selectedRestaurant.name}</h3>
-                  <button
-                    onClick={closePopup}
-                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none p-1"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <img
-                  src={selectedRestaurant.image}
-                  alt={selectedRestaurant.name}
-                  className="w-full h-40 object-cover rounded-xl mb-4"
-                />
-
-                <p className="text-gray-600 mb-4 font-medium">{selectedRestaurant.neighborhood}</p>
-
-                <div className="flex gap-3">
-                  <Link
-                    to={`/r/${selectedRestaurant.slug}`}
-                    className="btn btn-primary flex-1"
-                    onClick={closePopup}
-                  >
-                    Reserve Now
-                  </Link>
-                  <button
-                    onClick={closePopup}
-                    className="btn btn-secondary"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        
       </section>
 
       {/* Restaurant List - Mobile Fallback */}
