@@ -11,6 +11,10 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.get('/', (_req, res) => {
+  res.redirect('http://localhost:5173');
+});
+
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // Basic routes without database
