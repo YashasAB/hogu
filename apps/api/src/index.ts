@@ -7,8 +7,16 @@ import reservationsRouter from './routes/reservations';
 const app = express();
 const PORT = Number(process.env.PORT) || 3002;
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ message: 'Hogu API is running', status: 'healthy' });
+});
 
 // Routes
 app.use('/auth', authRouter);
