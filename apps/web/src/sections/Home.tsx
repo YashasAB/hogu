@@ -159,32 +159,37 @@ export default function Home() {
       </section>
 
       {/* WHAT PROBLEMS WE SOLVE */}
-      <section id="why" className="grid gap-4 sm:grid-cols-3">
-        <div className="card">
-          <div className="font-medium mb-1">
-            "Everything sells out in minutes."
-          </div>
-          <div className="text-muted text-sm">
-            We run timed <strong>drops</strong> & fair queues. No spam, no
-            scalpers.
-          </div>
-        </div>
-        <div className="card">
-          <div className="font-medium mb-1">
-            "I hate refreshing for cancels."
-          </div>
-          <div className="text-muted text-sm">
-            <strong>Notify</strong> pings you instantly and auto-holds a table
-            for a short window.
-          </div>
-        </div>
-        <div className="card">
-          <div className="font-medium mb-1">
-            "Last-minute plans? Forget it."
-          </div>
-          <div className="text-muted text-sm">
-            <strong>Tonight Near You</strong> shows live inventory for the next
-            few hours.
+      <section id="why" className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">
+                "Everything sells out in minutes."
+              </div>
+              <div className="opacity-90 text-sm">
+                We run timed <strong>drops</strong> & fair queues. No spam, no
+                scalpers.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">
+                "I hate refreshing for cancels."
+              </div>
+              <div className="opacity-90 text-sm">
+                <strong>Notify</strong> pings you instantly and auto-holds a table
+                for a short window.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">
+                "Last-minute plans? Forget it."
+              </div>
+              <div className="opacity-90 text-sm">
+                <strong>Tonight Near You</strong> shows live inventory for the next
+                few hours.
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -305,51 +310,99 @@ export default function Home() {
       </section>
 
       {/* FEATURES GRID — everything Hogu offers */}
-      <section id="features" className="space-y-3">
-        <SectionTitle>Why Hogu works</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Feature title="Fair Access (No Bots)">
-            Verified identity, device checks, and rate-limits stop hoarding &
-            resale. Everyone gets a fair shot.
-          </Feature>
-          <Feature title="Drops You Can Trust">
-            Transparent release windows. Join once; we'll notify you in order.
-            No constant refreshing.
-          </Feature>
-          <Feature title="Instant Notifies">
-            When cancels happen, we ping you immediately and auto-hold a table
-            for a short window.
-          </Feature>
-          <Feature title="Card Holds & Deposits">
-            Restaurants reduce no-shows; diners get more real availability, not
-            ghost slots.
-          </Feature>
-          <Feature title="Plan the Entire Week">
-            Browse day-by-day inventory and lock plans with friends in minutes.
-          </Feature>
-          <Feature title="Tonight Inventory">
-            See what's actually available right now — counters, bar seats, and
-            last-minute releases.
-          </Feature>
+      <section id="features" className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
+          <h2 className="text-xl font-semibold">Why Hogu works</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Fair Access (No Bots)</div>
+              <div className="opacity-90 text-sm">
+                Verified identity, device checks, and rate-limits stop hoarding &
+                resale. Everyone gets a fair shot.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Drops You Can Trust</div>
+              <div className="opacity-90 text-sm">
+                Transparent release windows. Join once; we'll notify you in order.
+                No constant refreshing.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Instant Notifies</div>
+              <div className="opacity-90 text-sm">
+                When cancels happen, we ping you immediately and auto-hold a table
+                for a short window.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Card Holds & Deposits</div>
+              <div className="opacity-90 text-sm">
+                Restaurants reduce no-shows; diners get more real availability, not
+                ghost slots.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Plan the Entire Week</div>
+              <div className="opacity-90 text-sm">
+                Browse day-by-day inventory and lock plans with friends in minutes.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="font-medium mb-1">Tonight Inventory</div>
+              <div className="opacity-90 text-sm">
+                See what's actually available right now — counters, bar seats, and
+                last-minute releases.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* HOW IT WORKS — 1-2-3 */}
-      <section id="how" className="space-y-3">
-        <SectionTitle>How it works</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Step n={1} title="Search & Pick">
-            Choose party size and the day — we show live inventory from top
-            spots.
-          </Step>
-          <Step n={2} title="Hold & Confirm">
-            Tap a time to hold it. If a deposit's required, add a card and
-            you're locked.
-          </Step>
-          <Step n={3} title="Get Notified">
-            Join Notifies for sold-out times. If a table opens, we'll ping you
-            instantly.
-          </Step>
+      <section id="how" className="relative overflow-hidden rounded-2xl text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
+          <h2 className="text-xl font-semibold">How it works</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div className="font-medium">Search & Pick</div>
+              </div>
+              <div className="opacity-90 text-sm">
+                Choose party size and the day — we show live inventory from top
+                spots.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div className="font-medium">Hold & Confirm</div>
+              </div>
+              <div className="opacity-90 text-sm">
+                Tap a time to hold it. If a deposit's required, add a card and
+                you're locked.
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div className="font-medium">Get Notified</div>
+              </div>
+              <div className="opacity-90 text-sm">
+                Join Notifies for sold-out times. If a table opens, we'll ping you
+                instantly.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
