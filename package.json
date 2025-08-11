@@ -1,0 +1,14 @@
+{
+  "name": "hogu",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "postinstall": "pnpm -C apps/api prisma:generate",
+    "dev": "concurrently -n api,web -c blue,magenta \"pnpm -C apps/api dev\" \"pnpm -C apps/web dev\"",
+    "build": "pnpm -C apps/web build && pnpm -C apps/api build",
+    "start": "pnpm -C apps/api start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
