@@ -1,0 +1,148 @@
+Goal
+Build Hogu — a Resy-style reservations layer for Bengaluru that solves scarcity fairly (drops, waitlists, deposits), protects restaurant yield (no-show controls, shoulder optimization), and creates premium access (bank/concierge partnerships) without discounts. This spec defines architecture, data model, APIs, React structure, styling tokens, and flows so an engineering team can implement without guesswork.
+1) Architecture
+Clients
+Web app (React + TypeScript + Vite) for diners & staff (mobile-first).
+Backoffice/Admin embedded as RBAC routes.
+Backend
+Node 18+, Express (or Nest), OpenAPI docs.
+PostgreSQL (prod), SQLite ok for dev.
+Redis for queues (BullMQ): inventory generation, holds expiry, notify match, drop invites, payments retries, webhooks.
+Payments: Stripe/Razorpay abstraction (card-on-file, deposits, no-show fees).
+Notifications: Email (SES/SendGrid), SMS (Twilio), Push (FCM/WebPush).
+Object storage: S3 (images, menus, floor plans).
+Optional POS adapters later (PetPooja/DotPe/Toast).
+Infra
+Monorepo with PNPM workspaces; Docker; GitHub Actions CI.
+2) Monorepo layout
+/hogu
+  /apps
+    /web            # React/Vite/Tailwind
+    /api            # Node/Express (or Nest)
+    /admin-scripts  # seed/import tools
+  /packages
+    /schemas        # Shared zod DTOs
+    /ui             # (optional) shared UI
+  /infra
+    /db             # migrations (Prisma/Knex)
+    /docker         # container files
+  pnpm-workspace.yaml
+  README.md
+3) Data model (PostgreSQL)
+All IDs UUID; created_at, updated_at on most tables.
+Identity & RBAC
+users(id, email UQ, phone UQ, full_name, country_code, marketing_opt_in, deleted_at)
+auth_providers(id, user_id FK, provider ENUM('password','google','apple','otp'), provider_id, password_hash, last_login_at)
+roles(id, name ENUM('DINER','STAFF','OWNER','ADMIN'))
+user_roles(user_id, role_id, restaurant_id NULL) UQ(user_id, role_id, restaurant_id)
+devices(id, user_id NULL, fingerprint, user_agent, last_seen_at)
+Restaurants & Inventory
+restaurants(id, name, slug UQ, legal_name, phone, email, website, instagram_url, hero_image_url, cuisine_tags text[], city, neighborhood, address, lat, lng, timezone, status ENUM('DRAFT','ACTIVE','PAUSED'))
+restaurant_photos(id, restaurant_id FK, url, width INT NULL, height INT NULL, sort_order INT DEFAULT 0, alt TEXT NULL, created_at)
+areas(id, restaurant_id FK, name ENUM('DINING_ROOM','BAR','COUNTER','PATIO','PRIVATE'))
+seating_units(id, restaurant_id FK, area_id FK, label, capacity_min, capacity_max, is_shared bool)
+opening_hours(id, restaurant_id FK, dow INT, open_time, close_time)
+booking_policies(id, restaurant_id FK, min_party, max_party, slot_interval_minutes, booking_window_days, cutoff_minutes, hold_minutes, cancel_window_minutes, no_show_fee_cents, deposit_cents, currency)
+special_closures(id, restaurant_id FK, starts_at, ends_at, reason)
+inventory_slots(id, restaurant_id FK, date, time, party_size, area_id FK NULL, capacity_total, capacity_held_partner, capacity_held_drop, capacity_booked, capacity_blocked, UQ(restaurant_id, date, time, party_size, area_id))
+partner_allocation(id, restaurant_id FK, partner_id FK, percent_held, notes)
+Reservations, Drops, Waitlist
+reservations(id, restaurant_id FK, user_id FK, inventory_slot_id FK, status ENUM('HELD','CONFIRMED','SEATED','CANCELLED','NO_SHOW'), party_size, source ENUM('WEB','STAFF','DROP','NOTIFY','PARTNER'), hold_expires_at, notes, referral_code)
+reservation_status_history(id, reservation_id FK, from_status, to_status, reason, actor ENUM('SYSTEM','USER','STAFF'), at)
+drops(id, restaurant_id, name, starts_at, ends_at, visible_at, description, is_public)
+drop_inventory(id, drop_id, inventory_slot_id, seats_offered)
+drop_queues(id, drop_id, user_id, joined_at, score, device_id, status ENUM('PENDING','PINGED','EXPIRED','CONFIRMED'))
+waitlist(id, restaurant_id, user_id, desired_date, party_size, earliest_time, latest_time, area_pref, notes, status ENUM('ACTIVE','PAUSED','FULFILLED','EXPIRED'))
+notify_rules(id, user_id, restaurant_id, party_min, party_max, days_ahead_min, days_ahead_max, time_range, areas)
+notify_events(id, user_id, restaurant_id, inventory_slot_id, sent_at, channel ENUM('PUSH','SMS','EMAIL'), accepted_reservation_id NULL FK)
+Payments
+payment_providers(id, name ENUM('STRIPE','RAZORPAY'))
+payment_methods(id, user_id FK, provider_id FK, token, brand, last4, exp_month, exp_year, billing_name)
+payment_intents(id, reservation_id FK, type ENUM('DEPOSIT','NO_SHOW','PREPAID'), amount_cents, currency, provider_id FK, provider_ref, status ENUM('REQUIRES_ACTION','SUCCEEDED','FAILED','CANCELLED'))
+charges(id, payment_intent_id FK, amount_cents, currency, provider_charge_id, status, error_code, error_message, created_at)
+Partners, POS, Auditing (summary)
+bank_partners, partner_memberships, pos_integrations, pos_checks, webhooks_outbound, webhook_logs, audit_logs, notification_channels, rate_limits, device_flags.
+Key indexes: inventory_slots(restaurant_id,date,time), reservations(restaurant_id,status,inventory_slot_id), drop_queues(drop_id,score DESC,joined_at ASC).
+4) Core availability logic
+Generate inventory by policy window; compute capacities per slot; hold partner/drop capacity as reserved buckets.
+Hold: clicking a slot creates reservation(HELD) + increments capacity; hold_expires_at = now + hold_minutes; release job on expiry.
+Confirm: attach payment (if deposit) → create intent → on success, CONFIRMED; else rollback.
+Cancel/no-show: inside cancel window, charge fee; mark NO_SHOW if not seated by grace.
+Notify: when capacity frees, match rules → push deep-link that auto-holds briefly.
+Drops: scheduled queue with anti-bot checks; invite waves, each invitation auto-holds for 2–3 mins.
+5) HTTP API (summary)
+Auth
+POST /auth/register, POST /auth/login, POST /auth/otp/start, POST /auth/otp/verify, POST /auth/oauth/:provider, POST /auth/refresh, POST /auth/logout.
+Restaurants & media
+GET /restaurants?city=&cuisine=&q=
+GET /restaurants/:slug
+GET /restaurants/:id/availability?date=YYYY-MM-DD&party_size=2
+Media/Profile (NEW)
+PATCH /restaurants/:id { name?, neighborhood?, instagram_url?, hero_image_url? }
+GET /restaurants/:id/photos
+POST /restaurants/:id/photos/presign → { url, fields, key, publicUrl } (S3 direct upload)
+POST /restaurants/:id/photos { url, alt?, sort_order? } (records uploaded file or dev URL)
+PATCH /restaurants/:id/photos/:photoId { alt?, sort_order? }
+DELETE /restaurants/:id/photos/:photoId
+Reservations
+POST /reservations/hold, POST /reservations/:id/confirm, POST /reservations/:id/cancel, GET /reservations.
+Waitlist & Drops
+POST /waitlist, GET /waitlist, PATCH /waitlist/:id, GET /drops, GET /drops/:id, POST /drops/:id/join_queue, POST /drops/:id/accept_invite.
+Staff/Admin
+GET /staff/overview?date=, POST /staff/walkins/hold, POST /staff/reservations/:id/seat, POST /staff/reservations/:id/no_show, PATCH /restaurants/:id/policies, POST /restaurants/:id/areas, POST /restaurants/:id/drops, POST /drops/:id/add_inventory.
+Security: JWT + refresh, RBAC per route, rate limits, idempotency on hold/confirm/cancel.
+
+6) React app (routes, pages, components)
+/apps/web/src
+  /components
+    /media/PhotoCarousel.tsx
+  /sections
+    Home.tsx, Login.tsx, Signup.tsx, RestaurantDetail.tsx, Hold.tsx,
+    Drops.tsx, DropDetail.tsx, Profile.tsx
+    /admin/AdminProfile.tsx, /admin/AdminPhotos.tsx
+  /routing/router.tsx (routes below)
+User-facing routes
+/ Discover (search + cards)
+/login, /signup
+/r/:slug Restaurant Detail → Hero (hero_image_url), Instagram link (instagram_url), Photo Carousel (restaurant_photos), Policies, Availability grid
+/r/:slug/hold/:reservationId Hold & Confirm
+/drops, /drops/:id
+/me
+Admin routes
+/admin/:restaurantId/profile → edit name, neighborhood, Instagram URL, hero image
+/admin/:restaurantId/photos → upload/reorder/delete gallery
+Key widgets
+AvailabilityGrid (fetches time slots, shows pills)
+PhotoCarousel (snap-scroll, lazy images)
+InstagramLink (small pill on hero)
+7) Styling tokens (Resy-inspired, not copied)
+Tailwind CSS with CSS vars:
+:root{
+  --brand:#0f172a; --accent:#ff5a5f;
+  --ink:#111827; --ink-muted:#6b7280;
+  --paper:#ffffff; --paper-alt:#f8fafc;
+}
+Rounded cards rounded-2xl, pills, strong focus rings.
+Hero uses hero_image_url with subtle overlay; 3:2 photos, swipe on mobile.
+8) Jobs, Ops, Testing (abridged)
+Jobs: inventory:generate, holds:expire, notify:match, drops:invite_wave, payments:retry, webhooks:deliver.
+Observability: pino logs, Sentry, Prometheus counters (holds_created, reservations_confirmed, notify_sent, etc.), OpenTelemetry traces.
+Tests: unit (policy math), integration (hold→confirm, cancel→fee), E2E (Playwright), load (k6 on availability/join_queue).
+9) Implementation checklist (page by page)
+Auth
+Build /login, /signup, /otp (email/phone/OTP later).
+Persist session; route guards.
+Discover & Restaurant
+GET /restaurants list + filters.
+Restaurant Detail: render hero, IG link, carousel; call availability; POST /reservations/hold on time pill.
+Hold & Confirm
+Show countdown; attach payment if deposit; confirm; success page + .ics.
+Photos & IG (NEW)
+Admin Profile page → PATCH profile.
+Admin Photos page → S3 presign → direct POST → record URL; reorder/alt/delete.
+Waitlist/Notify
+Join/Manage waitlist; background notify:match sends deep-links.
+Drops
+List, details, join queue, invite modal.
+Staff/Admin
+Service board; policies/hours/areas/drops config.
