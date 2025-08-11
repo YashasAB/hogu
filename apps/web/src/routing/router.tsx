@@ -1,35 +1,50 @@
+
 import { createBrowserRouter } from 'react-router-dom'
-import App from '../shells/App'
 import Home from '../sections/Home'
 import Login from '../sections/Login'
 import Signup from '../sections/Signup'
 import RestaurantDetail from '../sections/RestaurantDetail'
 import Hold from '../sections/Hold'
+import Profile from '../sections/Profile'
 import Drops from '../sections/Drops'
 import DropDetail from '../sections/DropDetail'
-import Profile from '../sections/Profile'
-import AdminProfile from '../sections/admin/AdminProfile'
-import AdminPhotos from '../sections/admin/AdminPhotos'
-import AdminDashboard from '../sections/admin/AdminDashboard'
 import RestaurantLogin from '../sections/RestaurantLogin'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
-    children: [
-      { index: true, element: <Home /> },
-      { path: 'login', element: <Login /> },
-      { path: 'signup', element: <Signup /> },
-      { path: 'r/:slug', element: <RestaurantDetail /> },
-      { path: 'r/:slug/hold/:reservationId', element: <Hold /> },
-      { path: 'drops', element: <Drops /> },
-      { path: 'drops/:id', element: <DropDetail /> },
-      { path: 'me', element: <Profile /> },
-      { path: 'restaurant/login', element: <RestaurantLogin /> },
-      { path: 'admin/:restaurantId', element: <AdminDashboard /> },
-      { path: 'admin/:restaurantId/profile', element: <AdminProfile /> },
-      { path: 'admin/:restaurantId/photos', element: <AdminPhotos /> },
-    ]
+    element: <Home />
+  },
+  {
+    path: '/login',
+    element: <Login />
+  },
+  {
+    path: '/signup', 
+    element: <Signup />
+  },
+  {
+    path: '/restaurant/:id',
+    element: <RestaurantDetail />
+  },
+  {
+    path: '/hold/:id',
+    element: <Hold />
+  },
+  {
+    path: '/profile',
+    element: <Profile />
+  },
+  {
+    path: '/drops',
+    element: <Drops />
+  },
+  {
+    path: '/drops/:id',
+    element: <DropDetail />
+  },
+  {
+    path: '/restaurant-login',
+    element: <RestaurantLogin />
   }
 ])
