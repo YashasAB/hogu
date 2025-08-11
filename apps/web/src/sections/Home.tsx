@@ -227,19 +227,19 @@ export default function Home() {
             <Link
               to={`/r/${card.restaurant.slug}`}
               key={card.restaurant.id}
-              className="card hover:shadow-lg transition"
+              className="card hover:shadow-lg transition group"
             >
               {card.restaurant.hero_image_url && (
                 <img
                   src={card.restaurant.hero_image_url}
-                  className="w-full h-36 object-cover rounded-2xl mb-2"
+                  className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
                   alt={card.restaurant.name}
                 />
               )}
-              <div className="text-lg font-semibold">
+              <div className="text-xl font-bold text-brand mb-2">
                 {card.restaurant.name}
               </div>
-              <div className="text-muted text-sm mb-2">
+              <div className="text-muted mb-4">
                 {card.restaurant.neighborhood || "Bengaluru"}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -271,19 +271,19 @@ export default function Home() {
             <Link
               to={`/r/${card.restaurant.slug}`}
               key={card.restaurant.id}
-              className="card hover:shadow-lg transition"
+              className="card hover:shadow-lg transition group"
             >
               {card.restaurant.hero_image_url && (
                 <img
                   src={card.restaurant.hero_image_url}
-                  className="w-full h-36 object-cover rounded-2xl mb-2"
+                  className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
                   alt={card.restaurant.name}
                 />
               )}
-              <div className="text-lg font-semibold">
+              <div className="text-xl font-bold text-brand mb-2">
                 {card.restaurant.name}
               </div>
-              <div className="text-muted text-sm mb-2">
+              <div className="text-muted mb-4">
                 {card.restaurant.neighborhood || "Bengaluru"}
               </div>
               <div className="flex flex-wrap gap-2">
