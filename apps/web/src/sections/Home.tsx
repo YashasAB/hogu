@@ -363,21 +363,6 @@ export default function Home() {
         </p>
       </section>
 
-      {/* CTA */}
-      <section className="flex flex-wrap gap-3">
-        <a href="#tonight" className="btn btn-accent">
-          Find a table tonight
-        </a>
-        <a href="#week" className="btn btn-primary">
-          Plan the week
-        </a>
-        {!token && (
-          <Link to="/login" className="btn">
-            Log in
-          </Link>
-        )}
-      </section>
-
       {/* FOOTNOTE: separate restaurant endpoint */}
       <footer className="text-muted text-xs">
         Are you a restaurant?{" "}
