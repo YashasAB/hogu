@@ -1,13 +1,9 @@
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { PrismaClient } from '@prisma/client';
-import authRouter from './routes/auth';
-import restaurantRouter from './routes/restaurants';
-import reservationsRouter from './routes/reservations';
 
-const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -17,9 +13,21 @@ app.use(cookieParser());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-app.use('/auth', authRouter);
-app.use('/restaurants', restaurantRouter);
-app.use('/reservations', reservationsRouter);
+// Basic routes without database
+app.get('/restaurants', (_req, res) => {
+  res.json([
+    { id: '1', name: 'Demo Restaurant 1', slug: 'demo-1' },
+    { id: '2', name: 'Demo Restaurant 2', slug: 'demo-2' }
+  ]);
+});
+
+app.post('/auth/login', (req, res) => {
+  res.json({ token: 'demo-token', user: { id: '1', email: 'demo@example.com' } });
+});
+
+app.post('/auth/register', (req, res) => {
+  res.json({ token: 'demo-token', user: { id: '1', email: 'demo@example.com' } });
+});
 
 app.listen(PORT, () => {
   console.log(`Hogu API listening on http://localhost:${PORT}`);
