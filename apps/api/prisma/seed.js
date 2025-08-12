@@ -151,18 +151,23 @@ async function main() {
     // Add some sample time slots for tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowDateStr = tomorrow.toISOString().split('T')[0];
+
+    // Add time slots for today
+    const today = new Date();
+    const todayDateStr = today.toISOString().split('T')[0];
 
     const timeSlots = ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30'];
     const partySizes = [2, 4, 6];
 
+    // Create slots for tomorrow for all restaurants
     for (const time of timeSlots) {
       for (const partySize of partySizes) {
         await prisma.timeSlot.upsert({
           where: {
             restaurantId_date_time_partySize: {
               restaurantId: createdRestaurant.id,
-              date: dateStr,
+              date: tomorrowDateStr,
               time: time,
               partySize: partySize,
             },
@@ -170,12 +175,39 @@ async function main() {
           update: {},
           create: {
             restaurantId: createdRestaurant.id,
-            date: dateStr,
+            date: tomorrowDateStr,
             time: time,
             partySize: partySize,
             status: 'AVAILABLE',
           },
         });
+      }
+    }
+
+    // Add today's slots specifically for ZLB 23 (first restaurant - index 0)
+    if (createdRestaurant.slug === 'zlb') {
+      const todayTimeSlots = ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
+      for (const time of todayTimeSlots) {
+        for (const partySize of partySizes) {
+          await prisma.timeSlot.upsert({
+            where: {
+              restaurantId_date_time_partySize: {
+                restaurantId: createdRestaurant.id,
+                date: todayDateStr,
+                time: time,
+                partySize: partySize,
+              },
+            },
+            update: {},
+            create: {
+              restaurantId: createdRestaurant.id,
+              date: todayDateStr,
+              time: time,
+              partySize: partySize,
+              status: 'AVAILABLE',
+            },
+          });
+        }
       }
     }
   }
