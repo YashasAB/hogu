@@ -5,8 +5,9 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "npm run dev"]
+run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
 deploymentTarget = "cloudrun"
+build = ["sh", "-c", "cd apps/web && npm run build && cd ../api && npm run build"]
 
 [workflows]
 runButton = "Development"
