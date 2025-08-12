@@ -7,11 +7,7 @@ channel = "stable-25_05"
 [deployment]
 run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
 deploymentTarget = "cloudrun"
-build = ["sh", "-c", """
-pnpm config set store-dir .pnpm-store && echo '@prisma/client
-@prisma/engines
-esbuild
-prisma' | pnpm approve-builds && pnpm install --no-frozen-lockfile && cd apps/web && npm run build && cd ../api && npm run build"""]
+build = ["sh", "-c", "pnpm config set store-dir .pnpm-store && pnpm config set auto-install-peers true && pnpm install --no-frozen-lockfile && cd apps/web && npm run build && cd ../api && npm run build && cp -r ../web/dist ./public"]
 
 [workflows]
 runButton = "Development"
