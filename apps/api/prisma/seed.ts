@@ -1,169 +1,154 @@
+
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('🌱 Starting database seed...');
 
-  // Create cuisine tags first
-  const cocktailsTag = await prisma.cuisineTag.upsert({
-    where: { name: 'cocktails' },
+  // Create sample restaurants
+  const restaurant1 = await prisma.restaurant.upsert({
+    where: { slug: 'demo-restaurant' },
     update: {},
-    create: { name: 'cocktails' },
-  });
-
-  const dinnerTag = await prisma.cuisineTag.upsert({
-    where: { name: 'dinner' },
-    update: {},
-    create: { name: 'dinner' },
-  });
-
-  const hotTag = await prisma.cuisineTag.upsert({
-    where: { name: 'hot' },
-    update: {},
-    create: { name: 'hot' },
-  });
-
-  // Create restaurants
-  const restaurants = [
-    {
-      name: "ZLB 23 (at The Leela Palace)",
-      slug: "zlb-23",
-      emoji: "🍸",
-      latitude: 12.960695,
-      longitude: 77.648663,
-      neighborhood: "Old Airport Rd",
-      category: "cocktails",
+    create: {
+      name: 'Demo Restaurant',
+      slug: 'demo-restaurant',
+      emoji: '🍽️',
+      latitude: 12.9716,
+      longitude: 77.5946,
+      neighborhood: 'Indiranagar',
+      category: 'dinner',
       isHot: true,
-      heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/zlb23",
-      website: "https://theleela.com",
-      email: "reservations@zlb23.com",
-      cuisineTagIds: [cocktailsTag.id, hotTag.id],
-    },
-    {
-      name: "Soka",
-      slug: "soka",
-      emoji: "🍸",
-      latitude: 12.965215,
-      longitude: 77.638143,
-      neighborhood: "Koramangala",
-      category: "cocktails",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/soka",
-      email: "hello@soka.in",
-      cuisineTagIds: [cocktailsTag.id],
-    },
-    {
-      name: "Bar Spirit Forward",
-      slug: "bar-spirit-forward",
-      emoji: "🥃",
-      latitude: 12.975125,
-      longitude: 77.602350,
-      neighborhood: "CBD",
-      category: "cocktails",
-      isHot: true,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "reservations@spiritforward.in",
-      cuisineTagIds: [cocktailsTag.id, hotTag.id],
-    },
-    {
-      name: "Naru Noodle Bar",
-      slug: "naru-noodle-bar",
-      emoji: "🍱",
-      latitude: 12.958431,
-      longitude: 77.592895,
-      neighborhood: "CBD",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/naru",
-      email: "reservations@naru.in",
-      cuisineTagIds: [dinnerTag.id],
-    },
-    {
-      name: "Pizza 4P's (Indiranagar)",
-      slug: "pizza-4ps-indiranagar",
-      emoji: "🍕",
-      latitude: 12.969968,
-      longitude: 77.636089,
-      neighborhood: "Indiranagar",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      website: "https://pizza4ps.com",
-      email: "indiranagar@pizza4ps.com",
-      cuisineTagIds: [dinnerTag.id],
-    },
-  ];
-
-  for (const restaurantData of restaurants) {
-    const { cuisineTagIds, ...restaurant } = restaurantData;
-
-    const createdRestaurant = await prisma.restaurant.upsert({
-      where: { slug: restaurant.slug },
-      update: restaurant,
-      create: restaurant,
-    });
-
-    // Connect cuisine tags
-    for (const tagId of cuisineTagIds) {
-      await prisma.restaurantCuisineTag.upsert({
-        where: {
-          restaurantId_cuisineTagId: {
-            restaurantId: createdRestaurant.id,
-            cuisineTagId: tagId,
-          },
-        },
-        update: {},
-        create: {
-          restaurantId: createdRestaurant.id,
-          cuisineTagId: tagId,
-        },
-      });
+      email: 'demo@restaurant.com',
+      website: 'https://demo-restaurant.com'
     }
+  });
 
-    // Add some sample time slots for tomorrow
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0];
-
-    const timeSlots = ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30'];
-    const partySizes = [2, 4, 6];
-
-    for (const time of timeSlots) {
-      for (const partySize of partySizes) {
-        await prisma.timeSlot.upsert({
-          where: {
-            restaurantId_date_time_partySize: {
-              restaurantId: createdRestaurant.id,
-              date: dateStr,
-              time: time,
-              partySize: partySize,
-            },
-          },
-          update: {},
-          create: {
-            restaurantId: createdRestaurant.id,
-            date: dateStr,
-            time: time,
-            partySize: partySize,
-            status: 'AVAILABLE',
-          },
-        });
-      }
+  const restaurant2 = await prisma.restaurant.upsert({
+    where: { slug: 'sample-bar' },
+    update: {},
+    create: {
+      name: 'Sample Bar',
+      slug: 'sample-bar',
+      emoji: '🍸',
+      latitude: 12.9352,
+      longitude: 77.6245,
+      neighborhood: 'Koramangala',
+      category: 'cocktails',
+      isHot: false,
+      email: 'hello@samplebar.com'
     }
-  }
+  });
 
-  console.log('Database seeded successfully!');
+  // Create sample users
+  const user1 = await prisma.user.upsert({
+    where: { email: 'john@example.com' },
+    update: {},
+    create: {
+      email: 'john@example.com',
+      name: 'John Doe',
+      phone: '+919876543210'
+    }
+  });
+
+  const user2 = await prisma.user.upsert({
+    where: { email: 'jane@example.com' },
+    update: {},
+    create: {
+      email: 'jane@example.com',
+      name: 'Jane Smith',
+      phone: '+919876543211'
+    }
+  });
+
+  // Hash passwords for authentication
+  const hashedRestaurantPassword = await bcrypt.hash('restaurant123', 10);
+  const hashedUserPassword1 = await bcrypt.hash('user123', 10);
+  const hashedUserPassword2 = await bcrypt.hash('jane123', 10);
+
+  // Create restaurant authentication records
+  await prisma.restaurantAuth.upsert({
+    where: { restaurantId: restaurant1.id },
+    update: {},
+    create: {
+      restaurantId: restaurant1.id,
+      username: 'demo-restaurant',
+      passwordHash: hashedRestaurantPassword
+    }
+  });
+
+  await prisma.restaurantAuth.upsert({
+    where: { restaurantId: restaurant2.id },
+    update: {},
+    create: {
+      restaurantId: restaurant2.id,
+      username: 'sample-bar',
+      passwordHash: hashedRestaurantPassword
+    }
+  });
+
+  // Create user authentication records
+  await prisma.userAuth.upsert({
+    where: { userId: user1.id },
+    update: {},
+    create: {
+      userId: user1.id,
+      username: 'johndoe',
+      passwordHash: hashedUserPassword1
+    }
+  });
+
+  await prisma.userAuth.upsert({
+    where: { userId: user2.id },
+    update: {},
+    create: {
+      userId: user2.id,
+      username: 'janesmith',
+      passwordHash: hashedUserPassword2
+    }
+  });
+
+  // Create user detail records
+  await prisma.userDetail.upsert({
+    where: { userId: user1.id },
+    update: {},
+    create: {
+      userId: user1.id,
+      name: 'John Doe',
+      phoneNumber: '+919876543210',
+      email: 'john@example.com',
+      preferredHood: 'Indiranagar'
+    }
+  });
+
+  await prisma.userDetail.upsert({
+    where: { userId: user2.id },
+    update: {},
+    create: {
+      userId: user2.id,
+      name: 'Jane Smith',
+      phoneNumber: '+919876543211',
+      email: 'jane@example.com',
+      preferredHood: 'Koramangala'
+    }
+  });
+
+  console.log('✅ Database seeded successfully!');
+  console.log('📊 Created:');
+  console.log('- 2 Restaurants');
+  console.log('- 2 Users');
+  console.log('- 2 Restaurant Auth records');
+  console.log('- 2 User Auth records');
+  console.log('- 2 User Detail records');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
   });
