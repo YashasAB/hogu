@@ -323,72 +323,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* QUICK FILTERS (mobile-first) */}
-      <section className="relative z-[1] -mt-10 rounded-2xl bg-slate-900/85 ring-1 ring-white/10 p-4 space-y-3">
-        {/* Inputs row */}
-        <div className="grid grid-cols-2 gap-3 items-end">
-          {/* Party size */}
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-300">Party size</label>
-            <select
-              className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500/30"
-              value={party}
-              onChange={(e) => setParty(e.target.value === '' ? '' : parseInt(e.target.value))}
-              aria-label="Party size"
-            >
-              <option value="" className="text-gray-400">Select party size</option>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
-                <option key={size} value={size} className="text-white bg-slate-800">
-                  {size} {size === 1 ? 'person' : 'people'}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* QUICK FILTERS — compact, hero-styled */}
+      <section className="relative -mt-8 overflow-hidden rounded-2xl">
+        {/* same gradient style as your hero */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
+        <div className="relative z-10 px-4 py-4 sm:px-6">
+          <div className="mx-auto max-w-md sm:max-w-2xl">
+            {/* Inputs row */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto] sm:gap-3 items-end">
+              {/* Party size */}
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-white/90">Party size</label>
+                <select
+                  className="h-12 w-full rounded-xl bg-white/10 border border-white/20 px-3 text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  value={party}
+                  onChange={(e) => setParty(e.target.value === '' ? '' : parseInt(e.target.value))}
+                  aria-label="Party size"
+                >
+                  <option value="">Select party size</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
+                    <option key={size} value={size}>
+                      {size} {size === 1 ? 'person' : 'people'}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Date */}
-          <div className="space-y-1">
-            <DarkDatePicker
-              value={selectedDate}
-              onChange={setSelectedDate}
-              min={new Date()}
-              label="Date"
-            />
+              {/* Date */}
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-white/90">Date</label>
+                <input
+                  type="date"
+                  min={today}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  aria-label="Date"
+                  className="h-12 w-full rounded-xl bg-white/10 border border-white/20 px-3 text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/40"
+                />
+              </div>
+
+              {/* CTA (stacks under on mobile, inline on sm+) */}
+              {user ? (
+                <button
+                  onClick={() => {
+                    if (party !== '' && selectedDate) {
+                      window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
+                    }
+                  }}
+                  disabled={party === '' || !selectedDate}
+                  className={`h-12 w-full rounded-xl font-semibold transition-all ${
+                    party !== '' && selectedDate
+                      ? 'bg-white text-brand hover:opacity-95'
+                      : 'bg-white/30 text-white/60 cursor-not-allowed'
+                  }`}
+                >
+                  Explore now
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="h-12 w-full inline-flex items-center justify-center rounded-xl font-semibold bg-white text-brand hover:opacity-95"
+                >
+                  Log in
+                </Link>
+              )}
+            </div>
+
+            {/* Meta row */}
+            <div className="mt-2 flex items-center justify-between text-xs text-white/85">
+              <span className="inline-flex items-center gap-1">
+                <span aria-hidden>📍</span> Bengaluru
+              </span>
+              <span>Plan for {selectedDate || '—'}</span>
+            </div>
           </div>
         </div>
-
-        {/* City / meta row */}
-        <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800 border border-white/10 text-slate-200 text-xs">
-            <span aria-hidden>📍</span> Bengaluru
-          </span>
-          <span className="text-[11px] text-slate-400">Plan for {selectedDate || '—'}</span>
-        </div>
-
-        {/* CTA */}
-        {user ? (
-          <button
-            onClick={() => {
-              if (party !== '' && selectedDate) {
-                window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
-              }
-            }}
-            disabled={party === '' || !selectedDate}
-            className={`h-12 w-full rounded-xl font-semibold transition-all ${
-              party !== '' && selectedDate
-                ? 'bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95'
-                : 'bg-slate-800 text-slate-400 border border-white/10 cursor-not-allowed'
-            }`}
-          >
-            Explore now
-          </button>
-        ) : (
-          <Link
-            to="/login"
-            className="h-12 w-full inline-flex items-center justify-center rounded-xl font-semibold bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95"
-          >
-            Log in
-          </Link>
-        )}
       </section>
 
       {/* WHAT PROBLEMS WE SOLVE */}
@@ -418,9 +427,7 @@ export default function Home() {
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">
-                "Last-minute plans? Forget it."
-              </div>
+              <div className="font-medium mb-1">"Last-minute plans? Forget it."</div>
               <div className="opacity-90 text-sm">
                 <strong>Tonight Near You</strong> shows live inventory for the
                 next few hours.
