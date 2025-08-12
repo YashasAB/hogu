@@ -153,7 +153,6 @@ router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRequ
 
     const createdSlots = await prisma.timeSlot.createMany({
       data: slots,
-      skipDuplicates: true,
     });
 
     res.json({ created: createdSlots.count });
