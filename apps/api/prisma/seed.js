@@ -63,7 +63,7 @@ async function main() {
       neighborhood: "CBD",
       category: "cocktails",
       isHot: true,
-      heroImageUrl: "/api/placeholder/400/300",
+      heroImageUrl: "https://assets.cntraveller.in/photos/65700e652b15c36f0c39adb1/16:9/w_1024,c_limit/spirit-forward-blr-lead.jpg",
       cuisineTagIds: [cocktailsTag.id, hotTag.id],
     },
     {
