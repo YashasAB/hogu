@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
@@ -112,21 +111,21 @@ export default function ExploreRestaurants() {
       try {
         console.log('Fetching restaurants from API...');
         const response = await fetch('/api/restaurants');
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         console.log('API response:', data);
-        
+
         if (Array.isArray(data) && data.length > 0) {
           setRestaurants(data);
-          
+
           // Extract unique categories and neighborhoods from the data
           const categories = [...new Set(data.map(r => r.category).filter(Boolean))];
           const neighborhoods = [...new Set(data.map(r => r.neighborhood).filter(Boolean))];
-          
+
           setAvailableCategories(categories);
           setAvailableNeighborhoods(neighborhoods);
           console.log('Successfully loaded restaurants from API');
