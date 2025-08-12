@@ -212,10 +212,10 @@ export default function Home() {
     } else if (date.toDateString() === tomorrow.toDateString()) {
       return 'Tomorrow'
     } else {
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
       })
     }
   }
@@ -311,31 +311,21 @@ export default function Home() {
 
       {/* YOUR RESERVATIONS SECTION */}
       {console.log('Debug - user:', !!user, 'userReservations.length:', userReservations.length, 'userReservations:', userReservations)}
-      {user && userReservations.length > 0 && (
+      {user && (
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              Your Reservations
+              Your Reservations ({userReservations.length})
             </h2>
-            <Link
-              to="/me"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              View All →
-            </Link>
           </div>
 
-          {loadingReservations ? (
-            <div className="space-y-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="border border-gray-200 rounded-xl p-4 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
-                </div>
-              ))}
+          {userReservations.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-2">No upcoming reservations found</p>
+              <p className="text-sm text-gray-400">Your future reservations will appear here</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -384,9 +374,9 @@ export default function Home() {
                 <div className="text-center pt-2">
                   <Link
                     to="/me"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
                   >
-                    View {userReservations.length - 3} more reservation{userReservations.length - 3 > 1 ? 's' : ''}
+                    View all {userReservations.length} reservations →
                   </Link>
                 </div>
               )}
