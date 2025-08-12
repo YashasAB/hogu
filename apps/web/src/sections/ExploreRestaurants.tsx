@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 type Restaurant = {
   id: string;
@@ -116,32 +116,40 @@ export default function ExploreRestaurants() {
 
     // Create emoji marker function
     const createEmojiMarker = (restaurant: Restaurant) => {
-      const html = `
-        <div style="
-          width: 38px; 
-          height: 38px; 
-          background: ${restaurant.hot ? '#ef4444' : '#8b5cf6'}; 
-          border-radius: 50%; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          font-size: 18px;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        ">
-          ${restaurant.emoji}
-        </div>
-      `;
-      const icon = L.divIcon({
-        className: "",
-        html,
-        iconSize: [38, 38],
-        iconAnchor: [19, 19],
-        popupAnchor: [0, -14],
-      });
-      return L.marker([restaurant.position.lat, restaurant.position.lng], {
-        icon,
-      });
+      try {
+        const html = `
+          <div style="
+            width: 32px; 
+            height: 32px; 
+            background: ${restaurant.hot ? '#ef4444' : '#8b5cf6'}; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 16px;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: white;
+            font-weight: bold;
+          ">
+            ${restaurant.emoji}
+          </div>
+        `;
+        const icon = L.divIcon({
+          className: "custom-marker",
+          html,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16],
+        });
+        return L.marker([restaurant.position.lat, restaurant.position.lng], {
+          icon,
+        });
+      } catch (error) {
+        console.error('Error creating marker for:', restaurant.name, error);
+        // Fallback to default marker
+        return L.marker([restaurant.position.lat, restaurant.position.lng]);
+      }
     };
 
     // Add filtered restaurant markers
@@ -154,17 +162,22 @@ export default function ExploreRestaurants() {
     console.log('Filtered restaurants count:', filteredRestaurants.length);
 
     filteredRestaurants.forEach((restaurant) => {
-      console.log('Adding marker for:', restaurant.name, restaurant.position);
-      const marker = createEmojiMarker(restaurant);
-      marker.bindPopup(`
-        <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
-          <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
-          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
-          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
-        </div>
-      `);
-      marker.addTo(mapInstanceRef.current!);
-      markersRef.current.push(marker);
+      try {
+        console.log('Adding marker for:', restaurant.name, restaurant.position);
+        const marker = createEmojiMarker(restaurant);
+        marker.bindPopup(`
+          <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
+            <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
+            <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
+            <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
+          </div>
+        `);
+        marker.addTo(mapInstanceRef.current!);
+        markersRef.current.push(marker);
+        console.log('Marker added successfully for:', restaurant.name);
+      } catch (error) {
+        console.error('Failed to add marker for:', restaurant.name, error);
+      }
     });
 
     // Fit bounds to visible markers
