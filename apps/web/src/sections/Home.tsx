@@ -110,33 +110,41 @@ export default function Home() {
   window.emergencyLogout = handleLogout
 
   // --- state ---
-  const [party, setParty] = useState(2);
+  const [party, setParty] = useState<number | ''>(''); // No default value, user must select
+  const [selectedDate, setSelectedDate] = useState(''); // State for the selected date
   const [city] = useState("BLR");
   const [tonight, setTonight] = useState<TonightRes>({ now: [], later: [] });
   const [week, setWeek] = useState<WeekRes>({ days: [] });
-  const [today] = useState(() => new Date().toISOString().slice(0, 10));
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const token =
     typeof window !== "undefined" ? localStorage.getItem("hogu_token") : null;
 
   // --- data fetch ---
   useEffect(() => {
-    fetch(`/api/discover/tonight?city=${city}&party_size=${party}`)
-      .then((r) => r.json())
-      .then(setTonight)
-      .catch(() => {});
-    fetch(
-      `/api/discover/week?city=${city}&start=${today}&days=7&party_size=${party}`,
-    )
-      .then((r) => r.json())
-      .then(setWeek)
-      .catch(() => {});
-  }, [city, party, today]);
+    // Only fetch if party and selectedDate are valid
+    if (party !== '' && selectedDate) {
+      fetch(`/api/discover/tonight?city=${city}&party_size=${party}&start_date=${selectedDate}`)
+        .then((r) => r.json())
+        .then(setTonight)
+        .catch(() => {});
+      fetch(
+        `/api/discover/week?city=${city}&start=${selectedDate}&days=7&party_size=${party}`,
+      )
+        .then((r) => r.json())
+        .then(setWeek)
+        .catch(() => {});
+    } else {
+      // Reset data if selections are invalid
+      setTonight({ now: [], later: [] });
+      setWeek({ days: [] });
+    }
+  }, [city, party, selectedDate]); // Depend on selectedDate as well
 
   const weekDays = week.days;
-  const weekToday = weekDays[0];
+  const weekToday = weekDays.find(day => day.date === selectedDate);
   const todayLabel = useMemo(
-    () => new Date(today).toLocaleDateString(undefined, { weekday: "long" }),
-    [today],
+    () => selectedDate ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long" }) : 'Select a Date',
+    [selectedDate],
   );
 
   // --- helpers ---
@@ -314,36 +322,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* QUICK FILTERS / PARTY SIZE + DATE (kept minimal) */}
+      {/* QUICK FILTERS / PARTY SIZE + DATE */}
       <section className="card -mt-10 relative z-[1] grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <select
-          className="input"
-          value={party}
-          onChange={(e) => setParty(parseInt(e.target.value))}
-          aria-label="Party size"
-        >
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
-            <option key={size} value={size}>
-              {size} {size === 1 ? "person" : "people"}
-            </option>
-          ))}
-        </select>
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-sm opacity-90 mb-1">Party Size</label>
+          <select
+            className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+            value={party}
+            onChange={(e) => setParty(e.target.value === '' ? '' : parseInt(e.target.value))}
+          >
+            <option value="" className="text-gray-900">Select party size</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
+              <option key={size} value={size} className="text-gray-900">
+                {size} {size === 1 ? "person" : "people"}
+              </option>
+            ))}
+          </select>
+        </div>
         <input
           className="input"
           type="date"
-          value={today}
-          readOnly
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          min={today} // Set min to today's date
           aria-label="Date"
         />
         <div className="hidden sm:flex items-center text-muted text-sm">
           City: Bengaluru
         </div>
-        {!token && (
-          <Link to="/login" className="btn btn-primary justify-self-end">
-            Log in
-          </Link>
-        )}
+        {/* The Explore Now button is placed below the filters */}
       </section>
+
+      {/* Explore Now Button */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => {
+            if (party !== '' && selectedDate) {
+              window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
+            }
+          }}
+          disabled={party === '' || !selectedDate}
+          className={`px-6 py-2 rounded-lg font-medium transition-all ${
+            party !== '' && selectedDate
+              ? "bg-white text-brand hover:bg-white/90 cursor-pointer"
+              : "bg-white/30 text-white/50 cursor-not-allowed"
+          }`}
+        >
+          Explore Now
+        </button>
+      </div>
 
       {/* WHAT PROBLEMS WE SOLVE */}
       <section
