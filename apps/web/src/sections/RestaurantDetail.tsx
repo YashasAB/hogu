@@ -283,8 +283,9 @@ export default function RestaurantDetail() {
         `Reservation created! Status: ${data.status}\n${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`
       );
       
-      // Reset selection
+      // Reset selection and navigate to home
       setSelectedSlot(null);
+      navigate('/');
     } catch (error) {
       console.error('Reservation error:', error);
       alert('Failed to create reservation. Please try again.');
