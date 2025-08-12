@@ -1,3 +1,4 @@
+
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -6,29 +7,32 @@ async function main() {
   console.log('Seeding database...');
 
   // Create cuisine tags first
-  const cocktailsTag = await prisma.cuisineTag.upsert({
-    where: { name: 'cocktails' },
-    update: {},
-    create: { name: 'cocktails' },
-  });
+  const cuisineTags = [
+    { name: 'Italian' },
+    { name: 'Japanese' },
+    { name: 'Indian' },
+    { name: 'American' },
+    { name: 'Mediterranean' },
+    { name: 'Chinese' },
+    { name: 'Thai' },
+    { name: 'Mexican' },
+  ];
 
-  const dinnerTag = await prisma.cuisineTag.upsert({
-    where: { name: 'dinner' },
-    update: {},
-    create: { name: 'dinner' },
-  });
+  const createdCuisineTags = [];
+  for (const tag of cuisineTags) {
+    const cuisineTag = await prisma.cuisineTag.upsert({
+      where: { name: tag.name },
+      update: {},
+      create: tag,
+    });
+    createdCuisineTags.push(cuisineTag);
+  }
 
-  const hotTag = await prisma.cuisineTag.upsert({
-    where: { name: 'hot' },
-    update: {},
-    create: { name: 'hot' },
-  });
-
-  // Create restaurants
+  // Create restaurants with proper data
   const restaurants = [
     {
       name: "ZLB 23 (at The Leela Palace)",
-      slug: "zlb-23",
+      slug: "zlb",
       emoji: "🍸",
       latitude: 12.960695,
       longitude: 77.648663,
@@ -36,9 +40,10 @@ async function main() {
       category: "cocktails",
       isHot: true,
       heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/zlb23",
-      website: "https://theleela.com",
-      cuisineTagIds: [cocktailsTag.id, hotTag.id],
+      instagramUrl: "https://instagram.com/zlb23bangalore",
+      website: "https://theleela.com/zlb23",
+      email: "reservations@zlb23.com",
+      cuisineTagIds: [createdCuisineTags[4].id], // Mediterranean
     },
     {
       name: "Soka",
@@ -50,24 +55,29 @@ async function main() {
       category: "cocktails",
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/soka",
-      cuisineTagIds: [cocktailsTag.id],
+      instagramUrl: "https://instagram.com/sokabangalore",
+      website: "https://soka.in",
+      email: "hello@soka.in",
+      cuisineTagIds: [createdCuisineTags[1].id], // Japanese
     },
     {
       name: "Bar Spirit Forward",
-      slug: "bar-spirit-forward",
+      slug: "spirit-forward",
       emoji: "🥃",
-      latitude: 12.9716,
-      longitude: 77.5946,
+      latitude: 12.975125,
+      longitude: 77.602350,
       neighborhood: "CBD",
       category: "cocktails",
       isHot: true,
-      heroImageUrl: "https://assets.cntraveller.in/photos/65700e652b15c36f0c39adb1/16:9/w_1024,c_limit/spirit-forward-blr-lead.jpg",
-      cuisineTagIds: [cocktailsTag.id, hotTag.id],
+      heroImageUrl: "/api/placeholder/400/300",
+      instagramUrl: "https://instagram.com/spiritforwardbangalore",
+      website: "https://spiritforward.in",
+      email: "reservations@spiritforward.in",
+      cuisineTagIds: [createdCuisineTags[3].id], // American
     },
     {
       name: "Naru Noodle Bar",
-      slug: "naru-noodle-bar",
+      slug: "naru",
       emoji: "🍱",
       latitude: 12.958431,
       longitude: 77.592895,
@@ -75,12 +85,14 @@ async function main() {
       category: "dinner",
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "https://instagram.com/naru",
-      cuisineTagIds: [dinnerTag.id],
+      instagramUrl: "https://instagram.com/narunoodlebar",
+      website: "https://naru.in",
+      email: "reservations@naru.in",
+      cuisineTagIds: [createdCuisineTags[1].id, createdCuisineTags[6].id], // Japanese, Thai
     },
     {
       name: "Pizza 4P's (Indiranagar)",
-      slug: "pizza-4ps-indiranagar",
+      slug: "pizza-4ps",
       emoji: "🍕",
       latitude: 12.969968,
       longitude: 77.636089,
@@ -88,8 +100,25 @@ async function main() {
       category: "dinner",
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
+      instagramUrl: "https://instagram.com/pizza4ps",
       website: "https://pizza4ps.com",
-      cuisineTagIds: [dinnerTag.id],
+      email: "indiranagar@pizza4ps.com",
+      cuisineTagIds: [createdCuisineTags[0].id], // Italian
+    },
+    {
+      name: "Demo Restaurant",
+      slug: "demo-restaurant",
+      emoji: "🏪",
+      latitude: 12.971599,
+      longitude: 77.594566,
+      neighborhood: "Bangalore",
+      category: "fine-dining",
+      isHot: true,
+      heroImageUrl: "/api/placeholder/400/300",
+      instagramUrl: "https://instagram.com/demorestaurant",
+      website: "https://demo-restaurant.com",
+      email: "demo-restaurant@hogu.com",
+      cuisineTagIds: [createdCuisineTags[2].id], // Indian
     },
   ];
 
