@@ -38,6 +38,7 @@ async function main() {
       heroImageUrl: "/api/placeholder/400/300",
       instagramUrl: "https://instagram.com/zlb23",
       website: "https://theleela.com",
+      email: "reservations@zlb23.com",
       cuisineTagIds: [cocktailsTag.id, hotTag.id],
     },
     {
@@ -51,6 +52,7 @@ async function main() {
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
       instagramUrl: "https://instagram.com/soka",
+      email: "hello@soka.in",
       cuisineTagIds: [cocktailsTag.id],
     },
     {
@@ -63,6 +65,7 @@ async function main() {
       category: "cocktails",
       isHot: true,
       heroImageUrl: "/api/placeholder/400/300",
+      email: "reservations@spiritforward.in",
       cuisineTagIds: [cocktailsTag.id, hotTag.id],
     },
     {
@@ -76,6 +79,7 @@ async function main() {
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
       instagramUrl: "https://instagram.com/naru",
+      email: "reservations@naru.in",
       cuisineTagIds: [dinnerTag.id],
     },
     {
@@ -89,6 +93,7 @@ async function main() {
       isHot: false,
       heroImageUrl: "/api/placeholder/400/300",
       website: "https://pizza4ps.com",
+      email: "indiranagar@pizza4ps.com",
       cuisineTagIds: [dinnerTag.id],
     },
   ];
