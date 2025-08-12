@@ -277,6 +277,44 @@ export default function Home() {
             fake accounts.
           </p>
 
+          {/* Quick search for logged-in users */}
+          {user && (
+            <div className="mt-6 bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+              <h3 className="text-lg font-medium mb-3">Quick Search</h3>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-sm opacity-90 mb-1">Party Size</label>
+                  <select
+                    className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    value={party}
+                    onChange={(e) => setParty(parseInt(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
+                      <option key={size} value={size} className="text-gray-900">
+                        {size} {size === 1 ? "person" : "people"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[140px]">
+                  <label className="block text-sm opacity-90 mb-1">Date</label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    value={today}
+                    min={today}
+                  />
+                </div>
+                <Link 
+                  to={`/explore-tonight?party=${party}&date=${today}`}
+                  className="btn bg-white text-brand hover:bg-white/90 px-6 py-2"
+                >
+                  Find Now
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/explore-tonight" className="btn btn-accent">
               Find a table tonight
