@@ -20,29 +20,53 @@ export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize everything in one useEffect to avoid race conditions
+  // Fetch restaurants data
   useEffect(() => {
-    let mounted = true;
-
-    const initializeMapAndFetchData = async () => {
-      if (!mapRef.current || initialized) return;
-
+    const fetchRestaurants = async () => {
       try {
-        // Step 1: Initialize map
+        console.log('Starting to fetch restaurants...');
+        const response = await fetch('/api/restaurants');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Successfully fetched restaurants:', data.length);
+        
+        setRestaurants(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch restaurants:', err);
+        setError('Failed to load restaurants. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
+
+  // Initialize map once DOM is ready
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    const timer = setTimeout(() => {
+      try {
         console.log('Initializing map...');
-        const map = L.map(mapRef.current, {
+        
+        const map = L.map(mapRef.current!, {
           center: [12.9716, 77.5946],
           zoom: 13,
           scrollWheelZoom: true,
           zoomControl: true,
         });
-
-        mapInstanceRef.current = map;
 
         const darkTiles = L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -53,51 +77,31 @@ export default function ExploreRestaurants() {
         );
         
         darkTiles.addTo(map);
+        mapInstanceRef.current = map;
 
-        // Step 2: Wait for map to be ready
-        await new Promise(resolve => setTimeout(resolve, 200));
-        map.invalidateSize();
-
-        // Step 3: Fetch restaurants
-        console.log('Fetching restaurants...');
-        const response = await fetch('/api/restaurants');
+        // Force resize after initialization
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 200);
         
-        if (!mounted) return; // Component unmounted
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Restaurants fetched successfully:', data.length, 'restaurants');
-          setRestaurants(data);
-        } else {
-          console.error('Failed to fetch restaurants:', response.status);
-        }
-
-        setLoading(false);
-        setInitialized(true);
-
+        console.log('Map initialized successfully');
       } catch (error) {
-        console.error('Initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        console.error('Failed to initialize map:', error);
       }
-    };
-
-    const timeoutId = setTimeout(initializeMapAndFetchData, 100);
+    }, 100);
 
     return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
+      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, []); // Empty dependency array - run only once
+  }, []);
 
-  // Update markers when restaurants change or filter changes
+  // Update markers when restaurants or filter changes
   useEffect(() => {
-    if (!mapInstanceRef.current || !initialized || restaurants.length === 0) {
+    if (!mapInstanceRef.current || loading || restaurants.length === 0) {
       return;
     }
 
@@ -116,9 +120,9 @@ export default function ExploreRestaurants() {
       return restaurant.category === selectedFilter;
     });
 
-    console.log('Adding', filteredRestaurants.length, 'markers');
+    console.log('Adding markers for', filteredRestaurants.length, 'restaurants');
 
-    // Add markers
+    // Add new markers
     filteredRestaurants.forEach((restaurant) => {
       try {
         const html = `
@@ -159,10 +163,9 @@ export default function ExploreRestaurants() {
       );
       mapInstanceRef.current!.fitBounds(latlngs, { padding: [28, 28] });
     }
+  }, [restaurants, selectedFilter, loading]);
 
-    console.log('Markers updated successfully');
-  }, [selectedFilter, restaurants, initialized]);
-
+  // Filter restaurants for the mobile list
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;
     if (selectedFilter === "hot") return restaurant.hot;
@@ -172,8 +175,25 @@ export default function ExploreRestaurants() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="text-center py-10">
-          <div className="text-xl">Loading restaurants...</div>
+        <div className="text-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <div className="text-xl text-gray-600">Loading restaurants...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center py-20">
+          <div className="text-xl text-red-600 mb-4">⚠️ {error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -222,7 +242,7 @@ export default function ExploreRestaurants() {
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
-              Scroll to zoom, drag to pan.
+              Scroll to zoom, drag to pan. Showing {restaurants.length} restaurants.
             </p>
 
             {/* Filter Chips */}
