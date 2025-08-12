@@ -6,7 +6,7 @@ import reservationsRouter from './routes/reservations';
 import discoverRouter from './routes/discover';
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3002;
+const PORT = Number(process.env.PORT) || 8080;
 
 app.use(cors({
   origin: true,
