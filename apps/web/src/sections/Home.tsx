@@ -55,29 +55,29 @@ export default function Home() {
     checkAuth()
   }, [])
 
-  // Fetch live status when user is logged in
+  // Fetch pending reservations when user is logged in
   useEffect(() => {
     if (user) {
-      const fetchLiveStatus = async () => {
+      const fetchPendingReservations = async () => {
         const token = localStorage.getItem('hogu_token')
         if (token) {
           try {
-            const response = await fetch('/api/reservations/status', {
+            const response = await fetch('/api/reservations/pending', {
               headers: { 'Authorization': `Bearer ${token}` }
             })
             if (response.ok) {
-              const status = await response.json()
-              setLiveStatus(status)
+              const pending = await response.json()
+              setLiveStatus({ pending: pending.length, ongoing: 0, completed: 0 })
             }
           } catch (error) {
-            console.error('Failed to fetch live status:', error)
+            console.error('Failed to fetch pending reservations:', error)
           }
         }
       }
-      fetchLiveStatus()
+      fetchPendingReservations()
       
-      // Refresh status every 30 seconds
-      const interval = setInterval(fetchLiveStatus, 30000)
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchPendingReservations, 30000)
       return () => clearInterval(interval)
     }
   }, [user])
@@ -216,47 +216,33 @@ export default function Home() {
         </section>
       )}
 
-      {/* LIVE STATUS SECTION */}
-      {user && (
+      {/* PENDING REQUESTS SECTION */}
+      {user && liveStatus.pending > 0 && (
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            Live Status
+            <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+            Pending Reservation Requests
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Pending Requests */}
-            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-orange-800">Pending Requests</h3>
-                <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                  {liveStatus.pending}
-                </span>
-              </div>
-              <p className="text-sm text-orange-600">Awaiting restaurant confirmation</p>
+          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-orange-800">Awaiting Restaurant Confirmation</h3>
+              <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                {liveStatus.pending}
+              </span>
             </div>
-
-            {/* Ongoing Bookings */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-blue-800">Ongoing</h3>
-                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                  {liveStatus.ongoing}
-                </span>
-              </div>
-              <p className="text-sm text-blue-600">Currently confirmed reservations</p>
-            </div>
-
-            {/* Completed Bookings */}
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-green-800">Completed</h3>
-                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                  {liveStatus.completed}
-                </span>
-              </div>
-              <p className="text-sm text-green-600">Successfully completed</p>
-            </div>
+            <p className="text-sm text-orange-600 mb-3">
+              You have {liveStatus.pending} reservation request{liveStatus.pending > 1 ? 's' : ''} waiting for restaurant confirmation.
+            </p>
+            <Link
+              to="/me"
+              className="inline-flex items-center text-sm font-medium text-orange-700 hover:text-orange-800"
+            >
+              View My Reservations
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </section>
       )}

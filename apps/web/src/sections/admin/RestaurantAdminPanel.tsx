@@ -170,6 +170,11 @@ export default function RestaurantAdminPanel() {
     website: '',
     heroImageUrl: ''
   });
+  const [liveStatus, setLiveStatus] = useState({
+    pending: 0,
+    confirmed: 0,
+    completed: 0
+  });
 
   const selectedIds = useMemo(() => Object.keys(selected).filter(id => selected[id]), [selected]);
 
@@ -231,6 +236,12 @@ export default function RestaurantAdminPanel() {
       ]);
       setSlots(slotsData);
       setBookings(bookingsData);
+      
+      // Calculate live status from bookings
+      const pending = bookingsData.filter(b => b.status === 'held').length;
+      const confirmed = bookingsData.filter(b => b.status === 'confirmed').length;
+      const completed = bookingsData.filter(b => b.status === 'completed').length;
+      setLiveStatus({ pending, confirmed, completed });
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
@@ -347,6 +358,49 @@ export default function RestaurantAdminPanel() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'dashboard' ? (
           <>
+            {/* Live Status Section */}
+            <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70 mb-8">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                Live Booking Status
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Pending Requests */}
+                <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-600/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-orange-300">Pending Requests</h3>
+                    <span className="bg-orange-600 text-white text-xs px-2 py-1 rounded-full">
+                      {liveStatus.pending}
+                    </span>
+                  </div>
+                  <p className="text-sm text-orange-400">Awaiting your confirmation</p>
+                </div>
+
+                {/* Confirmed Bookings */}
+                <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-600/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-blue-300">Confirmed</h3>
+                    <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                      {liveStatus.confirmed}
+                    </span>
+                  </div>
+                  <p className="text-sm text-blue-400">Active reservations</p>
+                </div>
+
+                {/* Completed Bookings */}
+                <div className="bg-green-900/30 rounded-lg p-4 border border-green-600/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-green-300">Completed</h3>
+                    <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                      {liveStatus.completed}
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-400">Successfully completed</p>
+                </div>
+              </div>
+            </section>
+
             {/* Date Selector */}
             <div className="mb-6">
               <label className="block text-sm font-medium mb-2">Date</label>

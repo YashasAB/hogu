@@ -211,15 +211,9 @@ router.post('/restaurant-login', async (req, res) => {
 // Get current user info
 router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const userId = req.user!.userId;
-
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      }
+      where: { id: req.user!.userId },
+      select: { id: true, name: true, email: true }
     });
 
     if (!user) {
@@ -228,8 +222,34 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     res.json(user);
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user info' });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get pending reservations for user
+router.get('/reservations/pending', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    const pendingReservations = await prisma.reservation.findMany({
+      where: { 
+        userId: req.user!.userId,
+        status: 'HELD'
+      },
+      include: {
+        restaurant: {
+          select: { name: true, slug: true }
+        },
+        slot: {
+          select: { date: true, time: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(pendingReservations);
+  } catch (error) {
+    console.error('Error fetching pending reservations:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
