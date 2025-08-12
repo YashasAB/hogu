@@ -10,6 +10,7 @@ import Drops from '../sections/Drops'
 import DropDetail from '../sections/DropDetail'
 import RestaurantLogin from '../sections/RestaurantLogin'
 import ExploreRestaurants from '../sections/ExploreRestaurants'
+import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
 
 export const router = createBrowserRouter([
   {
@@ -55,5 +56,9 @@ export const router = createBrowserRouter([
   {
     path: '/explore-tonight',
     element: <ExploreRestaurants />
+  },
+  {
+    path: '/admin/:restaurantId',
+    element: <RestaurantAdminPanel />
   }
 ])

@@ -27,7 +27,7 @@ export default function RestaurantLogin() {
 
       localStorage.setItem('hogu_restaurant_token', data.token)
       // Redirect to restaurant dashboard
-      navigate(`/admin/${data.restaurantId}/profile`)
+      navigate(`/admin/${data.restaurantId}`)
     } catch (error) {
       console.error('Restaurant login error:', error)
       alert('Login failed')
