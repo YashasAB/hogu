@@ -23,8 +23,8 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/restaurants', restaurantRoutes);
-app.use('/reservations', reservationsRouter);
-app.use('/discover', discoverRouter);
+app.use('/reservations', reservationRoutes);
+app.use('/discover', discoverRoutes);
 
 // Serve static files from the React app build directory
 if (process.env.NODE_ENV === 'production') {
