@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
@@ -18,13 +19,13 @@ type Restaurant = {
 export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
 
-  const markersRef = useRef<L.Marker[]>([]);
-
-  // Initialize map first, then fetch restaurants
+  // Initialize map once on mount
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -32,7 +33,6 @@ export default function ExploreRestaurants() {
       try {
         console.log('Initializing map...');
         
-        // Initialize map
         const map = L.map(mapRef.current!, {
           center: [12.9716, 77.5946],
           zoom: 13,
@@ -43,7 +43,6 @@ export default function ExploreRestaurants() {
         mapInstanceRef.current = map;
         console.log('Map instance created');
 
-        // Add dark tile layer (matching the neon theme)
         const darkTiles = L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
           {
@@ -55,10 +54,10 @@ export default function ExploreRestaurants() {
         darkTiles.addTo(map);
         console.log('Tiles added to map');
 
-        // Force map to resize after a short delay
         setTimeout(() => {
           map.invalidateSize();
           console.log('Map size invalidated');
+          setMapReady(true); // Signal that map is ready
         }, 100);
 
       } catch (error) {
@@ -66,7 +65,6 @@ export default function ExploreRestaurants() {
       }
     };
 
-    // Use timeout to ensure DOM is ready
     const timeoutId = setTimeout(initMap, 100);
 
     return () => {
@@ -76,11 +74,11 @@ export default function ExploreRestaurants() {
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, []); // Only run once on mount
 
-  // Fetch restaurants after map is initialized
+  // Fetch restaurants once when map is ready
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapReady) return;
 
     const fetchRestaurants = async () => {
       try {
@@ -102,11 +100,11 @@ export default function ExploreRestaurants() {
     };
 
     fetchRestaurants();
-  }, [mapInstanceRef.current]);
+  }, [mapReady]); // Only depends on mapReady flag
 
-  // Update markers when filter changes or restaurants data changes
+  // Update markers when restaurants or filter changes
   useEffect(() => {
-    if (!mapInstanceRef.current || restaurants.length === 0) {
+    if (!mapInstanceRef.current || !mapReady || restaurants.length === 0) {
       console.log('Skipping markers - map not ready or no restaurants');
       return;
     }
@@ -142,12 +140,11 @@ export default function ExploreRestaurants() {
         return marker;
       } catch (error) {
         console.error('Error creating marker for:', restaurant.name, error);
-        // Fallback to default marker
         return L.marker([restaurant.position.lat, restaurant.position.lng]);
       }
     };
 
-    // Add filtered restaurant markers
+    // Filter restaurants
     const filteredRestaurants = restaurants.filter((restaurant) => {
       if (selectedFilter === "all") return true;
       if (selectedFilter === "hot") return restaurant.hot;
@@ -155,13 +152,8 @@ export default function ExploreRestaurants() {
     });
 
     console.log('Filtered restaurants count:', filteredRestaurants.length);
-    console.log('Map instance exists:', !!mapInstanceRef.current);
 
-    if (!mapInstanceRef.current) {
-      console.error('No map instance available for adding markers');
-      return;
-    }
-
+    // Add markers
     filteredRestaurants.forEach((restaurant, index) => {
       try {
         console.log(`Adding marker ${index + 1}/${filteredRestaurants.length} for:`, restaurant.name, restaurant.position);
@@ -175,7 +167,7 @@ export default function ExploreRestaurants() {
           </div>
         `);
         
-        marker.addTo(mapInstanceRef.current);
+        marker.addTo(mapInstanceRef.current!);
         markersRef.current.push(marker);
         console.log(`Marker ${index + 1} added successfully for:`, restaurant.name);
       } catch (error) {
@@ -190,9 +182,9 @@ export default function ExploreRestaurants() {
       const latlngs = filteredRestaurants.map(
         (r) => [r.position.lat, r.position.lng] as [number, number],
       );
-      mapInstanceRef.current.fitBounds(latlngs, { padding: [28, 28] });
+      mapInstanceRef.current!.fitBounds(latlngs, { padding: [28, 28] });
     }
-  }, [selectedFilter, restaurants]);
+  }, [selectedFilter, restaurants, mapReady]); // Clean dependencies
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;
