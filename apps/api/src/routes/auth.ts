@@ -15,8 +15,8 @@ const RegisterSchema = z.object({
 });
 
 const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6)
+  username: z.string().min(1),
+  password: z.string().min(1)
 });
 
 // User signup
@@ -100,13 +100,54 @@ router.post('/login', async (req, res) => {
   const parse = LoginSchema.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ error: parse.error.flatten() });
 
-  const { email } = parse.data;
+  const { username, password } = parse.data;
 
-  // Mock response without database
-  const user = { id: '1', email, fullName: 'Demo User' };
-  const token = 'mock-jwt-token';
+  try {
+    // Find user by username
+    const userAuth = await prisma.userAuth.findUnique({
+      where: { username },
+      include: {
+        user: {
+          include: {
+            details: true
+          }
+        }
+      }
+    });
 
-  res.json({ token, user });
+    if (!userAuth) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    // Verify password
+    const isValid = await bcrypt.compare(password, userAuth.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: userAuth.user.id,
+        username: userAuth.username 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
+
+    res.json({ 
+      token, 
+      user: {
+        id: userAuth.user.id,
+        username: userAuth.username,
+        name: userAuth.user.name,
+        email: userAuth.user.email
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 const RestaurantLoginSchema = z.object({
