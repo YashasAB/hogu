@@ -159,13 +159,32 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: 'Restaurant not found' });
     }
 
-    // Create or find the time slot
+    // Convert time to 24-hour format if it's in 12-hour format
+    let normalizedTime = time;
+    if (time.includes('AM') || time.includes('PM')) {
+      const timeMatch = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (timeMatch) {
+        let hours = parseInt(timeMatch[1]);
+        const minutes = timeMatch[2];
+        const period = timeMatch[3].toUpperCase();
+        
+        if (period === 'PM' && hours !== 12) {
+          hours += 12;
+        } else if (period === 'AM' && hours === 12) {
+          hours = 0;
+        }
+        
+        normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
+      }
+    }
+
+    // Create or find the time slot using normalized time
     const slot = await prisma.timeSlot.upsert({
       where: {
         restaurantId_date_time_partySize: {
           restaurantId: restaurant.id,
           date,
-          time,
+          time: normalizedTime,
           partySize: parseInt(partySize)
         }
       },
@@ -173,7 +192,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       create: {
         restaurantId: restaurant.id,
         date,
-        time,
+        time: normalizedTime,
         partySize: parseInt(partySize),
         status: 'AVAILABLE'
       }
