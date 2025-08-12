@@ -56,29 +56,29 @@ export default function Home() {
     checkAuth()
   }, [])
 
-  // Fetch pending reservations when user is logged in
+  // Fetch live status when user is logged in
   useEffect(() => {
     if (user) {
-      const fetchPendingReservations = async () => {
+      const fetchLiveStatus = async () => {
         const token = localStorage.getItem('hogu_token')
         if (token) {
           try {
-            const response = await fetch('/api/reservations/pending', {
+            const response = await fetch('/api/reservations/status', {
               headers: { 'Authorization': `Bearer ${token}` }
             })
             if (response.ok) {
-              const pending = await response.json()
-              setLiveStatus({ pending: pending.length, ongoing: 0, completed: 0 })
+              const status = await response.json()
+              setLiveStatus(status)
             }
           } catch (error) {
-            console.error('Failed to fetch pending reservations:', error)
+            console.error('Failed to fetch live status:', error)
           }
         }
       }
-      fetchPendingReservations()
+      fetchLiveStatus()
 
       // Refresh every 30 seconds
-      const interval = setInterval(fetchPendingReservations, 30000)
+      const interval = setInterval(fetchLiveStatus, 30000)
       return () => clearInterval(interval)
     }
   }, [user])

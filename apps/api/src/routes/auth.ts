@@ -236,10 +236,25 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
 // Get pending reservations for user
 router.get('/reservations/pending', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
     const pendingReservations = await prisma.reservation.findMany({
       where: { 
         userId: req.user!.userId,
-        status: { in: ['PENDING', 'HELD'] }
+        status: { in: ['PENDING', 'HELD'] },
+        slot: {
+          OR: [
+            { date: { gt: today } }, // Future dates
+            { 
+              AND: [
+                { date: today }, // Today's date
+                { time: { gt: currentTime } } // Future time
+              ]
+            }
+          ]
+        }
       },
       include: {
         restaurant: {
