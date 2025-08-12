@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -35,97 +34,118 @@ type Restaurant = {
   heroImageUrl?: string;
 };
 
-// Mock API functions (replace with real API calls)
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-let _slots: Slot[] = [];
-let _bookings: Booking[] = [];
+// API functions
+const api = {
+  async getSlots(date: string): Promise<Slot[]> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch(`/api/admin/slots?date=${date}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-// Seed demo data
-(function seed() {
-  const today = new Date();
-  const d = today.toISOString().split('T')[0];
-  const times = ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"];
-  _slots = times.map((t, i) => ({
-    id: `s-${i}`,
-    date: d,
-    time: t,
-    capacity: Math.random() > 0.2 ? 4 : 2,
-    status: Math.random() < 0.15 ? "booked" : "open",
-    bookingId: null,
-  }));
-  
-  _slots.filter(s => s.status === "booked").slice(0, 2).forEach((s, idx) => {
-    const b: Booking = {
-      id: `b-${idx}`,
-      slotId: s.id,
-      guestName: idx ? "Ananya Iyer" : "Rohit Kumar",
-      phone: "+1 555-0123",
-      partySize: 2 + idx,
-      status: "booked",
-      createdAt: new Date().toISOString(),
-    };
-    _bookings.push(b);
-    s.bookingId = b.id;
-  });
-})();
-
-const mockAPI = {
-  async listSlots(date: string) {
-    await delay(300);
-    return _slots.filter(s => s.date === date);
-  },
-  async listBookings(date: string) {
-    await delay(300);
-    const ids = _slots.filter(s => s.date === date && s.bookingId).map(s => s.bookingId as string);
-    return _bookings.filter(b => ids.includes(b.id));
-  },
-  async addSlots(payload: { date: string; start: string; end: string; interval: number; capacity: number }) {
-    await delay(400);
-    const toMinutes = (t: string) => {
-      const [H, M] = t.split(":").map(Number);
-      return H * 60 + M;
-    };
-    const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-    const start = toMinutes(payload.start), end = toMinutes(payload.end);
-    const created: Slot[] = [];
-    for (let m = start; m <= end; m += payload.interval) {
-      const id = `s-${Date.now()}-${m}-${Math.random().toString(36).slice(2, 6)}`;
-      const slot: Slot = {
-        id,
-        date: payload.date,
-        time: fmt(m),
-        capacity: payload.capacity,
-        status: "open"
-      };
-      _slots.push(slot);
-      created.push(slot);
+    if (!response.ok) {
+      throw new Error('Failed to fetch slots');
     }
-    return created;
+
+    return response.json();
   },
-  async updateSlotStatus(slotIds: string[], status: SlotStatus) {
-    await delay(250);
-    _slots = _slots.map(s => slotIds.includes(s.id) ? {
-      ...s,
-      status,
-      bookingId: status !== "booked" ? null : s.bookingId
-    } : s);
-    return true;
+
+  async getBookings(): Promise<Booking[]> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch('/api/admin/bookings', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch bookings');
+    }
+
+    return response.json();
   },
-  async deleteSlots(slotIds: string[]) {
-    await delay(250);
-    _slots = _slots.filter(s => !slotIds.includes(s.id));
-    return true;
+
+  async updateSlotStatus(id: string, status: SlotStatus): Promise<void> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch(`/api/admin/slots/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update slot');
+    }
   },
-  async freeSlot(slotId: string) {
-    await delay(200);
-    _slots = _slots.map(s => s.id === slotId ? { ...s, status: "open", bookingId: null } : s);
-    return true;
+
+  async updateBookingStatus(id: string, status: BookingStatus): Promise<void> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch(`/api/admin/bookings/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update booking');
+    }
   },
-  async setBookingStatus(bookingId: string, status: BookingStatus) {
-    await delay(250);
-    _bookings = _bookings.map(b => b.id === bookingId ? { ...b, status } : b);
-    return true;
-  }
+
+  async addSlots(params: { date: string; start: string; end: string; interval: number; capacity: number }): Promise<void> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch('/api/admin/slots/bulk', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add slots');
+    }
+  },
+
+  async getRestaurant(): Promise<Restaurant> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch('/api/admin/restaurant', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch restaurant');
+    }
+
+    return response.json();
+  },
+
+  async updateRestaurant(data: Partial<Restaurant>): Promise<Restaurant> {
+    const token = localStorage.getItem('hogu_restaurant_token');
+    const response = await fetch('/api/admin/restaurant', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update restaurant');
+    }
+
+    return response.json();
+  },
 };
 
 // UI Components
@@ -161,7 +181,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 export default function RestaurantAdminPanel() {
   const { restaurantId } = useParams();
   const navigate = useNavigate();
-  
+
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -169,7 +189,7 @@ export default function RestaurantAdminPanel() {
   const [loading, setLoading] = useState(false);
   const [liveTick, setLiveTick] = useState(0);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile'>('dashboard');
-  
+
   // Restaurant profile state
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -195,48 +215,30 @@ export default function RestaurantAdminPanel() {
 
   const fetchRestaurant = async () => {
     try {
-      const response = await fetch(`/api/restaurants/${restaurantId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setRestaurant(data);
-        setProfileData({
-          name: data.name || '',
-          neighborhood: data.neighborhood || '',
-          instagramUrl: data.instagramUrl || '',
-          website: data.website || '',
-          heroImageUrl: data.heroImageUrl || ''
-        });
-      }
+      const restaurantData = await api.getRestaurant();
+      setRestaurant(restaurantData);
+      setProfileData({
+        name: restaurantData.name,
+        neighborhood: restaurantData.neighborhood || '',
+        instagramUrl: restaurantData.instagramUrl || '',
+        website: restaurantData.website || '',
+        heroImageUrl: restaurantData.heroImageUrl || '',
+      });
     } catch (error) {
-      console.error('Failed to fetch restaurant:', error);
+      console.error('Error fetching restaurant:', error);
+      navigate('/restaurant-login');
     }
   };
 
   const saveProfile = async () => {
     setProfileLoading(true);
     try {
-      const response = await fetch(`/api/restaurants/${restaurantId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: profileData.name,
-          neighborhood: profileData.neighborhood,
-          instagram_url: profileData.instagramUrl,
-          website: profileData.website,
-          hero_image_url: profileData.heroImageUrl
-        })
-      });
-      
-      if (response.ok) {
-        alert('Profile saved successfully!');
-        fetchRestaurant();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to save profile');
-      }
+      const updatedRestaurant = await api.updateRestaurant(profileData);
+      setRestaurant(updatedRestaurant);
+      alert('Profile updated successfully!');
     } catch (error) {
-      console.error('Error saving profile:', error);
-      alert('Failed to save profile');
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile');
     } finally {
       setProfileLoading(false);
     }
@@ -244,10 +246,18 @@ export default function RestaurantAdminPanel() {
 
   const refresh = async () => {
     setLoading(true);
-    const [sl, bk] = await Promise.all([mockAPI.listSlots(date), mockAPI.listBookings(date)]);
-    setSlots(sl.sort((a, b) => a.time.localeCompare(b.time)));
-    setBookings(bk);
-    setLoading(false);
+    try {
+      const [slotsData, bookingsData] = await Promise.all([
+        api.getSlots(date),
+        api.getBookings()
+      ]);
+      setSlots(slotsData);
+      setBookings(bookingsData);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -274,23 +284,35 @@ export default function RestaurantAdminPanel() {
   // Slot bulk operations
   const setStatus = async (status: SlotStatus) => {
     if (selectedIds.length === 0) return;
-    await mockAPI.updateSlotStatus(selectedIds, status);
-    setSelected({});
-    refresh();
-  };
-  
-  const deleteSel = async () => {
-    if (selectedIds.length === 0) return;
-    await mockAPI.deleteSlots(selectedIds);
-    setSelected({});
-    refresh();
-  };
-  
-  const freeFirst = async () => {
-    if (selectedIds[0]) {
-      await mockAPI.freeSlot(selectedIds[0]);
+    try {
+      await Promise.all(selectedIds.map(id => api.updateSlotStatus(id, status)));
       setSelected({});
       refresh();
+    } catch (error) {
+      console.error('Error setting status for selected slots:', error);
+    }
+  };
+
+  const deleteSel = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      await Promise.all(selectedIds.map(id => api.updateSlotStatus(id, 'closed'))); // Assuming delete maps to closed status for now
+      setSelected({});
+      refresh();
+    } catch (error) {
+      console.error('Error deleting selected slots:', error);
+    }
+  };
+
+  const freeFirst = async () => {
+    if (selectedIds[0]) {
+      try {
+        await api.updateSlotStatus(selectedIds[0], 'open');
+        setSelected({});
+        refresh();
+      } catch (error) {
+        console.error('Error freeing selected slot:', error);
+      }
     }
   };
 
@@ -301,14 +323,37 @@ export default function RestaurantAdminPanel() {
   const [capacity, setCapacity] = useState(4);
 
   const addSlots = async () => {
-    await mockAPI.addSlots({ date, start, end, interval, capacity });
-    refresh();
+    try {
+      await api.addSlots({ date, start, end, interval, capacity });
+      refresh();
+    } catch (error) {
+      console.error('Error adding slots:', error);
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('hogu_restaurant_token');
     navigate('/restaurant-login');
   };
+
+  const handleSlotStatusChange = async (slotId: string, newStatus: SlotStatus) => {
+    try {
+      await api.updateSlotStatus(slotId, newStatus);
+      refresh();
+    } catch (error) {
+      console.error('Error updating slot status:', error);
+    }
+  };
+
+  const handleBookingStatusChange = async (bookingId: string, newStatus: BookingStatus) => {
+    try {
+      await api.updateBookingStatus(bookingId, newStatus);
+      refresh();
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+    }
+  };
+
 
   if (!restaurant) {
     return (
@@ -325,14 +370,14 @@ export default function RestaurantAdminPanel() {
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_0_6px_rgba(244,63,94,.18)]" />
           <div className="text-sm font-medium">{restaurant.name}</div>
-          
+
           {/* Tab Navigation */}
           <div className="ml-4 flex bg-slate-900/50 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
-                activeTab === 'dashboard' 
-                  ? 'bg-rose-500 text-white' 
+                activeTab === 'dashboard'
+                  ? 'bg-rose-500 text-white'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -341,8 +386,8 @@ export default function RestaurantAdminPanel() {
             <button
               onClick={() => setActiveTab('profile')}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
-                activeTab === 'profile' 
-                  ? 'bg-rose-500 text-white' 
+                activeTab === 'profile'
+                  ? 'bg-rose-500 text-white'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -564,7 +609,7 @@ export default function RestaurantAdminPanel() {
               <SectionTitle>Restaurant Profile</SectionTitle>
               <div className="text-xs text-slate-400">ID: {restaurantId}</div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -578,7 +623,7 @@ export default function RestaurantAdminPanel() {
                   placeholder="Enter restaurant name"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Neighborhood
@@ -591,7 +636,7 @@ export default function RestaurantAdminPanel() {
                   placeholder="e.g., Koramangala, Indiranagar"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Instagram URL
@@ -604,7 +649,7 @@ export default function RestaurantAdminPanel() {
                   placeholder="https://instagram.com/yourrestaurant"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Website
@@ -617,7 +662,7 @@ export default function RestaurantAdminPanel() {
                   placeholder="https://yourrestaurant.com"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Hero Image URL
@@ -630,7 +675,7 @@ export default function RestaurantAdminPanel() {
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
-              
+
               <div className="pt-4">
                 <button
                   onClick={saveProfile}
@@ -640,7 +685,7 @@ export default function RestaurantAdminPanel() {
                   {profileLoading ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
-              
+
               <div className="text-xs text-slate-500 mt-4 p-3 bg-slate-800/50 rounded-lg">
                 <strong>Note:</strong> This is a demo admin panel. In production, this would be protected with proper authentication and role-based access control.
               </div>
