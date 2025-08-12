@@ -3,6 +3,11 @@ import { z } from 'zod';
 import jwt from 'jsonwebtoken'; // Assuming you have jwt installed
 import { PrismaClient } from '@prisma/client'; // Assuming you have prisma installed
 import bcrypt from 'bcrypt'; // Import bcrypt for password hashing
+import { authenticateToken } from '../middleware/auth';
+
+interface AuthenticatedRequest extends Request {
+  user?: { userId: string };
+}
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -216,7 +221,6 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
       where: { id: userId },
       select: {
         id: true,
-        username: true,
         name: true,
         email: true,
       }

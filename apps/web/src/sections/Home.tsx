@@ -1,6 +1,6 @@
 // apps/web/src/sections/Home.tsx
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 type Slot = { slot_id: string; time: string; party_size: number };
 type SlotSummary = {
@@ -19,6 +19,12 @@ type WeekRes = { days: WeekDay[] };
 
 export default function Home() {
   const [user, setUser] = useState<{name: string; email: string} | null>(null)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [liveStatus, setLiveStatus] = useState({
+    pending: 0,
+    ongoing: 0,
+    completed: 0
+  })
 
   // Check if user is logged in
   useEffect(() => {
@@ -40,6 +46,55 @@ export default function Home() {
     }
     checkAuth()
   }, [])
+
+  // Fetch live status when user is logged in
+  useEffect(() => {
+    if (user) {
+      const fetchLiveStatus = async () => {
+        const token = localStorage.getItem('hogu_token')
+        if (token) {
+          try {
+            const response = await fetch('/api/reservations/status', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (response.ok) {
+              const status = await response.json()
+              setLiveStatus(status)
+            }
+          } catch (error) {
+            console.error('Failed to fetch live status:', error)
+          }
+        }
+      }
+      fetchLiveStatus()
+      
+      // Refresh status every 30 seconds
+      const interval = setInterval(fetchLiveStatus, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserDropdown) {
+        setShowUserDropdown(false)
+      }
+    }
+    
+    if (showUserDropdown) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showUserDropdown])
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem('hogu_token')
+    setUser(null)
+    setShowUserDropdown(false)
+    // Optionally redirect to home or show a success message
+  }
 
   // --- state ---
   const [party, setParty] = useState(2);
@@ -93,16 +148,102 @@ export default function Home() {
   // --- UI ---
   return (
     <div className="space-y-8 mx-4 sm:mx-6 lg:mx-8">
-      {/* USER GREETING */}
+      {/* USER GREETING WITH DROPDOWN */}
       {user && (
         <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">{user.name?.charAt(0).toUpperCase()}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">{user.name?.charAt(0).toUpperCase()}</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Hello {user.name}!</h2>
+                <p className="text-gray-600">Welcome back to Hogu. Ready to discover tonight's hottest spots?</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Hello {user.name}!</h2>
-              <p className="text-gray-600">Welcome back to Hogu. Ready to discover tonight's hottest spots?</p>
+            
+            {/* User Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
+              >
+                <span className="font-medium text-gray-900">{user.name}</span>
+                <svg className={`w-4 h-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showUserDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="py-1">
+                    <Link
+                      to="/me"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      My Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* LIVE STATUS SECTION */}
+      {user && (
+        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            Live Status
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Pending Requests */}
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-orange-800">Pending Requests</h3>
+                <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                  {liveStatus.pending}
+                </span>
+              </div>
+              <p className="text-sm text-orange-600">Awaiting restaurant confirmation</p>
+            </div>
+
+            {/* Ongoing Bookings */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-blue-800">Ongoing</h3>
+                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                  {liveStatus.ongoing}
+                </span>
+              </div>
+              <p className="text-sm text-blue-600">Currently confirmed reservations</p>
+            </div>
+
+            {/* Completed Bookings */}
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-green-800">Completed</h3>
+                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                  {liveStatus.completed}
+                </span>
+              </div>
+              <p className="text-sm text-green-600">Successfully completed</p>
             </div>
           </div>
         </section>

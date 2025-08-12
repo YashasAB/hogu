@@ -232,3 +232,39 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
 });
 
 export default router;
+// Get user's live reservation status
+router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const [pending, ongoing, completed] = await Promise.all([
+      prisma.reservation.count({
+        where: {
+          userId: userId,
+          status: 'PENDING'
+        }
+      }),
+      prisma.reservation.count({
+        where: {
+          userId: userId,
+          status: { in: ['CONFIRMED', 'HELD'] }
+        }
+      }),
+      prisma.reservation.count({
+        where: {
+          userId: userId,
+          status: { in: ['SEATED', 'COMPLETED'] }
+        }
+      })
+    ]);
+
+    res.json({
+      pending,
+      ongoing,
+      completed
+    });
+  } catch (error) {
+    console.error('Get live status error:', error);
+    res.status(500).json({ error: 'Failed to get live status' });
+  }
+});
