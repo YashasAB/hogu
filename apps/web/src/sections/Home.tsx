@@ -81,17 +81,8 @@ export default function Home() {
             })
             if (reservationsResponse.ok) {
               const reservations = await reservationsResponse.json()
-
-              // Filter reservations that are today or in the future
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-
-              const futureReservations = reservations.filter((reservation: any) => {
-                const reservationDate = new Date(reservation.slot.date)
-                return reservationDate >= today
-              })
-
-              setUserReservations(futureReservations)
+              console.log('Received reservations from API:', reservations)
+              setUserReservations(reservations)
             }
           } catch (error) {
             console.error('Failed to fetch data:', error)

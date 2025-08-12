@@ -92,9 +92,20 @@ router.post('/:id/confirm', async (req, res) => {
 router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.userId;
+    
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    console.log('Today date for filtering:', today);
 
     const reservations = await prisma.reservation.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        slot: {
+          date: {
+            gte: today // Get reservations from today onwards
+          }
+        }
+      },
       include: {
         restaurant: {
           select: {
@@ -112,6 +123,15 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    console.log(`Found ${reservations.length} future reservations for user ${userId}`);
+    console.log('Reservations:', reservations.map(r => ({ 
+      id: r.id, 
+      status: r.status, 
+      date: r.slot.date, 
+      time: r.slot.time,
+      restaurant: r.restaurant.name 
+    })));
 
     res.json(reservations);
   } catch (error) {
