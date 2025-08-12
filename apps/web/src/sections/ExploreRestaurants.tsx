@@ -16,83 +16,107 @@ type Restaurant = {
   hot?: boolean;
 };
 
+const restaurants: Restaurant[] = [
+  {
+    id: "1",
+    name: "ZLB 23 (at The Leela Palace)",
+    slug: "zlb",
+    emoji: "🍸",
+    position: { lat: 12.960695, lng: 77.648663 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "Old Airport Rd",
+    category: "cocktails",
+    hot: true,
+  },
+  {
+    id: "2",
+    name: "Soka",
+    slug: "soka",
+    emoji: "🍸",
+    position: { lat: 12.965215, lng: 77.638143 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "Koramangala",
+    category: "cocktails",
+    hot: false,
+  },
+  {
+    id: "3",
+    name: "Bar Spirit Forward",
+    slug: "spirit-forward",
+    emoji: "🥃",
+    position: { lat: 12.975125, lng: 77.602350 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "CBD",
+    category: "cocktails",
+    hot: true,
+  },
+  {
+    id: "4",
+    name: "Naru Noodle Bar",
+    slug: "naru",
+    emoji: "🍱",
+    position: { lat: 12.958431, lng: 77.592895 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "CBD",
+    category: "dinner",
+    hot: false,
+  },
+
+  {
+    id: "8",
+    name: "Pizza 4P's (Indiranagar)",
+    slug: "pizza-4ps",
+    emoji: "🍕",
+    position: { lat: 12.969968, lng: 77.636089 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "Indiranagar",
+    category: "dinner",
+    hot: false,
+  },
+  {
+    id: "9",
+    name: "Dali & Gala",
+    slug: "dali-and-gala",
+    emoji: "🍸",
+    position: { lat: 12.975124, lng: 77.602868 },
+    image: "/api/placeholder/200/150",
+    neighborhood: "CBD",
+    category: "cocktails",
+    hot: false,
+  },
+];
+
 export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch restaurants data
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        console.log('Starting to fetch restaurants...');
-        // Use relative path - Vite dev server will proxy this correctly
-        const response = await fetch('/api/restaurants');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Successfully fetched restaurants:', data.length);
-        
-        setRestaurants(data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch restaurants:', err);
-        setError('Failed to load restaurants. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const markersRef = useRef<L.Marker[]>([]);
 
-    fetchRestaurants();
-  }, []);
-
-  // Initialize map once DOM is ready
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const timer = setTimeout(() => {
-      try {
-        console.log('Initializing map...');
-        
-        const map = L.map(mapRef.current!, {
-          center: [12.9716, 77.5946],
-          zoom: 13,
-          scrollWheelZoom: true,
-          zoomControl: true,
-        });
+    // Initialize map
+    const map = L.map(mapRef.current, {
+      center: [12.9716, 77.5946],
+      zoom: 13,
+      scrollWheelZoom: true,
+      zoomControl: true,
+    });
 
-        const darkTiles = L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-          {
-            maxZoom: 20,
-            attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-          },
-        );
-        
-        darkTiles.addTo(map);
-        mapInstanceRef.current = map;
+    mapInstanceRef.current = map;
 
-        // Force resize after initialization
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 200);
-        
-        console.log('Map initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize map:', error);
-      }
-    }, 100);
+    // Add dark tile layer (matching the neon theme)
+    const darkTiles = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        maxZoom: 20,
+        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+      },
+    );
+    darkTiles.addTo(map);
 
     return () => {
-      clearTimeout(timer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -100,13 +124,9 @@ export default function ExploreRestaurants() {
     };
   }, []);
 
-  // Update markers when restaurants or filter changes
+  // Update markers when filter changes
   useEffect(() => {
-    if (!mapInstanceRef.current || loading || restaurants.length === 0) {
-      return;
-    }
-
-    console.log('Updating markers for filter:', selectedFilter);
+    if (!mapInstanceRef.current) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
@@ -114,47 +134,43 @@ export default function ExploreRestaurants() {
     });
     markersRef.current = [];
 
-    // Filter restaurants
+    // Create emoji marker function
+    const createEmojiMarker = (restaurant: Restaurant) => {
+      const html = `
+        <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
+          <span class="pin__emoji">${restaurant.emoji}</span>
+        </div>
+      `;
+      const icon = L.divIcon({
+        className: "",
+        html,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -14],
+      });
+      return L.marker([restaurant.position.lat, restaurant.position.lng], {
+        icon,
+      });
+    };
+
+    // Add filtered restaurant markers
     const filteredRestaurants = restaurants.filter((restaurant) => {
       if (selectedFilter === "all") return true;
       if (selectedFilter === "hot") return restaurant.hot;
       return restaurant.category === selectedFilter;
     });
 
-    console.log('Adding markers for', filteredRestaurants.length, 'restaurants');
-
-    // Add new markers
     filteredRestaurants.forEach((restaurant) => {
-      try {
-        const html = `
-          <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
-            <span class="pin__emoji">${restaurant.emoji}</span>
-          </div>
-        `;
-        
-        const icon = L.divIcon({
-          className: "",
-          html,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19],
-          popupAnchor: [0, -14],
-        });
-        
-        const marker = L.marker([restaurant.position.lat, restaurant.position.lng], { icon });
-        
-        marker.bindPopup(`
-          <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
-            <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
-            <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
-            <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
-          </div>
-        `);
-        
-        marker.addTo(mapInstanceRef.current!);
-        markersRef.current.push(marker);
-      } catch (error) {
-        console.error('Failed to add marker for:', restaurant.name, error);
-      }
+      const marker = createEmojiMarker(restaurant);
+      marker.bindPopup(`
+        <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
+          <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
+          <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
+          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
+        </div>
+      `);
+      marker.addTo(mapInstanceRef.current);
+      markersRef.current.push(marker);
     });
 
     // Fit bounds to visible markers
@@ -162,43 +178,15 @@ export default function ExploreRestaurants() {
       const latlngs = filteredRestaurants.map(
         (r) => [r.position.lat, r.position.lng] as [number, number],
       );
-      mapInstanceRef.current!.fitBounds(latlngs, { padding: [28, 28] });
+      mapInstanceRef.current.fitBounds(latlngs, { padding: [28, 28] });
     }
-  }, [restaurants, selectedFilter, loading]);
+  }, [selectedFilter]);
 
-  // Filter restaurants for the mobile list
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;
     if (selectedFilter === "hot") return restaurant.hot;
     return restaurant.category === selectedFilter;
   });
-
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
-          <div className="text-xl text-gray-600">Loading restaurants...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center py-20">
-          <div className="text-xl text-red-600 mb-4">⚠️ {error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="btn btn-primary"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
