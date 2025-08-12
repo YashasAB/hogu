@@ -1,7 +1,38 @@
+
 import { Router } from 'express';
 import { z } from 'zod';
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
 
 const router = Router();
+const prisma = new PrismaClient();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Authentication middleware
+interface AuthenticatedRequest extends Request {
+  user?: { userId: string };
+}
+
+function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const authHeader = req.header('Authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('JWT verification error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
 
 // Mock availability data
 const mockAvailability = [
@@ -57,18 +88,10 @@ router.post('/:id/confirm', async (req, res) => {
   });
 });
 
-export default router;
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
-
-const router = express.Router();
-const prisma = new PrismaClient();
-
 // Get user's reservations
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
 
     const reservations = await prisma.reservation.findMany({
       where: { userId },
@@ -98,9 +121,9 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Create a reservation
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const { restaurantSlug, date, time, partySize } = req.body;
 
     if (!restaurantSlug || !date || !time || !partySize) {
@@ -170,9 +193,9 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Get specific reservation
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.user!.userId;
     const reservationId = req.params.id;
 
     const reservation = await prisma.reservation.findFirst({
