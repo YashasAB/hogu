@@ -26,6 +26,8 @@ export default function Home() {
     ongoing: 0,
     completed: 0
   })
+  const [userReservations, setUserReservations] = useState<any[]>([])
+  const [loadingReservations, setLoadingReservations] = useState(false)
 
   // Check if user is logged in
   useEffect(() => {
@@ -56,29 +58,53 @@ export default function Home() {
     checkAuth()
   }, [])
 
-  // Fetch live status when user is logged in
+  // Fetch live status and reservations when user is logged in
   useEffect(() => {
     if (user) {
-      const fetchLiveStatus = async () => {
+      const fetchData = async () => {
         const token = localStorage.getItem('hogu_token')
         if (token) {
           try {
-            const response = await fetch('/api/reservations/status', {
+            // Fetch live status
+            const statusResponse = await fetch('/api/reservations/status', {
               headers: { 'Authorization': `Bearer ${token}` }
             })
-            if (response.ok) {
-              const status = await response.json()
+            if (statusResponse.ok) {
+              const status = await statusResponse.json()
               setLiveStatus(status)
             }
+
+            // Fetch user reservations
+            setLoadingReservations(true)
+            const reservationsResponse = await fetch('/api/reservations', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (reservationsResponse.ok) {
+              const reservations = await reservationsResponse.json()
+              
+              // Filter reservations that are today or in the future
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              
+              const futureReservations = reservations.filter((reservation: any) => {
+                const reservationDate = new Date(reservation.slot.date)
+                return reservationDate >= today
+              })
+              
+              setUserReservations(futureReservations)
+            }
           } catch (error) {
-            console.error('Failed to fetch live status:', error)
+            console.error('Failed to fetch data:', error)
+          } finally {
+            setLoadingReservations(false)
           }
         }
       }
-      fetchLiveStatus()
+      
+      fetchData()
 
       // Refresh every 30 seconds
-      const interval = setInterval(fetchLiveStatus, 30000)
+      const interval = setInterval(fetchData, 30000)
       return () => clearInterval(interval)
     }
   }, [user])
@@ -167,6 +193,50 @@ export default function Home() {
     </svg>
   );
 
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':')
+    const hour = parseInt(hours)
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${displayHour}:${minutes} ${ampm}`
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today'
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return 'Tomorrow'
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium'
+      case 'CONFIRMED':
+        return 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium'
+      case 'SEATED':
+        return 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium'
+      case 'COMPLETED':
+        return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium'
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium'
+      default:
+        return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium'
+    }
+  }
+
   // --- UI ---
   return (
     <div className="space-y-8 mx-4 sm:mx-6 lg:mx-8">
@@ -239,34 +309,88 @@ export default function Home() {
         </section>
       )}
 
-      {/* PENDING REQUESTS SECTION */}
-      {user && liveStatus.pending > 0 && (
+      {/* YOUR RESERVATIONS SECTION */}
+      {user && userReservations.length > 0 && (
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-            Pending Reservation Requests
-          </h2>
-
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-orange-800">Awaiting Restaurant Confirmation</h3>
-              <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                {liveStatus.pending}
-              </span>
-            </div>
-            <p className="text-sm text-orange-600 mb-3">
-              You have {liveStatus.pending} reservation request{liveStatus.pending > 1 ? 's' : ''} waiting for restaurant confirmation.
-            </p>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Your Reservations
+            </h2>
             <Link
               to="/me"
-              className="inline-flex items-center text-sm font-medium text-orange-700 hover:text-orange-800"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
-              View My Reservations
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              View All →
             </Link>
           </div>
+
+          {loadingReservations ? (
+            <div className="space-y-3">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="border border-gray-200 rounded-xl p-4 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {userReservations.slice(0, 3).map((reservation) => (
+                <div
+                  key={reservation.id}
+                  className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <span>{reservation.restaurant.emoji || '🍽️'}</span>
+                      {reservation.restaurant.name}
+                    </h3>
+                    <span className={getStatusColor(reservation.status)}>
+                      {reservation.status === 'PENDING' ? 'Pending' :
+                       reservation.status === 'CONFIRMED' ? 'Accepted' :
+                       reservation.status === 'SEATED' ? 'Seated' :
+                       reservation.status === 'COMPLETED' ? 'Completed' :
+                       reservation.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {formatDate(reservation.slot.date)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {formatTime(reservation.slot.time)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {reservation.partySize} {reservation.partySize === 1 ? 'person' : 'people'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              
+              {userReservations.length > 3 && (
+                <div className="text-center pt-2">
+                  <Link
+                    to="/me"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    View {userReservations.length - 3} more reservation{userReservations.length - 3 > 1 ? 's' : ''}
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
 
