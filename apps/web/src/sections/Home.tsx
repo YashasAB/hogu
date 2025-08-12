@@ -81,16 +81,16 @@ export default function Home() {
             })
             if (reservationsResponse.ok) {
               const reservations = await reservationsResponse.json()
-              
+
               // Filter reservations that are today or in the future
               const today = new Date()
               today.setHours(0, 0, 0, 0)
-              
+
               const futureReservations = reservations.filter((reservation: any) => {
                 const reservationDate = new Date(reservation.slot.date)
                 return reservationDate >= today
               })
-              
+
               setUserReservations(futureReservations)
             }
           } catch (error) {
@@ -100,7 +100,7 @@ export default function Home() {
           }
         }
       }
-      
+
       fetchData()
 
       // Refresh every 30 seconds
@@ -206,7 +206,7 @@ export default function Home() {
     const today = new Date()
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-    
+
     if (date.toDateString() === today.toDateString()) {
       return 'Today'
     } else if (date.toDateString() === tomorrow.toDateString()) {
@@ -378,7 +378,7 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-              
+
               {userReservations.length > 3 && (
                 <div className="text-center pt-2">
                   <Link
