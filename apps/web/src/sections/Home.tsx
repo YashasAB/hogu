@@ -310,6 +310,7 @@ export default function Home() {
       )}
 
       {/* YOUR RESERVATIONS SECTION */}
+      {console.log('Debug - user:', !!user, 'userReservations.length:', userReservations.length, 'userReservations:', userReservations)}
       {user && userReservations.length > 0 && (
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-6">
