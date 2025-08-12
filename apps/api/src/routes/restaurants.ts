@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 
@@ -48,7 +47,7 @@ router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
     console.log('Fetching restaurant with slug:', slug);
-    
+
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug },
       include: {
@@ -59,9 +58,9 @@ router.get('/:slug', async (req, res) => {
         },
       },
     });
-    
+
     console.log('Found restaurant:', restaurant ? restaurant.name : 'null');
-    
+
     if (!restaurant) {
       console.log('Restaurant not found for slug:', slug);
       return res.status(404).json({ error: 'Restaurant not found' });
@@ -85,7 +84,7 @@ router.get('/:slug', async (req, res) => {
       website: restaurant.website,
       cuisineTags: restaurant.cuisineTags.map(ct => ct.cuisineTag.name),
     };
-    
+
     res.json(formattedRestaurant);
   } catch (error) {
     console.error('Error fetching restaurant:', error);
@@ -135,13 +134,13 @@ router.get('/:slug/availability', async (req, res) => {
   }
 });
 
-// Helper function to format time from 24h to 12h format
+// Helper function to format time from 24h to 12h format for display only
 function formatTime(time: string): string {
   const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:${minutes} ${ampm}`;
+  const hour24 = parseInt(hours);
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+  return `${hour12}:${minutes} ${period}`;
 }
 
 export default router;

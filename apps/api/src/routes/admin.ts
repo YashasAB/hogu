@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateRestaurant, AuthenticatedRequest } from '../middleware/auth';
@@ -51,7 +50,7 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedReque
 router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
   try {
     const { date } = req.query;
-    
+
     if (!date) {
       return res.status(400).json({ error: 'Date is required' });
     }

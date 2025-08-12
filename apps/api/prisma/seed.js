@@ -1,4 +1,3 @@
-
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -157,7 +156,7 @@ async function main() {
     const today = new Date();
     const todayDateStr = today.toISOString().split('T')[0];
 
-    const timeSlots = ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30'];
+    const timeSlots = ['19:30', '20:00', '20:30', '21:00', '21:30', '22:00'];
     const partySizes = [2, 4, 6];
 
     // Create slots for tomorrow for all restaurants
