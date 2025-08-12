@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 
@@ -10,11 +9,11 @@ router.get('/tonight', async (req, res) => {
   try {
     const { city, party_size } = req.query;
     const partySize = parseInt(party_size as string) || 2;
-    
+
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
     const currentHour = new Date().getHours();
-    
+
     // Get available slots for today from current time onwards
     const availableSlots = await prisma.timeSlot.findMany({
       where: {
@@ -36,11 +35,11 @@ router.get('/tonight', async (req, res) => {
 
     // Group slots by restaurant
     const restaurantSlots = new Map();
-    
-    availableSlots.forEach(slot => {
+
+    availableSlots.forEach((slot: TimeSlot & { restaurant: Restaurant }) => {
       const restaurant = slot.restaurant;
       const key = restaurant.id;
-      
+
       if (!restaurantSlots.has(key)) {
         restaurantSlots.set(key, {
           restaurant: {
@@ -53,7 +52,7 @@ router.get('/tonight', async (req, res) => {
           slots: [],
         });
       }
-      
+
       restaurantSlots.get(key).slots.push({
         slot_id: slot.id,
         time: formatTime(slot.time),
@@ -80,12 +79,12 @@ router.get('/week', async (req, res) => {
     const numDays = parseInt(days as string) || 7;
 
     const weekDays = [];
-    
+
     for (let i = 0; i < numDays; i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       // Get available slots for this date
       const availableSlots = await prisma.timeSlot.findMany({
         where: {
@@ -101,10 +100,10 @@ router.get('/week', async (req, res) => {
 
       // Group by restaurant for picks
       const restaurantSlots = new Map();
-      availableSlots.forEach(slot => {
+      availableSlots.forEach((slot: TimeSlot & { restaurant: Restaurant }) => {
         const restaurant = slot.restaurant;
         const key = restaurant.id;
-        
+
         if (!restaurantSlots.has(key)) {
           restaurantSlots.set(key, {
             restaurant: {
@@ -117,7 +116,7 @@ router.get('/week', async (req, res) => {
             slots: [],
           });
         }
-        
+
         restaurantSlots.get(key).slots.push({
           slot_id: slot.id,
           time: formatTime(slot.time),
