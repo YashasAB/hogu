@@ -81,14 +81,24 @@ export default function RestaurantDetail() {
   // Fetch restaurant data
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (!slug) return;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
       
       try {
+        console.log('Fetching restaurant with slug:', slug);
         const response = await fetch(`/api/restaurants/${slug}`);
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('Restaurant data:', data);
           setRestaurant(data);
         } else {
+          console.error('Restaurant not found, status:', response.status);
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
           setRestaurant(null);
         }
       } catch (error) {

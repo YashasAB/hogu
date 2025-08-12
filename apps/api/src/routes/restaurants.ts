@@ -47,6 +47,8 @@ router.get('/', async (_req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
+    console.log('Fetching restaurant with slug:', slug);
+    
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug },
       include: {
@@ -58,7 +60,10 @@ router.get('/:slug', async (req, res) => {
       },
     });
     
+    console.log('Found restaurant:', restaurant ? restaurant.name : 'null');
+    
     if (!restaurant) {
+      console.log('Restaurant not found for slug:', slug);
       return res.status(404).json({ error: 'Restaurant not found' });
     }
 
@@ -76,6 +81,7 @@ router.get('/:slug', async (req, res) => {
       hot: restaurant.isHot,
       image: restaurant.heroImageUrl || '/api/placeholder/200/150',
       instagramUrl: restaurant.instagramUrl,
+      heroImageUrl: restaurant.heroImageUrl,
       website: restaurant.website,
       cuisineTags: restaurant.cuisineTags.map(ct => ct.cuisineTag.name),
     };
