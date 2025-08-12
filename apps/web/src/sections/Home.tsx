@@ -1,6 +1,7 @@
 // apps/web/src/sections/Home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import DarkDatePicker from "../components/DarkDatePicker";
 
 type Slot = { slot_id: string; time: string; party_size: number };
 type SlotSummary = {
@@ -346,14 +347,11 @@ export default function Home() {
 
           {/* Date */}
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-300">Date</label>
-            <input
-              className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500/30"
-              type="date"
+            <DarkDatePicker
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              min={today}
-              aria-label="Date"
+              onChange={setSelectedDate}
+              min={new Date()}
+              label="Date"
             />
           </div>
         </div>
