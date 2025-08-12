@@ -78,7 +78,7 @@ const restaurants: Restaurant[] = [
     emoji: "🍸",
     position: { lat: 12.975125, lng: 77.60287 },
     image: "/api/placeholder/200/150",
-    neighborhood: "UB City",
+    neighborhood: "CBD",
     category: "cocktails",
     hot: false,
   },
