@@ -323,54 +323,60 @@ export default function Home() {
       </section>
 
       {/* QUICK FILTERS / PARTY SIZE + DATE */}
-      <section className="card -mt-10 relative z-[1] grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="flex-1 min-w-[120px]">
-          <label className="block text-sm opacity-90 mb-1">Party Size</label>
+      <section className="card -mt-10 relative z-[1] grid grid-cols-2 sm:grid-cols-4 gap-4 items-end">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Party Size</label>
           <select
-            className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="input"
             value={party}
             onChange={(e) => setParty(e.target.value === '' ? '' : parseInt(e.target.value))}
+            aria-label="Party size"
           >
-            <option value="" className="text-gray-900">Select party size</option>
+            <option value="">Select party size</option>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
-              <option key={size} value={size} className="text-gray-900">
+              <option key={size} value={size}>
                 {size} {size === 1 ? "person" : "people"}
               </option>
             ))}
           </select>
         </div>
-        <input
-          className="input"
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          min={today} // Set min to today's date
-          aria-label="Date"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+          <input
+            className="input"
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            min={today}
+            aria-label="Date"
+          />
+        </div>
         <div className="hidden sm:flex items-center text-muted text-sm">
           City: Bengaluru
         </div>
-        {/* The Explore Now button is placed below the filters */}
+        {user && (
+          <button
+            onClick={() => {
+              if (party !== '' && selectedDate) {
+                window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
+              }
+            }}
+            disabled={party === '' || !selectedDate}
+            className={`btn transition-all ${
+              party !== '' && selectedDate
+                ? "btn-primary"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            Explore Now
+          </button>
+        )}
+        {!user && (
+          <Link to="/login" className="btn btn-primary">
+            Log in
+          </Link>
+        )}
       </section>
-
-      {/* Explore Now Button */}
-      <div className="flex justify-center">
-        <button
-          onClick={() => {
-            if (party !== '' && selectedDate) {
-              window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
-            }
-          }}
-          disabled={party === '' || !selectedDate}
-          className={`px-6 py-2 rounded-lg font-medium transition-all ${
-            party !== '' && selectedDate
-              ? "bg-white text-brand hover:bg-white/90 cursor-pointer"
-              : "bg-white/30 text-white/50 cursor-not-allowed"
-          }`}
-        >
-          Explore Now
-        </button>
-      </div>
 
       {/* WHAT PROBLEMS WE SOLVE */}
       <section
