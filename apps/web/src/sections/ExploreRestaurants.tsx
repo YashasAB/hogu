@@ -117,34 +117,32 @@ export default function ExploreRestaurants() {
     // Create emoji marker function
     const createEmojiMarker = (restaurant: Restaurant) => {
       try {
-        const html = `
-          <div style="
-            width: 32px; 
-            height: 32px; 
+        console.log('Creating marker for:', restaurant.name, 'at position:', restaurant.position);
+        
+        const icon = L.divIcon({
+          className: "custom-div-icon",
+          html: `<div style="
+            width: 30px; 
+            height: 30px; 
             background: ${restaurant.hot ? '#ef4444' : '#8b5cf6'}; 
             border-radius: 50%; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 16px;
+            font-size: 14px;
             border: 2px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
             color: white;
             font-weight: bold;
-          ">
-            ${restaurant.emoji}
-          </div>
-        `;
-        const icon = L.divIcon({
-          className: "custom-marker",
-          html,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -16],
+          ">${restaurant.emoji}</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
         });
-        return L.marker([restaurant.position.lat, restaurant.position.lng], {
-          icon,
-        });
+        
+        const marker = L.marker([restaurant.position.lat, restaurant.position.lng], { icon });
+        console.log('Marker created successfully for:', restaurant.name);
+        return marker;
       } catch (error) {
         console.error('Error creating marker for:', restaurant.name, error);
         // Fallback to default marker
@@ -160,11 +158,18 @@ export default function ExploreRestaurants() {
     });
 
     console.log('Filtered restaurants count:', filteredRestaurants.length);
+    console.log('Map instance exists:', !!mapInstanceRef.current);
 
-    filteredRestaurants.forEach((restaurant) => {
+    if (!mapInstanceRef.current) {
+      console.error('No map instance available for adding markers');
+      return;
+    }
+
+    filteredRestaurants.forEach((restaurant, index) => {
       try {
-        console.log('Adding marker for:', restaurant.name, restaurant.position);
+        console.log(`Adding marker ${index + 1}/${filteredRestaurants.length} for:`, restaurant.name, restaurant.position);
         const marker = createEmojiMarker(restaurant);
+        
         marker.bindPopup(`
           <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
             <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
@@ -172,13 +177,16 @@ export default function ExploreRestaurants() {
             <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
           </div>
         `);
-        marker.addTo(mapInstanceRef.current!);
+        
+        marker.addTo(mapInstanceRef.current);
         markersRef.current.push(marker);
-        console.log('Marker added successfully for:', restaurant.name);
+        console.log(`Marker ${index + 1} added successfully for:`, restaurant.name);
       } catch (error) {
         console.error('Failed to add marker for:', restaurant.name, error);
       }
     });
+    
+    console.log('Total markers added:', markersRef.current.length);
 
     // Fit bounds to visible markers
     if (filteredRestaurants.length > 0) {

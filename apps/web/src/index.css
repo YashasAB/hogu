@@ -98,7 +98,13 @@
 }
 
 /* Custom marker styling */
-.custom-marker {
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Ensure Leaflet markers display properly */
+.leaflet-div-icon {
   background: transparent !important;
   border: none !important;
 }
