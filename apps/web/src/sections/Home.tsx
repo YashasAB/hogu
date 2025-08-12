@@ -30,6 +30,7 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('hogu_token')
+      console.log('Token found:', !!token) // Debug log
       if (token) {
         try {
           const response = await fetch('/api/auth/me', {
@@ -37,10 +38,17 @@ export default function Home() {
           })
           if (response.ok) {
             const userData = await response.json()
+            console.log('User data:', userData) // Debug log
             setUser(userData)
+          } else {
+            console.log('Auth failed, clearing token')
+            localStorage.removeItem('hogu_token')
+            setUser(null)
           }
         } catch (error) {
           console.error('Auth check failed:', error)
+          localStorage.removeItem('hogu_token')
+          setUser(null)
         }
       }
     }
@@ -90,11 +98,15 @@ export default function Home() {
 
   // Logout function
   const handleLogout = () => {
+    console.log('Logging out...')
     localStorage.removeItem('hogu_token')
     setUser(null)
     setShowUserDropdown(false)
-    // Optionally redirect to home or show a success message
+    window.location.reload() // Force refresh to reset all state
   }
+
+  // Emergency logout - you can call this from browser console if needed
+  window.emergencyLogout = handleLogout
 
   // --- state ---
   const [party, setParty] = useState(2);
