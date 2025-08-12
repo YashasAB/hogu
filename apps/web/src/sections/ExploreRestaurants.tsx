@@ -68,7 +68,7 @@ const restaurants: Restaurant[] = [
     position: { lat: 12.969968, lng: 77.636089 },
     image: "/api/placeholder/200/150",
     neighborhood: "Indiranagar",
-    category: "pizza",
+    category: "dinner",
     hot: false,
   },
   {
@@ -76,7 +76,7 @@ const restaurants: Restaurant[] = [
     name: "Dali & Gala",
     slug: "dali-and-gala",
     emoji: "🍸",
-    position: { lat: 12.975125, lng: 77.60287 },
+    position: { lat: 12.975124, lng: 77.602868 },
     image: "/api/placeholder/200/150",
     neighborhood: "CBD",
     category: "cocktails",
