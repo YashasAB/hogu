@@ -4,7 +4,7 @@ import path from 'path';
 import authRoutes from './routes/auth';
 import discoverRoutes from './routes/discover';
 import reservationRoutes from './routes/reservations';
-import restaurantRoutes from './routes/restaurants';
+import restaurantsRoutes from './routes/restaurants';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
@@ -21,10 +21,10 @@ app.get('/', (req, res) => {
 });
 
 // Routes
-app.use('/auth', authRoutes);
-app.use('/restaurants', restaurantRoutes);
-app.use('/reservations', reservationRoutes);
-app.use('/discover', discoverRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/restaurants', restaurantsRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/discover', discoverRoutes);
 
 // Serve static files from the React app build directory
 if (process.env.NODE_ENV === 'production') {

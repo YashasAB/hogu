@@ -110,7 +110,7 @@ export default function ExploreRestaurants() {
       setError(null);
       try {
         console.log('Fetching restaurants from API...');
-        const response = await fetch('/api/restaurants');
+        const response = await fetch('http://0.0.0.0:8080/api/restaurants');
 
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
