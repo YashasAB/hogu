@@ -12,6 +12,19 @@ const prisma = new PrismaClient({
   log: ['query', 'info', 'warn', 'error'],
 });
 
+// Test database connection on startup
+async function testDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    process.exit(1);
+  }
+}
+
+testDatabaseConnection();
+
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 

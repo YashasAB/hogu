@@ -22,42 +22,38 @@ const LoginSchema = z.object({
 // User signup
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Signup request received:', req.body);
+
     const { username, password, name, email, phone, preferredHood } = req.body;
 
     if (!username || !password) {
+      console.log('Missing username or password');
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Check if username already exists
-    const existingAuth = await prisma.userAuth.findUnique({
+    // Check if user already exists
+    const existingUser = await prisma.userAuth.findUnique({
       where: { username }
     });
 
-    if (existingAuth) {
+    if (existingUser) {
+      console.log('User already exists:', username);
       return res.status(400).json({ error: 'Username already exists' });
     }
 
-    // Check if email already exists (if provided)
-    if (email) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email }
-      });
-      if (existingUser) {
-        return res.status(400).json({ error: 'Email already registered' });
-      }
-    }
-
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('Hashing password...');
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user transaction
+    // Create user and auth record in a transaction
+    console.log('Creating user in database...');
     const result = await prisma.$transaction(async (tx) => {
-      // Create base user
+      // Create the main user record
       const user = await tx.user.create({
         data: {
-          email: email || `${username}@hogu.temp`,
-          name: name || username,
-          phone: phone || null
+          email: email || null,
+          phone: phone || null,
+          name: name || null,
         }
       });
 
@@ -66,32 +62,35 @@ router.post('/signup', async (req, res) => {
         data: {
           userId: user.id,
           username,
-          passwordHash: hashedPassword
+          passwordHash
         }
       });
 
-      // Create user details
-      await tx.userDetail.create({
-        data: {
-          userId: user.id,
-          name: name || username,
-          phoneNumber: phone || null,
-          email: email || null,
-          preferredHood: preferredHood || null
-        }
-      });
+      // Create user details if provided
+      if (name || phone || email || preferredHood) {
+        await tx.userDetail.create({
+          data: {
+            userId: user.id,
+            name: name || null,
+            phoneNumber: phone || null,
+            email: email || null,
+            preferredHood: preferredHood || null
+          }
+        });
+      }
 
       return user;
     });
 
-    res.status(201).json({
-      message: 'Account created successfully',
-      userId: result.id
+    console.log('User created successfully:', result.id);
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      userId: result.id 
     });
 
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Signup error details:', error);
+    res.status(500).json({ error: 'Internal server error during signup' });
   }
 });
 
