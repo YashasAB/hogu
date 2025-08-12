@@ -41,8 +41,6 @@ export default function Home() {
     checkAuth()
   }, [])
 
-  // Mock availability data for demo
-  const mockAvailability = [
   // --- state ---
   const [party, setParty] = useState(2);
   const [city] = useState("BLR");
