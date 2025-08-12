@@ -24,7 +24,7 @@ const restaurants = [
     emoji: "🍸",
     latitude: 12.965215,
     longitude: 77.638143,
-    neighborhood: "Koramangala",
+    neighborhood: "Indiranagar",
     category: "cocktails",
     isHot: false,
     heroImageUrl: "https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=1600&auto=format&fit=crop",
