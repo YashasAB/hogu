@@ -210,7 +210,6 @@ export default function ExploreRestaurants() {
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
-              Open‑source tiles, cute emoji pins, live location & quick filters.
               Scroll to zoom, drag to pan.
             </p>
 
