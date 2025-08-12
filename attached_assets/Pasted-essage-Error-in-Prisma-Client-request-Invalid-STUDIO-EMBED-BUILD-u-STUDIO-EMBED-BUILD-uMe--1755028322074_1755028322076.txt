@@ -1,0 +1,28 @@
+essage: Error in Prisma Client request: 
+
+
+Invalid `STUDIO_EMBED_BUILD<"u"&&STUDIO_EMBED_BUILD?uMe():require(`${l.prismaClient}/runtime/${c}`),F=r,$=(0,eH.createHash)("sha256").update()` invocation in
+/home/runner/.npm/_npx/2778af9cee32ff87/node_modules/prisma/build/index.js:4793:10635
+
+  4790       }
+  4791     }
+  4792   }
+→ 4793 `}}),i=n.workspaces.find(a=>a.isDefault);if(!i)throw new Error("No default workspace found");return i};var DMe=require("@prisma/engines");var ZPe=require("buffer");function XPe(r,e,n,i){Object.defineProperty(r,e,{get:n,set:i,enumerable:!0,configurable:!0})}var eFe={};XPe(eFe,"serializeRPCMessage",()=>ZG);XPe(eFe,"deserializeRPCMessage",()=>XG);var YG="PrismaBigInt::",QG="PrismaBytes::";function ZG(r){return JSON.stringify(r,(e,n)=>typeof n=="bigint"?YG+n:n?.type==="Buffer"&&Array.isArray(n?.data)?QG+ZPe.Buffer.from(n.data).toString("base64"):n)}function XG(r){return JSON.parse(r,(e,n)=>typeof n=="string"&&n.startsWith(YG)?BigInt(n.substr(YG.length)):typeof n=="string"&&n.startsWith(QG)?n.substr(QG.length):n)}var hMe=G(oFe()),G6=G(h6e()),gMe=G(require("http")),yMe=G(v6e()),vMe=require("zlib");var im=require("path");var eH=require("crypto"),lMe=require("fs/promises"),pMe=G(rV());function ZV(r,e,n,i){Object.defineProperty(r,e,{get:n,set:i,enumerable:!0,configurable:!0})}var dMe=globalThis,YV={},U6={},Fg=dMe.parcelRequire94c2;Fg==null&&(Fg=function(r){if(r in YV)return YV[r].exports;if(r in U6){var e=U6[r];delete U6[r];var n={id:r,exports:{}};return YV[r]=n,e.call(n.exports,n,n.exports),n.exports}var i=new Error("Cannot find module '"+r+"'");throw i.code="MODULE_NOT_FOUND",i},Fg.register=function(e,n){U6[e]=n},dMe.parcelRequire94c2=Fg);var fMe=Fg.register;fMe("9lTzd",function(module,exports){ZV(module.exports,"guessEnginePaths",()=>guessEnginePaths),ZV(module.exports,"guessPrismaClientPath",()=>guessPrismaClientPath);var $5COlq=Fg("5COlq");async function guessEnginePaths({forceBinary,forceLibrary,resolveOverrides}){let queryEngineName,queryEngineType;if(forceLibrary?(queryEngineName=await(0,$5COlq.prismaEngineName)("query-engine","library"),queryEngineType="library"):forceBinary?(queryEngineName=await(0,$5COlq.prismaEngineName)("query-engine","binary"),queryEngineType="binary"):(queryEngineName=void 0,queryEngineType=void 0),!queryEngineName||!queryEngineType)return{queryEngine:void 0};let queryEnginePath;if(resolveOverrides[".prisma/client"])queryEnginePath=(0,im.resolve)(resolveOverrides[".prisma/client"],`../${queryEngineName}`);else if(resolveOverrides["@prisma/engines"])queryEnginePath=(0,im.resolve)(resolveOverrides["@prisma/engines"],`../../${queryEngineName}`);else{let atPrismaEnginesPath;try{atPrismaEnginesPath=eval("require.resolve('@prisma/engines')")}catch(r){throw new Error("Unable to resolve Prisma engine paths. This is a bug.")}queryEnginePath=(0,im.resolve)(atPrismaEnginesPath`../../${queryEngineName}`)}return{queryEngine:{type:queryEngineType,path:queryEnginePath}}}function guessPrismaClientPath({resolveOverrides}){let prismaClientPath=resolveOverrides["@prisma/client"]||eval("require.resolve('@prisma/client')");return(0,im.resolve)(prismaClientPath,"../")}});fMe("5COlq",function(r,e){ZV(r.exports,"prismaEngineName",()=>n);async function n(i,a){let o=await $i(),u=o==="windows"?".exe":"";if(a==="library")return ma(o,"fs");if(a==="binary")return`${i}-${o}${u}`;throw new Error(`Unknown engine type: ${a}`)}});function $kt(r){return{models:QV(r.models),enums:QV(r.enums),types:QV(r.types)}}function QV(r){let e={};for(let{name:n,...i}of r)e[n]=i;return e}var vD=(0,pMe.debug)("prisma:studio-pcw"),Mkt=/^\s*datasource\s+([^\s]+)\s*{/m,kkt=/url *= *env\("(.*)"\)/,Nkt=/url *= *"(.*)"/;async function jkt({schema:r,schemaPath:e,dmmf:n,adapter:i,datasourceProvider:a,previewFeatures:o,datasources:u,engineType:c,paths:l,directUrl:p,versions:f}){let g=r.match(Mkt)?.[1]??"",v=r.match(kkt)?.[1]??null,x=r.match(Nkt)?.[1]??null,{getPrismaClient:b,PrismaClientKnownRequestError:E,PrismaClientRustPanicError:_,PrismaClientInitializationError:C,PrismaClientValidationError:A}=typeof STUDIO_EMBED_BUILD<"u"&&STUDIO_EMBED_BUILD?uMe():require(`${l.prismaClient}/runtime/${c}`),F=r,$=(0,eH.createHash)("sha256").update(
+The column `main.restaurants.email` does not exist in the current database.
+  
+Query:
+{
+  "modelName": "RestaurantCuisineTag",
+  "operation": "findMany",
+  "args": {
+    "take": 100,
+    "skip": 0,
+    "select": {
+      "restaurantId": true,
+      "cuisineTagId": true,
+      "restaurant": true,
+      "cuisineTag": true
+    }
+  }
+}
+  
