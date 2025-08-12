@@ -16,6 +16,8 @@ model User {
   createdAt DateTime @default(now())
 
   reservations Reservation[]
+  auth         UserAuth?
+  details      UserDetail?
 
   @@map("users")
 }
@@ -39,6 +41,7 @@ model Restaurant {
   cuisineTags      RestaurantCuisineTag[]
   timeSlots        TimeSlot[]
   reservations     Reservation[]
+  auth             RestaurantAuth?
 
   @@map("restaurants")
 }
@@ -95,4 +98,45 @@ model Reservation {
   slot       TimeSlot   @relation(fields: [slotId], references: [id], onDelete: Cascade)
 
   @@map("reservations")
+}
+
+model RestaurantAuth {
+  id           String   @id @default(cuid())
+  restaurantId String   @unique
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("restaurant_auth")
+}
+
+model UserAuth {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_auth")
+}
+
+model UserDetail {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  name           String?
+  phoneNumber    String?
+  email          String?
+  preferredHood  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_details")
 }
