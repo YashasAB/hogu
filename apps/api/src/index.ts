@@ -30,6 +30,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static files from React build in production
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  const webDistPath = path.join(__dirname, '../../web/dist');
+  app.use(express.static(webDistPath));
+  console.log('Serving static files from:', webDistPath);
+}
+
 // Health check endpoint
 app.get('/', (req, res) => {
   res.status(200).json({ 
@@ -68,14 +76,11 @@ app.use('/api/restaurants', restaurantsRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/discover', discoverRoutes);
 
-// Serve static files from the React app build directory
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../../web/dist');
-  app.use(express.static(buildPath));
-
-  // Catch all handler: send back React's index.html file for client-side routing
+// In production, serve the React app for all non-API routes
+if (isProduction) {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
+    const webDistPath = path.join(__dirname, '../../web/dist');
+    res.sendFile(path.join(webDistPath, 'index.html'));
   });
 }
 
