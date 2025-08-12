@@ -75,7 +75,7 @@ export default function Home() {
         }
       }
       fetchPendingReservations()
-      
+
       // Refresh every 30 seconds
       const interval = setInterval(fetchPendingReservations, 30000)
       return () => clearInterval(interval)
@@ -90,7 +90,7 @@ export default function Home() {
         setShowUserDropdown(false);
       }
     }
-    
+
     if (showUserDropdown) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -174,7 +174,7 @@ export default function Home() {
                 <p className="text-gray-600">Welcome back to Hogu. Ready to discover tonight's hottest spots?</p>
               </div>
             </div>
-            
+
             {/* User Dropdown */}
             <div className="relative">
               <button
@@ -189,7 +189,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              
+
               {showUserDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                   <div className="py-1">
@@ -202,6 +202,16 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       My Profile
+                    </Link>
+                    <Link
+                      to="/me"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      My Reservations
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -227,7 +237,7 @@ export default function Home() {
             <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
             Pending Reservation Requests
           </h2>
-          
+
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-orange-800">Awaiting Restaurant Confirmation</h3>
@@ -312,9 +322,9 @@ export default function Home() {
           onChange={(e) => setParty(parseInt(e.target.value))}
           aria-label="Party size"
         >
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-            <option key={n} value={n}>
-              {n} {n === 1 ? "person" : "people"}
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
+            <option key={size} value={size}>
+              {size} {size === 1 ? "person" : "people"}
             </option>
           ))}
         </select>
@@ -328,13 +338,9 @@ export default function Home() {
         <div className="hidden sm:flex items-center text-muted text-sm">
           City: Bengaluru
         </div>
-        {!token ? (
+        {!token && (
           <Link to="/login" className="btn btn-primary justify-self-end">
             Log in
-          </Link>
-        ) : (
-          <Link to="/me" className="btn justify-self-end">
-            My reservations
           </Link>
         )}
       </section>
