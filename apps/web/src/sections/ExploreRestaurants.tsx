@@ -24,34 +24,10 @@ export default function ExploreRestaurants() {
 
   const markersRef = useRef<L.Marker[]>([]);
 
-  // Fetch restaurants from API
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        console.log('Fetching restaurants...');
-        const response = await fetch('/api/restaurants');
-        console.log('Response status:', response.status);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Restaurants data:', data);
-          setRestaurants(data);
-        } else {
-          console.error('Failed to fetch restaurants:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Failed to fetch restaurants:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRestaurants();
-  }, []);
-
+  // Initialize map first, then fetch restaurants
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Small delay to ensure DOM is ready
     const initMap = () => {
       try {
         console.log('Initializing map...');
@@ -102,9 +78,38 @@ export default function ExploreRestaurants() {
     };
   }, []);
 
+  // Fetch restaurants after map is initialized
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const fetchRestaurants = async () => {
+      try {
+        console.log('Fetching restaurants...');
+        const response = await fetch('/api/restaurants');
+        console.log('Response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Restaurants data:', data);
+          setRestaurants(data);
+        } else {
+          console.error('Failed to fetch restaurants:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Failed to fetch restaurants:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, [mapInstanceRef.current]);
+
   // Update markers when filter changes or restaurants data changes
   useEffect(() => {
-    if (!mapInstanceRef.current || restaurants.length === 0) return;
+    if (!mapInstanceRef.current || restaurants.length === 0) {
+      console.log('Skipping markers - map not ready or no restaurants');
+      return;
+    }
 
     console.log('Adding markers to map, restaurants count:', restaurants.length);
 
