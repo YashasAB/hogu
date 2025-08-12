@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -72,12 +71,20 @@ export default function Profile() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'pill bg-green-100 text-green-800'
-      case 'HELD': return 'pill bg-yellow-100 text-yellow-800'
-      case 'CANCELLED': return 'pill bg-red-100 text-red-800'
-      case 'SEATED': return 'pill bg-blue-100 text-blue-800'
-      case 'NO_SHOW': return 'pill bg-gray-100 text-gray-800'
-      default: return 'pill bg-gray-100 text-gray-800'
+      case 'PENDING':
+        return 'pill bg-orange-100 text-orange-800'
+      case 'CONFIRMED':
+        return 'pill bg-green-100 text-green-800'
+      case 'HELD':
+        return 'pill bg-yellow-100 text-yellow-800'
+      case 'CANCELLED':
+        return 'pill bg-red-100 text-red-800'
+      case 'SEATED':
+        return 'pill bg-blue-100 text-blue-800'
+      case 'NO_SHOW':
+        return 'pill bg-gray-100 text-gray-800'
+      default:
+        return 'pill bg-gray-100 text-gray-800'
     }
   }
 
@@ -121,7 +128,7 @@ export default function Profile() {
       {/* Reservations */}
       <div className="card space-y-4">
         <h2 className="text-xl font-semibold">My Reservations</h2>
-        
+
         {loading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (

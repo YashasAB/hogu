@@ -1,8 +1,6 @@
-
 import { createBrowserRouter } from 'react-router-dom'
 import Home from '../sections/Home'
 import Login from '../sections/Login'
-import Signup from '../sections/Signup'
 import RestaurantDetail from '../sections/RestaurantDetail'
 import Hold from '../sections/Hold'
 import Profile from '../sections/Profile'
@@ -11,6 +9,8 @@ import DropDetail from '../sections/DropDetail'
 import RestaurantLogin from '../sections/RestaurantLogin'
 import ExploreRestaurants from '../sections/ExploreRestaurants'
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
+import Signup from '../sections/Signup'
+
 
 export const router = createBrowserRouter([
   {

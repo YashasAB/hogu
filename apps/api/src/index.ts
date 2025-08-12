@@ -3,10 +3,10 @@ import cors from 'cors';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
-import adminRoutes from './routes/admin';
 import discoverRoutes from './routes/discover';
-import restaurantsRoutes from './routes/restaurants';
-import reservationsRoutes from './routes/reservations';
+import restaurantRoutes from './routes/restaurants';
+import reservationRoutes from './routes/reservations';
+import adminRoutes from './routes/admin';
 
 const prisma = new PrismaClient({
   log: ['query', 'info', 'warn', 'error'],
@@ -73,10 +73,10 @@ app.get('/health', async (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/discover', discoverRoutes);
-app.use('/api/restaurants', restaurantsRoutes);
-app.use('/api/reservations', reservationsRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {

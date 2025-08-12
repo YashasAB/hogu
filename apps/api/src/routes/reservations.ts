@@ -58,3 +58,154 @@ router.post('/:id/confirm', async (req, res) => {
 });
 
 export default router;
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth';
+
+const router = express.Router();
+const prisma = new PrismaClient();
+
+// Get user's reservations
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+
+    const reservations = await prisma.reservation.findMany({
+      where: { userId },
+      include: {
+        restaurant: {
+          select: {
+            name: true,
+            slug: true,
+            emoji: true
+          }
+        },
+        slot: {
+          select: {
+            date: true,
+            time: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(reservations);
+  } catch (error) {
+    console.error('Get reservations error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Create a reservation
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { restaurantSlug, date, time, partySize } = req.body;
+
+    if (!restaurantSlug || !date || !time || !partySize) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Find the restaurant
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { slug: restaurantSlug }
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    // Create or find the time slot
+    const slot = await prisma.timeSlot.upsert({
+      where: {
+        restaurantId_date_time_partySize: {
+          restaurantId: restaurant.id,
+          date,
+          time,
+          partySize: parseInt(partySize)
+        }
+      },
+      update: {},
+      create: {
+        restaurantId: restaurant.id,
+        date,
+        time,
+        partySize: parseInt(partySize),
+        status: 'AVAILABLE'
+      }
+    });
+
+    // Create the reservation
+    const reservation = await prisma.reservation.create({
+      data: {
+        userId,
+        restaurantId: restaurant.id,
+        slotId: slot.id,
+        partySize: parseInt(partySize),
+        status: 'PENDING'
+      },
+      include: {
+        restaurant: {
+          select: {
+            name: true,
+            slug: true,
+            emoji: true
+          }
+        },
+        slot: {
+          select: {
+            date: true,
+            time: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json(reservation);
+  } catch (error) {
+    console.error('Create reservation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get specific reservation
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    const reservationId = req.params.id;
+
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        id: reservationId,
+        userId
+      },
+      include: {
+        restaurant: {
+          select: {
+            name: true,
+            slug: true,
+            emoji: true
+          }
+        },
+        slot: {
+          select: {
+            date: true,
+            time: true
+          }
+        }
+      }
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    res.json(reservation);
+  } catch (error) {
+    console.error('Get reservation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;

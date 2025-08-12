@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken'; // Assuming you have jwt installed
 import { PrismaClient } from '@prisma/client'; // Assuming you have prisma installed
+import bcrypt from 'bcrypt'; // Import bcrypt for password hashing
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -18,19 +19,83 @@ const LoginSchema = z.object({
   password: z.string().min(6)
 });
 
-router.post('/register', async (req, res) => {
-  const parse = RegisterSchema.safeParse(req.body);
-  if (!parse.success) return res.status(400).json({ error: parse.error.flatten() });
+// User signup
+router.post('/signup', async (req, res) => {
+  try {
+    const { username, password, name, email, phone, preferredHood } = req.body;
 
-  const { email, fullName } = parse.data;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
 
-  // Mock response without database
-  const user = { id: '1', email, fullName };
-  const token = 'mock-jwt-token';
+    // Check if username already exists
+    const existingAuth = await prisma.userAuth.findUnique({
+      where: { username }
+    });
 
-  res.json({ token, user });
+    if (existingAuth) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Check if email already exists (if provided)
+    if (email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create base user
+      const user = await tx.user.create({
+        data: {
+          email: email || `${username}@hogu.temp`,
+          name: name || username,
+          phone: phone || null
+        }
+      });
+
+      // Create auth record
+      await tx.userAuth.create({
+        data: {
+          userId: user.id,
+          username,
+          passwordHash: hashedPassword
+        }
+      });
+
+      // Create user details
+      await tx.userDetail.create({
+        data: {
+          userId: user.id,
+          name: name || username,
+          phoneNumber: phone || null,
+          email: email || null,
+          preferredHood: preferredHood || null
+        }
+      });
+
+      return user;
+    });
+
+    res.status(201).json({
+      message: 'Account created successfully',
+      userId: result.id
+    });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
+// User login
 router.post('/login', async (req, res) => {
   const parse = LoginSchema.safeParse(req.body);
   if (!parse.success) return res.status(400).json({ error: parse.error.flatten() });

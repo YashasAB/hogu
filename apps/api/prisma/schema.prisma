@@ -88,7 +88,7 @@ model Reservation {
   restaurantId   String
   slotId         String
   partySize      Int
-  status         String   // HELD, CONFIRMED, CANCELLED, EXPIRED
+  status         String   // PENDING, HELD, CONFIRMED, CANCELLED, EXPIRED
   holdExpiresAt  DateTime?
   confirmedAt    DateTime?
   createdAt      DateTime @default(now())

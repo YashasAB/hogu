@@ -241,15 +241,54 @@ export default function RestaurantDetail() {
     fetchAvailability();
   }, [restaurant, date, partySize]);
 
-  const handleReserveNow = () => {
+  const handleReserveNow = async () => {
     if (!selectedSlot) {
       alert("Please select a time slot");
       return;
     }
+
+    const token = localStorage.getItem('hogu_token');
+    if (!token) {
+      alert("Please log in to make a reservation");
+      navigate('/login');
+      return;
+    }
+
     const slot = timeSlots.find((s) => s.id === selectedSlot);
-    alert(
-      `Reservation request for ${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`,
-    );
+    if (!slot) return;
+
+    try {
+      const response = await fetch('/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          restaurantSlug: restaurant?.slug,
+          date: date,
+          time: slot.time,
+          partySize: partySize
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to create reservation');
+        return;
+      }
+
+      alert(
+        `Reservation created! Status: ${data.status}\n${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`
+      );
+      
+      // Reset selection
+      setSelectedSlot(null);
+    } catch (error) {
+      console.error('Reservation error:', error);
+      alert('Failed to create reservation. Please try again.');
+    }
   };
 
   const handleMobileCTA = () => {
