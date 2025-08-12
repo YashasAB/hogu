@@ -31,7 +31,12 @@ export default function ExploreRestaurants() {
     const fetchRestaurants = async () => {
       try {
         console.log('Starting to fetch restaurants...');
-        const response = await fetch('/api/restaurants');
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:8080/api/restaurants'
+          : `${window.location.protocol}//${window.location.hostname}:8080/api/restaurants`;
+        
+        console.log('Fetching from:', apiUrl);
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
