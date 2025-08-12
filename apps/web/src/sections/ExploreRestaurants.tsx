@@ -23,17 +23,19 @@ export default function ExploreRestaurants() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapReady, setMapReady] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Initialize map once on mount
+  // Initialize everything in one useEffect to avoid race conditions
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    let mounted = true;
 
-    const initMap = () => {
+    const initializeMapAndFetchData = async () => {
+      if (!mapRef.current || initialized) return;
+
       try {
+        // Step 1: Initialize map
         console.log('Initializing map...');
-        
-        const map = L.map(mapRef.current!, {
+        const map = L.map(mapRef.current, {
           center: [12.9716, 77.5946],
           zoom: 13,
           scrollWheelZoom: true,
@@ -41,7 +43,6 @@ export default function ExploreRestaurants() {
         });
 
         mapInstanceRef.current = map;
-        console.log('Map instance created');
 
         const darkTiles = L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -52,64 +53,55 @@ export default function ExploreRestaurants() {
         );
         
         darkTiles.addTo(map);
-        console.log('Tiles added to map');
 
-        setTimeout(() => {
-          map.invalidateSize();
-          console.log('Map size invalidated');
-          setMapReady(true); // Signal that map is ready
-        }, 100);
+        // Step 2: Wait for map to be ready
+        await new Promise(resolve => setTimeout(resolve, 200));
+        map.invalidateSize();
+
+        // Step 3: Fetch restaurants
+        console.log('Fetching restaurants...');
+        const response = await fetch('/api/restaurants');
+        
+        if (!mounted) return; // Component unmounted
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Restaurants fetched successfully:', data.length, 'restaurants');
+          setRestaurants(data);
+        } else {
+          console.error('Failed to fetch restaurants:', response.status);
+        }
+
+        setLoading(false);
+        setInitialized(true);
 
       } catch (error) {
-        console.error('Failed to initialize map:', error);
+        console.error('Initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    const timeoutId = setTimeout(initMap, 100);
+    const timeoutId = setTimeout(initializeMapAndFetchData, 100);
 
     return () => {
+      mounted = false;
       clearTimeout(timeoutId);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, []); // Only run once on mount
+  }, []); // Empty dependency array - run only once
 
-  // Fetch restaurants once when map is ready
+  // Update markers when restaurants change or filter changes
   useEffect(() => {
-    if (!mapReady) return;
-
-    const fetchRestaurants = async () => {
-      try {
-        console.log('Fetching restaurants...');
-        const response = await fetch('/api/restaurants');
-        console.log('Response status:', response.status);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Restaurants data:', data);
-          setRestaurants(data);
-        } else {
-          console.error('Failed to fetch restaurants:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Failed to fetch restaurants:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRestaurants();
-  }, [mapReady]); // Only depends on mapReady flag
-
-  // Update markers when restaurants or filter changes
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapReady || restaurants.length === 0) {
-      console.log('Skipping markers - map not ready or no restaurants');
+    if (!mapInstanceRef.current || !initialized || restaurants.length === 0) {
       return;
     }
 
-    console.log('Adding markers to map, restaurants count:', restaurants.length);
+    console.log('Updating markers for filter:', selectedFilter);
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
@@ -117,16 +109,24 @@ export default function ExploreRestaurants() {
     });
     markersRef.current = [];
 
-    // Create emoji marker function
-    const createEmojiMarker = (restaurant: Restaurant) => {
+    // Filter restaurants
+    const filteredRestaurants = restaurants.filter((restaurant) => {
+      if (selectedFilter === "all") return true;
+      if (selectedFilter === "hot") return restaurant.hot;
+      return restaurant.category === selectedFilter;
+    });
+
+    console.log('Adding', filteredRestaurants.length, 'markers');
+
+    // Add markers
+    filteredRestaurants.forEach((restaurant) => {
       try {
-        console.log('Creating marker for:', restaurant.name, 'at position:', restaurant.position);
-        
         const html = `
           <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
             <span class="pin__emoji">${restaurant.emoji}</span>
           </div>
         `;
+        
         const icon = L.divIcon({
           className: "",
           html,
@@ -136,28 +136,6 @@ export default function ExploreRestaurants() {
         });
         
         const marker = L.marker([restaurant.position.lat, restaurant.position.lng], { icon });
-        console.log('Marker created successfully for:', restaurant.name);
-        return marker;
-      } catch (error) {
-        console.error('Error creating marker for:', restaurant.name, error);
-        return L.marker([restaurant.position.lat, restaurant.position.lng]);
-      }
-    };
-
-    // Filter restaurants
-    const filteredRestaurants = restaurants.filter((restaurant) => {
-      if (selectedFilter === "all") return true;
-      if (selectedFilter === "hot") return restaurant.hot;
-      return restaurant.category === selectedFilter;
-    });
-
-    console.log('Filtered restaurants count:', filteredRestaurants.length);
-
-    // Add markers
-    filteredRestaurants.forEach((restaurant, index) => {
-      try {
-        console.log(`Adding marker ${index + 1}/${filteredRestaurants.length} for:`, restaurant.name, restaurant.position);
-        const marker = createEmojiMarker(restaurant);
         
         marker.bindPopup(`
           <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
@@ -169,13 +147,10 @@ export default function ExploreRestaurants() {
         
         marker.addTo(mapInstanceRef.current!);
         markersRef.current.push(marker);
-        console.log(`Marker ${index + 1} added successfully for:`, restaurant.name);
       } catch (error) {
         console.error('Failed to add marker for:', restaurant.name, error);
       }
     });
-    
-    console.log('Total markers added:', markersRef.current.length);
 
     // Fit bounds to visible markers
     if (filteredRestaurants.length > 0) {
@@ -184,7 +159,9 @@ export default function ExploreRestaurants() {
       );
       mapInstanceRef.current!.fitBounds(latlngs, { padding: [28, 28] });
     }
-  }, [selectedFilter, restaurants, mapReady]); // Clean dependencies
+
+    console.log('Markers updated successfully');
+  }, [selectedFilter, restaurants, initialized]);
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;
