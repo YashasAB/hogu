@@ -27,10 +27,15 @@ export default function ExploreRestaurants() {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
+        console.log('Fetching restaurants...');
         const response = await fetch('/api/restaurants');
+        console.log('Response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('Restaurants data:', data);
           setRestaurants(data);
+        } else {
+          console.error('Failed to fetch restaurants:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Failed to fetch restaurants:', error);
@@ -45,27 +50,44 @@ export default function ExploreRestaurants() {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Initialize map
-    const map = L.map(mapRef.current, {
-      center: [12.9716, 77.5946],
-      zoom: 13,
-      scrollWheelZoom: true,
-      zoomControl: true,
-    });
+    // Small delay to ensure DOM is ready
+    const initMap = () => {
+      try {
+        // Initialize map
+        const map = L.map(mapRef.current!, {
+          center: [12.9716, 77.5946],
+          zoom: 13,
+          scrollWheelZoom: true,
+          zoomControl: true,
+        });
 
-    mapInstanceRef.current = map;
+        mapInstanceRef.current = map;
 
-    // Add dark tile layer (matching the neon theme)
-    const darkTiles = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 20,
-        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-      },
-    );
-    darkTiles.addTo(map);
+        // Add dark tile layer (matching the neon theme)
+        const darkTiles = L.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          {
+            maxZoom: 20,
+            attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+          },
+        );
+        darkTiles.addTo(map);
+
+        // Force map to resize after a short delay
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+
+      } catch (error) {
+        console.error('Failed to initialize map:', error);
+      }
+    };
+
+    // Use timeout to ensure DOM is ready
+    const timeoutId = setTimeout(initMap, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -237,6 +259,7 @@ export default function ExploreRestaurants() {
             <div
               ref={mapRef}
               className="h-[70vh] w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
+              style={{ minHeight: '500px' }}
             />
             <div className="text-xs text-slate-400 mt-2 opacity-85">
               Tiles ©{" "}
