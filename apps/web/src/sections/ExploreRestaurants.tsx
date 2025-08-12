@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { MAP_CONFIG, TILE_CONFIG, MAP_STYLES, MAP_TEXT, CATEGORY_EMOJIS } from "../constants/mapConfig";
 
 type Restaurant = {
   id: string;
@@ -88,23 +89,7 @@ const fallbackRestaurants: Restaurant[] = [
 
 // Helper function to get emoji for category
 const getCategoryEmoji = (category: string) => {
-  const emojiMap: Record<string, string> = {
-    cocktails: "🍸",
-    dinner: "🍽️",
-    lunch: "🥗",
-    breakfast: "🍳",
-    coffee: "☕",
-    dessert: "🍰",
-    pizza: "🍕",
-    asian: "🥢",
-    italian: "🍝",
-    mexican: "🌮",
-    indian: "🍛",
-    bar: "🍺",
-    wine: "🍷",
-    default: "🍴"
-  };
-  return emojiMap[category.toLowerCase()] || emojiMap.default;
+  return CATEGORY_EMOJIS[category.toLowerCase()] || CATEGORY_EMOJIS.default;
 };
 
 export default function ExploreRestaurants() {
@@ -173,22 +158,19 @@ export default function ExploreRestaurants() {
 
     // Initialize map
     const map = L.map(mapRef.current, {
-      center: [12.9716, 77.5946],
-      zoom: 13,
-      scrollWheelZoom: true,
-      zoomControl: true,
+      center: [MAP_CONFIG.center.lat, MAP_CONFIG.center.lng],
+      zoom: MAP_CONFIG.zoom,
+      scrollWheelZoom: MAP_CONFIG.scrollWheelZoom,
+      zoomControl: MAP_CONFIG.zoomControl,
     });
 
     mapInstanceRef.current = map;
 
     // Add dark tile layer (matching the neon theme)
-    const darkTiles = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 20,
-        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-      },
-    );
+    const darkTiles = L.tileLayer(TILE_CONFIG.url, {
+      maxZoom: MAP_CONFIG.maxZoom,
+      attribution: TILE_CONFIG.attribution,
+    });
     darkTiles.addTo(map);
 
     return () => {
@@ -219,9 +201,9 @@ export default function ExploreRestaurants() {
       const icon = L.divIcon({
         className: "",
         html,
-        iconSize: [38, 38],
-        iconAnchor: [19, 19],
-        popupAnchor: [0, -14],
+        iconSize: MAP_STYLES.markerSize,
+        iconAnchor: MAP_STYLES.markerAnchor,
+        popupAnchor: MAP_STYLES.popupAnchor,
       });
       return L.marker([restaurant.position.lat, restaurant.position.lng], {
         icon,
@@ -253,7 +235,7 @@ export default function ExploreRestaurants() {
       const latlngs = filteredRestaurants.map(
         (r) => [r.position.lat, r.position.lng] as [number, number],
       );
-      mapInstanceRef.current.fitBounds(latlngs, { padding: [28, 28] });
+      mapInstanceRef.current.fitBounds(latlngs, { padding: MAP_STYLES.boundsOptions.padding });
     }
   }, [selectedFilter]);
 
@@ -301,12 +283,12 @@ export default function ExploreRestaurants() {
             <div className="flex items-center gap-3 mb-1">
               <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-400 shadow-lg shadow-violet-400/30"></div>
               <h2 className="text-xl font-bold text-white tracking-wide">
-                Find Spots Tonight{" "}
-                <span className="opacity-60 font-semibold">• Live Map</span>
+                {MAP_TEXT.sectionTitle}{" "}
+                <span className="opacity-60 font-semibold">• {MAP_TEXT.sectionSubtitle}</span>
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
-              Scroll to zoom, drag to pan. {isLoading ? 'Loading restaurants...' : `Showing ${restaurants.length} restaurants`}
+              {MAP_TEXT.mapDescription} {isLoading ? MAP_TEXT.loadingText : `${MAP_TEXT.showingText} ${restaurants.length} ${MAP_TEXT.restaurantsText}`}
               {error && <span className="text-amber-400"> • {error}</span>}
             </p>
 
@@ -315,7 +297,7 @@ export default function ExploreRestaurants() {
               {[
                 {
                   key: "all",
-                  label: "✨ All",
+                  label: MAP_TEXT.allFilterLabel,
                   active: selectedFilter === "all",
                 },
                 ...availableCategories.map(category => ({
@@ -325,7 +307,7 @@ export default function ExploreRestaurants() {
                 })),
                 {
                   key: "hot",
-                  label: "🔥 Hot Spots",
+                  label: MAP_TEXT.hotFilterLabel,
                   active: selectedFilter === "hot",
                 },
               ].map((filter) => (
@@ -348,8 +330,8 @@ export default function ExploreRestaurants() {
           <div className="p-4">
             <div
               ref={mapRef}
-              className="h-[70vh] w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
-              style={{ minHeight: '500px' }}
+              className="w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
+              style={{ height: MAP_STYLES.mapHeight, minHeight: MAP_STYLES.minHeight }}
             />
             <div className="text-xs text-slate-400 mt-2 opacity-85">
               Tiles ©{" "}
