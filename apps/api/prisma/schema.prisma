@@ -1,0 +1,111 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  phone     String?
+  name      String?
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  reservations Reservation[]
+  
+  @@map("users")
+}
+
+model Restaurant {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  emoji           String
+  latitude        Float
+  longitude       Float
+  neighborhood    String
+  category        String
+  isHot           Boolean  @default(false)
+  heroImageUrl    String?
+  instagramUrl    String?
+  website         String?
+  createdAt       DateTime @default(now())
+  
+  cuisineTags      RestaurantCuisineTag[]
+  timeSlots        TimeSlot[]
+  reservations     Reservation[]
+  
+  @@map("restaurants")
+}
+
+model CuisineTag {
+  id   String @id @default(cuid())
+  name String @unique
+  
+  restaurants RestaurantCuisineTag[]
+  
+  @@map("cuisine_tags")
+}
+
+model RestaurantCuisineTag {
+  restaurantId String
+  cuisineTagId String
+  
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  cuisineTag CuisineTag  @relation(fields: [cuisineTagId], references: [id], onDelete: Cascade)
+  
+  @@id([restaurantId, cuisineTagId])
+  @@map("restaurant_cuisine_tags")
+}
+
+model TimeSlot {
+  id           String   @id @default(cuid())
+  restaurantId String
+  date         String   // YYYY-MM-DD format
+  time         String   // HH:mm format
+  partySize    Int
+  status       SlotStatus
+  createdAt    DateTime @default(now())
+  
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+  
+  @@unique([restaurantId, date, time, partySize])
+  @@map("time_slots")
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  userId         String
+  restaurantId   String
+  slotId         String
+  partySize      Int
+  status         ReservationStatus
+  holdExpiresAt  DateTime?
+  confirmedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  slot       TimeSlot   @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  
+  @@map("reservations")
+}
+
+enum SlotStatus {
+  AVAILABLE
+  CUTOFF
+  FULL
+}
+
+enum ReservationStatus {
+  HELD
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}

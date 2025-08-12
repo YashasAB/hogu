@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRouter from './routes/auth';
 import restaurantRouter from './routes/restaurants';
 import reservationsRouter from './routes/reservations';
+import discoverRouter from './routes/discover';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3002;
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 app.use('/auth', authRouter);
 app.use('/restaurants', restaurantRouter);
 app.use('/reservations', reservationsRouter);
+app.use('/discover', discoverRouter);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Hogu API listening on http://0.0.0.0:${PORT}`);
