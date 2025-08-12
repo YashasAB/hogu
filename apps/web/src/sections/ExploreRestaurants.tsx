@@ -86,6 +86,27 @@ const fallbackRestaurants: Restaurant[] = [
   },
 ];
 
+// Helper function to get emoji for category
+const getCategoryEmoji = (category: string) => {
+  const emojiMap: Record<string, string> = {
+    cocktails: "🍸",
+    dinner: "🍽️",
+    lunch: "🥗",
+    breakfast: "🍳",
+    coffee: "☕",
+    dessert: "🍰",
+    pizza: "🍕",
+    asian: "🥢",
+    italian: "🍝",
+    mexican: "🌮",
+    indian: "🍛",
+    bar: "🍺",
+    wine: "🍷",
+    default: "🍴"
+  };
+  return emojiMap[category.toLowerCase()] || emojiMap.default;
+};
+
 export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -93,6 +114,8 @@ export default function ExploreRestaurants() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(fallbackRestaurants);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
 
   const markersRef = useRef<L.Marker[]>([]);
 
@@ -114,10 +137,24 @@ export default function ExploreRestaurants() {
         
         if (Array.isArray(data) && data.length > 0) {
           setRestaurants(data);
+          
+          // Extract unique categories and neighborhoods from the data
+          const categories = [...new Set(data.map(r => r.category).filter(Boolean))];
+          const neighborhoods = [...new Set(data.map(r => r.neighborhood).filter(Boolean))];
+          
+          setAvailableCategories(categories);
+          setAvailableNeighborhoods(neighborhoods);
           console.log('Successfully loaded restaurants from API');
+          console.log('Available categories:', categories);
+          console.log('Available neighborhoods:', neighborhoods);
         } else {
           console.log('API returned empty data, using fallback');
           setRestaurants(fallbackRestaurants);
+          // Set fallback categories and neighborhoods
+          const fallbackCategories = [...new Set(fallbackRestaurants.map(r => r.category))];
+          const fallbackNeighborhoods = [...new Set(fallbackRestaurants.map(r => r.neighborhood))];
+          setAvailableCategories(fallbackCategories);
+          setAvailableNeighborhoods(fallbackNeighborhoods);
         }
       } catch (error) {
         console.error('Error fetching restaurants:', error);
@@ -281,16 +318,11 @@ export default function ExploreRestaurants() {
                   label: "✨ All",
                   active: selectedFilter === "all",
                 },
-                {
-                  key: "cocktails",
-                  label: "🍸 Cocktails",
-                  active: selectedFilter === "cocktails",
-                },
-                {
-                  key: "dinner",
-                  label: "🍽️ Dine",
-                  active: selectedFilter === "dinner",
-                },
+                ...availableCategories.map(category => ({
+                  key: category,
+                  label: `${getCategoryEmoji(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+                  active: selectedFilter === category,
+                })),
                 {
                   key: "hot",
                   label: "🔥 Hot Spots",
