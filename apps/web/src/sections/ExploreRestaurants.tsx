@@ -42,7 +42,7 @@ const restaurants: Restaurant[] = [
     name: "Bar Spirit Forward",
     slug: "spirit-forward",
     emoji: "🥃",
-    position: { lat: 12.975125, lng: 77.60287 },
+    position: { lat: 12.975125, lng: 77.602350 },
     image: "/api/placeholder/200/150",
     neighborhood: "CBD",
     category: "cocktails",
