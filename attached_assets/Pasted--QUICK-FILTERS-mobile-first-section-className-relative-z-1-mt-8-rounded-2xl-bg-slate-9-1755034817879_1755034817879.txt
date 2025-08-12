@@ -1,0 +1,70 @@
+{/* QUICK FILTERS (mobile-first) */}
+<section className="relative z-[1] -mt-8 rounded-2xl bg-slate-900/85 ring-1 ring-white/10 p-4 space-y-3">
+  {/* Inputs row */}
+  <div className="grid grid-cols-2 gap-3 items-end">
+    {/* Party size */}
+    <div className="space-y-1">
+      <label className="block text-xs font-medium text-slate-300">Party size</label>
+      <select
+        className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+        value={party}
+        onChange={(e) => setParty(e.target.value === '' ? '' : parseInt(e.target.value))}
+        aria-label="Party size"
+      >
+        <option value="">Select party size</option>
+        {[1,2,3,4,5,6,7,8].map((size) => (
+          <option key={size} value={size}>
+            {size} {size === 1 ? 'person' : 'people'}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Date */}
+    <div className="space-y-1">
+      <label className="block text-xs font-medium text-slate-300">Date</label>
+      <input
+        className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+        type="date"
+        value={selectedDate}
+        onChange={(e) => setSelectedDate(e.target.value)}
+        min={today}
+        aria-label="Date"
+      />
+    </div>
+  </div>
+
+  {/* City / meta row (visible on mobile) */}
+  <div className="flex items-center justify-between">
+    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800 border border-white/10 text-slate-200 text-xs">
+      <span aria-hidden>📍</span> Bengaluru
+    </span>
+    <span className="text-[11px] text-slate-400">Plan for {selectedDate || '—'}</span>
+  </div>
+
+  {/* CTA */}
+  {user ? (
+    <button
+      onClick={() => {
+        if (party !== '' && selectedDate) {
+          window.location.href = `/explore-tonight?party=${party}&date=${selectedDate}`;
+        }
+      }}
+      disabled={party === '' || !selectedDate}
+      className={`h-12 w-full rounded-xl font-semibold transition-all ${
+        party !== '' && selectedDate
+          ? 'bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95'
+          : 'bg-slate-800 text-slate-400 border border-white/10 cursor-not-allowed'
+      }`}
+    >
+      Explore now
+    </button>
+  ) : (
+    <Link
+      to="/login"
+      className="h-12 w-full inline-flex items-center justify-center rounded-xl font-semibold bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95"
+    >
+      Log in
+    </Link>
+  )}
+</section>
