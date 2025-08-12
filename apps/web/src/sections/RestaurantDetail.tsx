@@ -62,8 +62,7 @@ const restaurants: Restaurant[] = [
     slug: "spirit-forward",
     emoji: "🥃",
     position: { lat: 12.975125, lng: 77.60287 },
-    image:
-      "https://images.unsplash.com/photo-1542326237-94b1c5a538d8?q=80&w=1600&auto=format&fit=crop",
+    image: "/spirit-forward-image.jpg",
     neighborhood: "CBD",
     category: "cocktails",
     hot: true,

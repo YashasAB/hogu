@@ -46,7 +46,7 @@ const fallbackRestaurants: Restaurant[] = [
     slug: "spirit-forward",
     emoji: "🥃",
     position: { lat: 12.975125, lng: 77.602350 },
-    image: "/api/placeholder/200/150",
+    image: "/spirit-forward-image.jpg",
     neighborhood: "CBD",
     category: "cocktails",
     hot: true,
