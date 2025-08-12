@@ -234,7 +234,10 @@ export default function ExploreRestaurants() {
       const latlngs = filteredRestaurants.map(
         (r) => [r.position.lat, r.position.lng] as [number, number],
       );
-      mapInstanceRef.current.fitBounds(latlngs, { padding: MAP_STYLES.boundsOptions.padding });
+      const map = mapInstanceRef.current;
+      if (map) {
+        map.fitBounds(latlngs, { padding: MAP_STYLES.boundsOptions.padding });
+      }
     }
   }, [selectedFilter]);
 
