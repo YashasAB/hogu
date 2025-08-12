@@ -1,4 +1,3 @@
-
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -58,8 +57,8 @@ async function main() {
       name: "Bar Spirit Forward",
       slug: "bar-spirit-forward",
       emoji: "🥃",
-      latitude: 12.975125,
-      longitude: 77.602350,
+      latitude: 12.9716,
+      longitude: 77.5946,
       neighborhood: "CBD",
       category: "cocktails",
       isHot: true,
