@@ -94,9 +94,6 @@ export default function Home() {
 
       fetchData()
 
-      // Refresh every 30 seconds
-      const interval = setInterval(fetchData, 30000)
-      return () => clearInterval(interval)
     }
   }, [user])
 
@@ -186,10 +183,11 @@ export default function Home() {
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
+    let hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-    return `${displayHour}:${minutes} ${ampm}`
+    hour = hour % 12
+    hour = hour ? hour : 12 // the hour '0' should be '12'
+    return `${hour}:${minutes} ${ampm}`
   }
 
   const formatDate = (dateStr: string) => {
