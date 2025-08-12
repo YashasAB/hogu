@@ -18,6 +18,31 @@ type WeekDay = { date: string; available_count: number; picks: SlotSummary[] };
 type WeekRes = { days: WeekDay[] };
 
 export default function Home() {
+  const [user, setUser] = useState<{name: string; email: string} | null>(null)
+
+  // Check if user is logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('hogu_token')
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (response.ok) {
+            const userData = await response.json()
+            setUser(userData)
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error)
+        }
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // Mock availability data for demo
+  const mockAvailability = [
   // --- state ---
   const [party, setParty] = useState(2);
   const [city] = useState("BLR");
@@ -70,7 +95,22 @@ export default function Home() {
   // --- UI ---
   return (
     <div className="space-y-8 mx-4 sm:mx-6 lg:mx-8">
-      {/* HERO — what Hogu is */}
+      {/* USER GREETING */}
+      {user && (
+        <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-lg">{user.name?.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Hello {user.name}!</h2>
+              <p className="text-gray-600">Welcome back to Hogu. Ready to discover tonight's hottest spots?</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
         <div className="relative z-10 px-5 py-8 sm:px-8">
