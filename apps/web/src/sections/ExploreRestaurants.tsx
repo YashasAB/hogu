@@ -16,7 +16,8 @@ type Restaurant = {
   hot?: boolean;
 };
 
-const restaurants: Restaurant[] = [
+// Hardcoded fallback data
+const fallbackRestaurants: Restaurant[] = [
   {
     id: "1",
     name: "ZLB 23 (at The Leela Palace)",
@@ -61,7 +62,6 @@ const restaurants: Restaurant[] = [
     category: "dinner",
     hot: false,
   },
-
   {
     id: "8",
     name: "Pizza 4P's (Indiranagar)",
@@ -90,8 +90,46 @@ export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [restaurants, setRestaurants] = useState<Restaurant[]>(fallbackRestaurants);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const markersRef = useRef<L.Marker[]>([]);
+
+  // Fetch restaurants from API
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        console.log('Fetching restaurants from API...');
+        const response = await fetch('/api/restaurants');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('API response:', data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          setRestaurants(data);
+          console.log('Successfully loaded restaurants from API');
+        } else {
+          console.log('API returned empty data, using fallback');
+          setRestaurants(fallbackRestaurants);
+        }
+      } catch (error) {
+        console.error('Error fetching restaurants:', error);
+        setError('Failed to load restaurants from API, using offline data');
+        setRestaurants(fallbackRestaurants);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -231,7 +269,8 @@ export default function ExploreRestaurants() {
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
-              Scroll to zoom, drag to pan. Showing {restaurants.length} restaurants.
+              Scroll to zoom, drag to pan. {isLoading ? 'Loading restaurants...' : `Showing ${restaurants.length} restaurants`}
+              {error && <span className="text-amber-400"> • {error}</span>}
             </p>
 
             {/* Filter Chips */}
