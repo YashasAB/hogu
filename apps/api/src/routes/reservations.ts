@@ -235,43 +235,18 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
 router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.userId;
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
 
     const [pending, ongoing, completed] = await Promise.all([
       prisma.reservation.count({
         where: {
           userId: userId,
-          status: { in: ['PENDING', 'HELD'] },
-          slot: {
-            OR: [
-              { date: { gt: today } }, // Future dates
-              { 
-                AND: [
-                  { date: today }, // Today's date
-                  { time: { gt: currentTime } } // Future time
-                ]
-              }
-            ]
-          }
+          status: { in: ['PENDING', 'HELD'] }
         }
       }),
       prisma.reservation.count({
         where: {
           userId: userId,
-          status: 'CONFIRMED',
-          slot: {
-            OR: [
-              { date: { gt: today } }, // Future dates
-              { 
-                AND: [
-                  { date: today }, // Today's date
-                  { time: { gt: currentTime } } // Future time
-                ]
-              }
-            ]
-          }
+          status: 'CONFIRMED'
         }
       }),
       prisma.reservation.count({
