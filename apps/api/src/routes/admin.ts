@@ -189,18 +189,52 @@ router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedR
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const normalizedStatus = status.toUpperCase();
 
-    const booking = await prisma.reservation.update({
-      where: {
-        id,
-        restaurantId: req.restaurantId,
-      },
-      data: {
-        status: status.toUpperCase(),
-      },
+    // Start a transaction to update both reservation and timeslot
+    const result = await prisma.$transaction(async (prisma) => {
+      // Update the reservation status
+      const booking = await prisma.reservation.update({
+        where: {
+          id,
+          restaurantId: req.restaurantId,
+        },
+        data: {
+          status: normalizedStatus,
+          confirmedAt: normalizedStatus === 'CONFIRMED' ? new Date() : undefined,
+        },
+        include: {
+          slot: true,
+        },
+      });
+
+      // If the reservation is being confirmed/accepted, mark the timeslot as unavailable
+      if (normalizedStatus === 'CONFIRMED') {
+        await prisma.timeSlot.update({
+          where: {
+            id: booking.slotId,
+          },
+          data: {
+            status: 'FULL',
+          },
+        });
+      }
+      // If the reservation is being cancelled/rejected, mark the timeslot as available again
+      else if (normalizedStatus === 'CANCELLED') {
+        await prisma.timeSlot.update({
+          where: {
+            id: booking.slotId,
+          },
+          data: {
+            status: 'AVAILABLE',
+          },
+        });
+      }
+
+      return booking;
     });
 
-    res.json(booking);
+    res.json(result);
   } catch (error) {
     console.error('Error updating booking:', error);
     res.status(500).json({ error: 'Failed to update booking' });
