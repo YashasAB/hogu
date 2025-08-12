@@ -116,7 +116,6 @@ export default function ExploreRestaurants() {
     const createEmojiMarker = (restaurant: Restaurant) => {
       const html = `
         <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
-          <span class="pulse"></span>
           <span class="pin__emoji">${restaurant.emoji}</span>
         </div>
       `;
