@@ -7,7 +7,7 @@ channel = "stable-25_05"
 [deployment]
 run = ["sh", "-c", "cd apps/api && npm start"]
 deploymentTarget = "cloudrun"
-build = ["sh", "-c", "npx prisma generate --schema=apps/api/prisma/schema.prisma && pnpm -C apps/web build && pnpm -C apps/api build"]
+build = ["sh", "-c", "cd apps/api && npx prisma generate && npx prisma migrate deploy && cd ../.. && pnpm -C apps/web build && pnpm -C apps/api build"]
 
 [workflows]
 runButton = "Development"

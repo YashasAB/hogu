@@ -7,15 +7,22 @@ import discoverRoutes from './routes/discover';
 import reservationRoutes from './routes/reservations';
 import restaurantsRoutes from './routes/restaurants';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
 console.log('Environment check:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', PORT);
+console.log('PORT:', process.env.PORT || 8080);
 console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+
+// Set DATABASE_URL if not present (for deployment)
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
 
 app.use(cors({
   origin: true,
