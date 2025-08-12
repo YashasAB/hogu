@@ -241,13 +241,13 @@ router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res) 
       prisma.reservation.count({
         where: {
           userId: userId,
-          status: 'PENDING'
+          status: { in: ['PENDING', 'HELD'] }
         }
       }),
       prisma.reservation.count({
         where: {
           userId: userId,
-          status: { in: ['CONFIRMED', 'HELD'] }
+          status: 'CONFIRMED'
         }
       }),
       prisma.reservation.count({

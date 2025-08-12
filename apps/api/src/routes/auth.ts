@@ -239,7 +239,7 @@ router.get('/reservations/pending', authenticateToken, async (req: Authenticated
     const pendingReservations = await prisma.reservation.findMany({
       where: { 
         userId: req.user!.userId,
-        status: 'HELD'
+        status: { in: ['PENDING', 'HELD'] }
       },
       include: {
         restaurant: {
