@@ -89,6 +89,8 @@ export default function ExploreRestaurants() {
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("all");
 
+  const markersRef = useRef<L.Marker[]>([]);
+
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -112,7 +114,25 @@ export default function ExploreRestaurants() {
     );
     darkTiles.addTo(map);
 
-    // Create emoji marker function (matching the HTML example)
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update markers when filter changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => {
+      mapInstanceRef.current?.removeLayer(marker);
+    });
+    markersRef.current = [];
+
+    // Create emoji marker function
     const createEmojiMarker = (restaurant: Restaurant) => {
       const html = `
         <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
@@ -131,8 +151,14 @@ export default function ExploreRestaurants() {
       });
     };
 
-    // Add restaurant markers
-    restaurants.forEach((restaurant) => {
+    // Add filtered restaurant markers
+    const filteredRestaurants = restaurants.filter((restaurant) => {
+      if (selectedFilter === "all") return true;
+      if (selectedFilter === "hot") return restaurant.hot;
+      return restaurant.category === selectedFilter;
+    });
+
+    filteredRestaurants.forEach((restaurant) => {
       const marker = createEmojiMarker(restaurant);
       marker.bindPopup(`
         <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
@@ -141,24 +167,18 @@ export default function ExploreRestaurants() {
           <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
         </div>
       `);
-      marker.addTo(map);
+      marker.addTo(mapInstanceRef.current);
+      markersRef.current.push(marker);
     });
 
-    // Fit bounds to markers
-    const latlngs = restaurants.map(
-      (r) => [r.position.lat, r.position.lng] as [number, number],
-    );
-    if (latlngs.length) {
-      map.fitBounds(latlngs, { padding: [28, 28] });
+    // Fit bounds to visible markers
+    if (filteredRestaurants.length > 0) {
+      const latlngs = filteredRestaurants.map(
+        (r) => [r.position.lat, r.position.lng] as [number, number],
+      );
+      mapInstanceRef.current.fitBounds(latlngs, { padding: [28, 28] });
     }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
+  }, [selectedFilter]);
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;
@@ -227,7 +247,7 @@ export default function ExploreRestaurants() {
                 },
                 {
                   key: "dinner",
-                  label: "🍽️ Dinner",
+                  label: "🍽️ Dine",
                   active: selectedFilter === "dinner",
                 },
                 {
