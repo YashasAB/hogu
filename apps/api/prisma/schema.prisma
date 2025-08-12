@@ -69,7 +69,7 @@ model TimeSlot {
   date         String   // YYYY-MM-DD format
   time         String   // HH:mm format
   partySize    Int
-  status       SlotStatus
+  status       String   // AVAILABLE, CUTOFF, FULL
   createdAt    DateTime @default(now())
   
   restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -80,32 +80,19 @@ model TimeSlot {
 }
 
 model Reservation {
-  id             String            @id @default(cuid())
+  id             String   @id @default(cuid())
   userId         String
   restaurantId   String
   slotId         String
   partySize      Int
-  status         ReservationStatus
+  status         String   // HELD, CONFIRMED, CANCELLED, EXPIRED
   holdExpiresAt  DateTime?
   confirmedAt    DateTime?
-  createdAt      DateTime          @default(now())
+  createdAt      DateTime @default(now())
   
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   slot       TimeSlot   @relation(fields: [slotId], references: [id], onDelete: Cascade)
   
   @@map("reservations")
-}
-
-enum SlotStatus {
-  AVAILABLE
-  CUTOFF
-  FULL
-}
-
-enum ReservationStatus {
-  HELD
-  CONFIRMED
-  CANCELLED
-  EXPIRED
 }
