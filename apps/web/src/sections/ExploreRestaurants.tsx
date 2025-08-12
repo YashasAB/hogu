@@ -231,7 +231,7 @@ export default function ExploreRestaurants() {
     });
 
     // Fit bounds to visible markers
-    if (filteredRestaurants.length > 0) {
+    if (filteredRestaurants.length > 0 && mapInstanceRef.current) {
       const latlngs = filteredRestaurants.map(
         (r) => [r.position.lat, r.position.lng] as [number, number],
       );
