@@ -18,7 +18,7 @@ type WeekDay = { date: string; available_count: number; picks: SlotSummary[] };
 type WeekRes = { days: WeekDay[] };
 
 export default function Home() {
-  const [user, setUser] = useState<{name: string; email: string} | null>(null)
+  const [user, setUser] = useState<{name: string; username: string; email: string} | null>(null)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [liveStatus, setLiveStatus] = useState({
     pending: 0,
@@ -85,14 +85,15 @@ export default function Home() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showUserDropdown) {
-        setShowUserDropdown(false)
+      const target = event.target as HTMLElement;
+      if (showUserDropdown && !target.closest('.relative')) {
+        setShowUserDropdown(false);
       }
     }
     
     if (showUserDropdown) {
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showUserDropdown])
 
@@ -177,10 +178,13 @@ export default function Home() {
             {/* User Dropdown */}
             <div className="relative">
               <button
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowUserDropdown(!showUserDropdown);
+                }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
               >
-                <span className="font-medium text-gray-900">{user.name}</span>
+                <span className="font-medium text-gray-900">{user.username}</span>
                 <svg className={`w-4 h-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>

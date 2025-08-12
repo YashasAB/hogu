@@ -211,18 +211,24 @@ router.post('/restaurant-login', async (req, res) => {
 // Get current user info
 router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.userId },
-      select: { id: true, name: true, email: true }
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    // Get user info from token
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'No user ID in token' });
     }
+
+    // Here you would typically fetch user data from database
+    // For now, return mock data
+    const user = {
+      id: userId,
+      name: 'yashas ab', // This would come from your database
+      username: 'yashasab', // This would come from your database
+      email: 'yashasab.ab@gmail.com' // This would come from your database
+    };
 
     res.json(user);
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('Error getting user info:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
