@@ -1,0 +1,172 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+
+/**
+ * Dark, mobile-friendly date picker built with react-day-picker.
+ * - Warm red accents to match your theme
+ * - Dropdown popover on desktop, full-screen sheet on mobile
+ * - Emits YYYY-MM-DD strings (local) to match your filters/API
+ *
+ * Install:
+ *   pnpm add react-day-picker
+ */
+
+// Utils
+function toYMD(d: Date | undefined) {
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function fromYMD(s?: string) {
+  if (!s) return undefined;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return undefined;
+  return new Date(y, m - 1, d);
+}
+
+export type DarkDatePickerProps = {
+  value?: string; // YYYY-MM-DD
+  onChange?: (value: string) => void;
+  min?: Date;
+  max?: Date;
+  label?: string;
+};
+
+export default function DarkDatePicker({ value, onChange, min, max, label = "Date" }: DarkDatePickerProps) {
+  const [open, setOpen] = useState(false);
+  const [internal, setInternal] = useState<Date | undefined>(() => fromYMD(value));
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => { setInternal(fromYMD(value)); }, [value]);
+
+  // close on click outside (desktop popover)
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as Node;
+      if (popRef.current?.contains(t) || triggerRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDocClick); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const selected = internal;
+
+  const disabled = useMemo(() => {
+    const dis: any[] = [];
+    if (min) dis.push({ before: min });
+    if (max) dis.push({ after: max });
+    return dis;
+  }, [min, max]);
+
+  function commit(d?: Date) {
+    setInternal(d);
+    setOpen(false);
+    if (onChange) onChange(toYMD(d));
+  }
+
+  return (
+    <div className="w-full">
+      {label && <label className="block text-xs font-medium text-slate-300 mb-1">{label}</label>}
+
+      {/* Trigger */}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen(true)}
+        className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-left text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+      >
+        {selected ? (
+          <span className="font-medium">{toYMD(selected)}</span>
+        ) : (
+          <span className="text-slate-400">Select date</span>
+        )}
+      </button>
+
+      {/* Desktop popover */}
+      {open && (
+        <div className="hidden md:block relative z-50">
+          <div ref={popRef} className="absolute mt-2 right-0 md:right-auto md:left-0 w-[320px] rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl">
+            <CalendarPanel selected={selected} onSelect={commit} min={min} max={max} />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile full-screen sheet */}
+      {open && (
+        <div className="md:hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm">
+          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-slate-900 ring-1 ring-white/10 p-3 pt-2">
+            <div className="flex items-center justify-between px-1 pb-2">
+              <button className="px-3 h-10 rounded-lg text-slate-300" onClick={() => setOpen(false)}>Cancel</button>
+              <div className="text-sm text-slate-300">Pick a date</div>
+              <button
+                className="px-3 h-10 rounded-lg bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 font-semibold"
+                onClick={() => commit(selected)}
+              >Done</button>
+            </div>
+            <div className="rounded-xl overflow-hidden ring-1 ring-white/10">
+              <CalendarPanel selected={selected} onSelect={setInternal} min={min} max={max} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CalendarPanel({ selected, onSelect, min, max }: { selected?: Date; onSelect: (d?: Date) => void; min?: Date; max?: Date }) {
+  return (
+    <div className="rdp-root bg-slate-900 text-slate-100">
+      <DayPicker
+        mode="single"
+        selected={selected}
+        onSelect={onSelect}
+        captionLayout="dropdown"
+        fromYear={new Date().getFullYear() - 1}
+        toYear={new Date().getFullYear() + 2}
+        showOutsideDays
+        fixedWeeks
+        disabled={[
+          ...(min ? [{ before: min }] : []),
+          ...(max ? [{ after: max }] : []),
+        ]}
+      />
+      {/* Theme overrides using CSS variables */}
+      <style>{`
+        .rdp-root .rdp { 
+          --rdp-cell-size: 46px; 
+          --rdp-caption-font-size: 14px; 
+          --rdp-accent-color: #f43f5e; /* rose-500 */
+          --rdp-accent-color-dark: #e11d48; /* darker rose */
+          --rdp-background-color: #0f172a; 
+          --rdp-background-color-dark: #0b1220; 
+          --rdp-outline: 2px solid rgba(244,63,94,.35);
+          --rdp-outline-selected: 2px solid rgba(245,158,11,.55);
+        }
+        .rdp-root .rdp {
+          background: #0f172a; /* slate-900 */
+          color: #e5e7eb;
+        }
+        .rdp-root .rdp-button[aria-selected="true"] { color: #0b1220; }
+      `}</style>
+    </div>
+  );
+}
+
+// --- Usage example (remove if you import as a component) ---
+export function Demo() {
+  const [date, setDate] = useState<string>("");
+  return (
+    <div className="max-w-sm mx-auto p-4 space-y-3">
+      <DarkDatePicker value={date} onChange={setDate} min={new Date()} />
+      <div className="text-xs text-slate-400">Selected: <span className="text-slate-200">{date || "—"}</span></div>
+    </div>
+  );
+}
