@@ -119,25 +119,17 @@ export default function ExploreRestaurants() {
       try {
         console.log('Creating marker for:', restaurant.name, 'at position:', restaurant.position);
         
+        const html = `
+          <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
+            <span class="pin__emoji">${restaurant.emoji}</span>
+          </div>
+        `;
         const icon = L.divIcon({
-          className: "custom-div-icon",
-          html: `<div style="
-            width: 30px; 
-            height: 30px; 
-            background: ${restaurant.hot ? '#ef4444' : '#8b5cf6'}; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 14px;
-            border: 2px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            color: white;
-            font-weight: bold;
-          ">${restaurant.emoji}</div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
-          popupAnchor: [0, -15],
+          className: "",
+          html,
+          iconSize: [38, 38],
+          iconAnchor: [19, 19],
+          popupAnchor: [0, -14],
         });
         
         const marker = L.marker([restaurant.position.lat, restaurant.position.lng], { icon });
