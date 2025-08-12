@@ -203,6 +203,16 @@ export default function Home() {
                       </svg>
                       My Profile
                     </Link>
+                    <Link
+                      to="/me"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m0 0a1 1 0 01-1 1H9a1 1 0 01-1-1m0 0v5a2 2 0 002 2h4a2 2 0 002-2V7m-6 4h6" />
+                      </svg>
+                      My Reservations
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -270,6 +280,9 @@ export default function Home() {
           <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/explore-tonight" className="btn btn-accent">
               Find a table tonight
+            </Link>
+            <Link to="/explore-tonight" className="btn bg-white text-brand">
+              Explore
             </Link>
             <a href="#week" className="btn bg-white text-brand">
               Plan the week
