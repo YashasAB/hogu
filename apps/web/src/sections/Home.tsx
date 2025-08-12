@@ -382,7 +382,7 @@ export default function Home() {
               ) : (
                 <Link
                   to="/login"
-                  className="h-12 w-full inline-flex items-center justify-center rounded-xl font-semibold bg-white text-brand hover:opacity-95"
+                  className="btn btn-primary"
                 >
                   Log in
                 </Link>
@@ -394,7 +394,6 @@ export default function Home() {
               <span className="inline-flex items-center gap-1">
                 <span aria-hidden>📍</span> Bengaluru
               </span>
-              <span>Plan for {selectedDate || '—'}</span>
             </div>
           </div>
         </div>
