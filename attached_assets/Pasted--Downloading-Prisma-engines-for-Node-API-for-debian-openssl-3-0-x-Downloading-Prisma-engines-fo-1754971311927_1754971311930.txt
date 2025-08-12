@@ -1,0 +1,27 @@
+> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []> Downloading Prisma engines for Node-API for debian-openssl-3.0.x []
+Environment variables loaded from .env
+Running seed command `ts-node --compiler-options {"module":"CommonJS"} prisma/seed.ts` ...
+/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+prisma/seed.ts:1:10 - error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+
+1 import { PrismaClient } from '@prisma/client';
+           ~~~~~~~~~~~~
+
+    at createTSError (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Object.require.extensions.<computed> [as .ts] (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.1_typescript@5.9.2/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12) {
+  diagnosticCodes: [ 2305 ]
+}
+
+An error occurred while running the seed command:
+Error: Command failed with exit code 1: ts-node --compiler-options {"module":"CommonJS"} prisma/seed.ts
