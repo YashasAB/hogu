@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -24,7 +25,114 @@ type TimeSlot = {
   available: boolean;
 };
 
+// Local restaurant data (matching ExploreRestaurants)
+const restaurants: Restaurant[] = [
+  {
+    id: "1",
+    name: "ZLB 23 (at The Leela Palace)",
+    slug: "zlb",
+    emoji: "🍸",
+    position: { lat: 12.960695, lng: 77.648663 },
+    image:
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "Old Airport Road",
+    category: "cocktails",
+    hot: true,
+    instagramUrl: "https://instagram.com/zlb23",
+    website: "https://theleela.com",
+    cuisineTags: ["Cocktails", "Fine Dining", "Rooftop"],
+  },
+  {
+    id: "2",
+    name: "Soka",
+    slug: "soka",
+    emoji: "🍸",
+    position: { lat: 12.965215, lng: 77.638143 },
+    image:
+      "https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "Koramangala",
+    category: "cocktails",
+    hot: false,
+    instagramUrl: "https://instagram.com/soka",
+    cuisineTags: ["Cocktails", "Asian Fusion"],
+  },
+  {
+    id: "3",
+    name: "Bar Spirit Forward",
+    slug: "spirit-forward",
+    emoji: "🥃",
+    position: { lat: 12.975125, lng: 77.60287 },
+    image:
+      "https://images.unsplash.com/photo-1542326237-94b1c5a538d8?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "CBD",
+    category: "cocktails",
+    hot: true,
+    instagramUrl: "https://instagram.com/spiritforward",
+    cuisineTags: ["Cocktails", "Whiskey", "Bar"],
+  },
+  {
+    id: "4",
+    name: "Naru Noodle Bar",
+    slug: "naru",
+    emoji: "🍱",
+    position: { lat: 12.958431, lng: 77.592895 },
+    image:
+      "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "CBD",
+    category: "dinner",
+    hot: false,
+    instagramUrl: "https://instagram.com/naru",
+    cuisineTags: ["Japanese", "Noodles", "Asian"],
+  },
+  {
+    id: "8",
+    name: "Pizza 4P's (Indiranagar)",
+    slug: "pizza-4ps",
+    emoji: "🍕",
+    position: { lat: 12.969968, lng: 77.636089 },
+    image:
+      "https://images.unsplash.com/photo-1541745537413-b804d1a57a51?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "Indiranagar",
+    category: "pizza",
+    hot: false,
+    instagramUrl: "https://instagram.com/pizza4ps",
+    cuisineTags: ["Pizza", "Italian", "Cheese"],
+  },
+  {
+    id: "9",
+    name: "Dali & Gala",
+    slug: "dali-and-gala",
+    emoji: "🍸",
+    position: { lat: 12.975125, lng: 77.60287 },
+    image:
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1600&auto=format&fit=crop",
+    neighborhood: "CBD",
+    category: "cocktails",
+    hot: false,
+    instagramUrl: "https://instagram.com/daligala",
+    cuisineTags: ["Cocktails", "Art", "Modern"],
+  },
+];
 
+// Generate demo time slots
+const generateTimeSlots = (): TimeSlot[] => {
+  const times = [
+    "6:00 PM",
+    "6:30 PM",
+    "7:00 PM",
+    "7:30 PM",
+    "8:00 PM",
+    "8:30 PM",
+    "9:00 PM",
+    "9:30 PM",
+    "10:00 PM",
+  ];
+  return times.map((t, i) => ({
+    id: `slot-${i}`,
+    time: t,
+    available: Math.random() > 0.3,
+  }));
+};
 
 const Badge: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-rose-600 to-amber-500 shadow-sm border border-white/10">
@@ -66,18 +174,6 @@ export default function RestaurantDetail() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [date, setDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0];
-  });
-  const [partySize, setPartySize] = useState(2);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-
-  const bookingRef = useRef<HTMLDivElement | null>(null);
-
   // Fetch restaurant data
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -87,23 +183,21 @@ export default function RestaurantDetail() {
       }
       
       try {
-        console.log('Fetching restaurant with slug:', slug);
         const response = await fetch(`/api/restaurants/${slug}`);
-        console.log('Response status:', response.status);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Restaurant data:', data);
           setRestaurant(data);
         } else {
-          console.error('Restaurant not found, status:', response.status);
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          setRestaurant(null);
+          // Fallback to hardcoded data if API fails
+          const fallbackRestaurant = restaurants.find((r) => r.slug === slug);
+          setRestaurant(fallbackRestaurant || restaurants[0]);
         }
       } catch (error) {
         console.error('Failed to fetch restaurant:', error);
-        setRestaurant(null);
+        // Fallback to hardcoded data on error
+        const fallbackRestaurant = restaurants.find((r) => r.slug === slug);
+        setRestaurant(fallbackRestaurant || restaurants[0]);
       } finally {
         setLoading(false);
       }
@@ -112,22 +206,35 @@ export default function RestaurantDetail() {
     fetchRestaurant();
   }, [slug]);
 
+  const [date, setDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  });
+  const [partySize, setPartySize] = useState(2);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(generateTimeSlots());
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  const bookingRef = useRef<HTMLDivElement | null>(null);
+
   // Fetch availability when date, party size, or restaurant changes
   useEffect(() => {
     const fetchAvailability = async () => {
       if (!restaurant || !date || !partySize) return;
       
-      setSlotsLoading(true);
       try {
         const response = await fetch(`/api/restaurants/${restaurant.slug}/availability?date=${date}&partySize=${partySize}`);
         if (response.ok) {
           const data = await response.json();
           setTimeSlots(data);
+        } else {
+          // Fallback to generated time slots
+          setTimeSlots(generateTimeSlots());
         }
       } catch (error) {
         console.error('Failed to fetch availability:', error);
-      } finally {
-        setSlotsLoading(false);
+        // Fallback to generated time slots
+        setTimeSlots(generateTimeSlots());
       }
       setSelectedSlot(null);
     };
@@ -353,15 +460,8 @@ export default function RestaurantDetail() {
               </select>
 
               <h3 className="text-sm font-medium mb-2">Available times</h3>
-              {slotsLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="h-12 bg-slate-800/40 rounded-xl animate-pulse" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                  {timeSlots.map((slot) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                {timeSlots.map((slot) => {
                   const selected = selectedSlot === slot.id;
                   const base =
                     "px-3 h-12 rounded-xl text-sm font-semibold border transition";
@@ -386,9 +486,8 @@ export default function RestaurantDetail() {
                       {slot.time}
                     </button>
                   );
-                  })}
-                </div>
-              )}
+                })}
+              </div>
 
               {/* Desktop/Tablet CTA (mobile has bottom bar) */}
               <div className="hidden md:block">
