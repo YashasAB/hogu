@@ -225,8 +225,10 @@ export default function ExploreRestaurants() {
           <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
         </div>
       `);
-      marker.addTo(mapInstanceRef.current);
-      markersRef.current.push(marker);
+      if (mapInstanceRef.current) {
+        marker.addTo(mapInstanceRef.current);
+        markersRef.current.push(marker);
+      }
     });
 
     // Fit bounds to visible markers
