@@ -22,15 +22,24 @@ type Slot = {
 type Booking = {
   id: string;
   slotId: string;
-  guestName: string;
-  phone?: string;
   partySize: number;
-  status: "held" | "confirmed" | "cancelled";
+  status: "PENDING" | "HELD" | "CONFIRMED" | "CANCELLED" | "SEATED" | "COMPLETED";
   createdAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    phone: string | null;
+  };
+  slot: {
+    date: string;
+    time: string;
+    partySize: number;
+  };
 };
 
 type SlotStatus = "available" | "cutoff" | "full";
-type BookingStatus = "held" | "confirmed" | "cancelled";
+type BookingStatus = "PENDING" | "HELD" | "CONFIRMED" | "CANCELLED" | "SEATED" | "COMPLETED";
 
 // API functions
 const api = {
@@ -253,12 +262,12 @@ export default function RestaurantAdminPanel() {
       setBookings(bookingsData);
 
       // Calculate live status from bookings
-      const pending = bookingsData.filter((b) => b.status === "pending").length;
+      const pending = bookingsData.filter((b) => b.status === "PENDING" || b.status === "HELD").length;
       const confirmed = bookingsData.filter(
-        (b) => b.status === "confirmed",
+        (b) => b.status === "CONFIRMED" || b.status === "SEATED",
       ).length;
       const completed = bookingsData.filter(
-        (b) => b.status === "completed",
+        (b) => b.status === "COMPLETED",
       ).length;
       setLiveStatus({ pending, confirmed, completed });
     } catch (error) {
@@ -400,6 +409,130 @@ export default function RestaurantAdminPanel() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Pending Requests */}
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-yellow-400">Pending</h3>
+                    <span className="text-2xl font-bold text-yellow-400">
+                      {liveStatus.pending}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400">Awaiting confirmation</p>
+                </div>
+
+                {/* Confirmed Bookings */}
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-green-400">Confirmed</h3>
+                    <span className="text-2xl font-bold text-green-400">
+                      {liveStatus.confirmed}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400">Ready to dine</p>
+                </div>
+
+                {/* Completed */}
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-blue-400">Completed</h3>
+                    <span className="text-2xl font-bold text-blue-400">
+                      {liveStatus.completed}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400">Service complete</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Today's Bookings Section */}
+            <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70">
+              <SectionTitle>Today's Bookings ({new Date().toLocaleDateString()})</SectionTitle>
+              
+              <div className="mt-6 overflow-hidden">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 bg-slate-800 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : bookings.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">
+                    No bookings for today
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {bookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="font-medium text-white">
+                                {booking.user.name || booking.user.email}
+                              </p>
+                              <p className="text-sm text-slate-400">
+                                {booking.slot.time} • Party of {booking.partySize}
+                              </p>
+                              {booking.user.phone && (
+                                <p className="text-xs text-slate-500">{booking.user.phone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              booking.status === "PENDING" || booking.status === "HELD"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : booking.status === "CONFIRMED" || booking.status === "SEATED"
+                                ? "bg-green-500/20 text-green-400"
+                                : booking.status === "COMPLETED"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {booking.status}
+                          </span>
+                          
+                          {booking.status === "PENDING" && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, "CONFIRMED")}
+                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          
+                          {booking.status === "CONFIRMED" && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, "SEATED")}
+                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+                            >
+                              Seat
+                            </button>
+                          )}
+                          
+                          {booking.status === "SEATED" && (
+                            <button
+                              onClick={() => handleBookingStatusChange(booking.id, "COMPLETED")}
+                              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md transition-colors"
+                            >
+                              Complete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Slot Management Section */}
+            <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70">
+              <SectionTitle>Slot Management</SectionTitle>
                 <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-600/30">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-orange-300">

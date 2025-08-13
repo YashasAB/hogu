@@ -92,13 +92,34 @@ router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, r
 // Get bookings
 router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
   try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
     const bookings = await prisma.reservation.findMany({
       where: {
         restaurantId: req.restaurantId,
+        slot: {
+          date: today
+        },
+        status: {
+          in: ['PENDING', 'HELD', 'CONFIRMED', 'SEATED', 'COMPLETED']
+        }
       },
       include: {
-        user: true,
-        slot: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        },
+        slot: {
+          select: {
+            date: true,
+            time: true,
+            partySize: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',
