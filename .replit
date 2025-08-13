@@ -5,7 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && npm run start"]
+run = ["sh", "-c", "NODE_ENV=production cd apps/api && pnpm start"]
+build = ["sh", "-c", "cd apps/web && pnpm run build"]
 
 [objectStorage]
 defaultBucketID = "restaurant-photos"
@@ -20,7 +21,7 @@ mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd apps/api && npm run dev"
+args = "cd apps/api && PORT=8080 npm run dev"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
