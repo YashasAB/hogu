@@ -62,7 +62,7 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
 });
 
 // Upload hero image for a restaurant
-router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('heroImage'), async (req: any, res: Response) => {
+router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('heroImage') as any), async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const file = req.file;
@@ -74,15 +74,12 @@ router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('her
     console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
 
     // Upload the file to Replit Object Storage
-    const uploadResult = await storageClient.uploadFromBuffer(`${restaurantId}/heroImage.${file.originalname.split('.').pop()}`, file.buffer, {
+    const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
+    const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer, {
       contentType: file.mimetype,
     });
 
-    if (!uploadResult.ok) {
-      throw new Error('Failed to upload to storage');
-    }
-
-    const heroImageUrl = `https://storage.googleapis.com/replit-objects/${process.env.REPL_SLUG}/${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
+    const heroImageUrl = uploadResult.url;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
 
     // Update the restaurant's heroImageUrl in the database
@@ -92,7 +89,7 @@ router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('her
     });
 
     console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
-    res.json({ message: 'Hero image updated successfully', heroImageUrl: updatedRestaurant.heroImageUrl });
+    res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
 
   } catch (error) {
     console.error('Error uploading hero image:', error);
