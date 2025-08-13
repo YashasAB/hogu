@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MAP_CONFIG, TILE_CONFIG, MAP_STYLES, MAP_TEXT, CATEGORY_EMOJIS } from "../constants/mapConfig";
+import {
+  MAP_CONFIG,
+  TILE_CONFIG,
+  MAP_STYLES,
+  MAP_TEXT,
+  CATEGORY_EMOJIS,
+} from "../constants/mapConfig";
 
 type Restaurant = {
   id: string;
@@ -15,8 +21,6 @@ type Restaurant = {
   category: string;
   hot?: boolean;
 };
-
-
 
 // Helper function to get emoji for category
 const getCategoryEmoji = (category: string) => {
@@ -31,7 +35,9 @@ export default function ExploreRestaurants() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<
+    string[]
+  >([]);
 
   const markersRef = useRef<L.Marker[]>([]);
 
@@ -41,37 +47,43 @@ export default function ExploreRestaurants() {
       setIsLoading(true);
       setError(null);
       try {
-        console.log('Fetching restaurants from API...');
-        const response = await fetch('/api/restaurants');
+        console.log("Fetching restaurants from API...");
+        const response = await fetch("/api/restaurants");
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch: ${response.status} ${response.statusText}`,
+          );
         }
 
         const data = await response.json();
-        console.log('API response:', data);
+        console.log("API response:", data);
 
         if (Array.isArray(data) && data.length > 0) {
           setRestaurants(data);
 
           // Extract unique categories and neighborhoods from the data
-          const categories = [...new Set(data.map(r => r.category).filter(Boolean))];
-          const neighborhoods = [...new Set(data.map(r => r.neighborhood).filter(Boolean))];
+          const categories = [
+            ...new Set(data.map((r) => r.category).filter(Boolean)),
+          ];
+          const neighborhoods = [
+            ...new Set(data.map((r) => r.neighborhood).filter(Boolean)),
+          ];
 
           setAvailableCategories(categories);
           setAvailableNeighborhoods(neighborhoods);
-          console.log('Successfully loaded restaurants from API');
-          console.log('Available categories:', categories);
-          console.log('Available neighborhoods:', neighborhoods);
+          console.log("Successfully loaded restaurants from API");
+          console.log("Available categories:", categories);
+          console.log("Available neighborhoods:", neighborhoods);
         } else {
-          console.log('API returned empty data');
+          console.log("API returned empty data");
           setRestaurants([]);
           setAvailableCategories([]);
           setAvailableNeighborhoods([]);
         }
       } catch (error) {
-        console.error('Error fetching restaurants:', error);
-        setError('Failed to load restaurants from API');
+        console.error("Error fetching restaurants:", error);
+        setError("Failed to load restaurants from API");
         setRestaurants([]);
       } finally {
         setIsLoading(false);
@@ -114,7 +126,7 @@ export default function ExploreRestaurants() {
     if (!mapInstanceRef.current) return;
 
     // Clear existing markers
-    markersRef.current.forEach(marker => {
+    markersRef.current.forEach((marker) => {
       mapInstanceRef.current?.removeLayer(marker);
     });
     markersRef.current = [];
@@ -217,11 +229,16 @@ export default function ExploreRestaurants() {
               <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-400 to-cyan-400 shadow-lg shadow-violet-400/30"></div>
               <h2 className="text-xl font-bold text-white tracking-wide">
                 {MAP_TEXT.sectionTitle}{" "}
-                <span className="opacity-60 font-semibold">• {MAP_TEXT.sectionSubtitle}</span>
+                <span className="opacity-60 font-semibold">
+                  • {MAP_TEXT.sectionSubtitle}
+                </span>
               </h2>
             </div>
             <p className="text-slate-400 text-sm">
-              {MAP_TEXT.mapDescription} {isLoading ? MAP_TEXT.loadingText : `${MAP_TEXT.showingText} ${restaurants.length} ${MAP_TEXT.restaurantsText}`}
+              {MAP_TEXT.mapDescription}{" "}
+              {isLoading
+                ? MAP_TEXT.loadingText
+                : `${MAP_TEXT.showingText} ${restaurants.length} ${MAP_TEXT.restaurantsText}`}
               {error && <span className="text-amber-400"> • {error}</span>}
             </p>
 
@@ -233,7 +250,7 @@ export default function ExploreRestaurants() {
                   label: MAP_TEXT.allFilterLabel,
                   active: selectedFilter === "all",
                 },
-                ...availableCategories.map(category => ({
+                ...availableCategories.map((category) => ({
                   key: category,
                   label: `${getCategoryEmoji(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}`,
                   active: selectedFilter === category,
@@ -264,7 +281,10 @@ export default function ExploreRestaurants() {
             <div
               ref={mapRef}
               className="w-full rounded-2xl border border-slate-400/12 shadow-2xl shadow-violet-600/8 overflow-hidden"
-              style={{ height: MAP_STYLES.mapHeight, minHeight: MAP_STYLES.minHeight }}
+              style={{
+                height: MAP_STYLES.mapHeight,
+                minHeight: MAP_STYLES.minHeight,
+              }}
             />
             <div className="text-xs text-slate-400 mt-2 opacity-85">
               Tiles ©{" "}
@@ -304,10 +324,7 @@ export default function ExploreRestaurants() {
         <div className="relative overflow-hidden rounded-2xl text-white">
           <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
           <div className="relative z-10 px-5 py-6 sm:px-8">
-            <h2 className="text-xl font-semibold">Available Tonight</h2>
-            <p className="opacity-90 text-sm">
-              Browse restaurants on smaller screens
-            </p>
+            <h2 className="text-xl font-semibold">Available Restaurants</h2>
           </div>
         </div>
 
