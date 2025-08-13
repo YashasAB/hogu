@@ -5,7 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && npm run start"]
+run = ["sh", "-c", "cd apps/api && npm start"]
+build = ["sh", "-c", "cd apps/web && npm run build"]
 
 [objectStorage]
 defaultBucketID = "restaurant-photos"
@@ -25,38 +26,6 @@ args = "cd apps/api && PORT=8080 npm run dev"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd apps/web && npm run dev"
-
-[[ports]]
-localPort = 3001
-externalPort = 3001
-
-[[ports]]
-localPort = 3002
-externalPort = 3002
-
-[[ports]]
-localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
-
-[[ports]]
-localPort = 5002
-externalPort = 4200
-
-[[ports]]
-localPort = 5173
-externalPort = 5173
-
-[[ports]]
-localPort = 5555
-externalPort = 3003
-
-[[ports]]
-localPort = 5556
-externalPort = 6000
 
 [[ports]]
 localPort = 8080
