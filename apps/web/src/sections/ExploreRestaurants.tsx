@@ -121,9 +121,17 @@ export default function ExploreRestaurants() {
     };
   }, []);
 
-  // Update markers when filter changes
+  // Update markers when restaurants data or filter changes
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapInstanceRef.current || restaurants.length === 0) {
+      console.log("Map not ready or no restaurants data:", {
+        mapReady: !!mapInstanceRef.current,
+        restaurantsCount: restaurants.length
+      });
+      return;
+    }
+
+    console.log("Adding markers for restaurants:", restaurants.length);
 
     // Clear existing markers
     markersRef.current.forEach((marker) => {
@@ -133,17 +141,31 @@ export default function ExploreRestaurants() {
 
     // Create emoji marker function
     const createEmojiMarker = (restaurant: Restaurant) => {
+      const emoji = restaurant.emoji || '🍽️'; // Fallback emoji
       const html = `
-        <div class="pin ${restaurant.hot ? "pin--hot" : ""}">
-          <span class="pin__emoji">${restaurant.emoji}</span>
+        <div class="pin ${restaurant.hot ? "pin--hot" : ""}" style="
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: ${restaurant.hot ? '#ef4444' : '#3b82f6'};
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          position: relative;
+          z-index: 1000;
+        ">
+          <span class="pin__emoji">${emoji}</span>
         </div>
       `;
       const icon = L.divIcon({
         className: "",
         html,
-        iconSize: MAP_STYLES.markerSize,
-        iconAnchor: MAP_STYLES.markerAnchor,
-        popupAnchor: MAP_STYLES.popupAnchor,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -20],
       });
       return L.marker([restaurant.position.lat, restaurant.position.lng], {
         icon,
@@ -157,7 +179,16 @@ export default function ExploreRestaurants() {
       return restaurant.category === selectedFilter;
     });
 
-    filteredRestaurants.forEach((restaurant) => {
+    console.log("Filtered restaurants:", filteredRestaurants.length);
+
+    filteredRestaurants.forEach((restaurant, index) => {
+      console.log(`Adding marker ${index + 1}:`, {
+        name: restaurant.name,
+        lat: restaurant.position.lat,
+        lng: restaurant.position.lng,
+        emoji: restaurant.emoji
+      });
+
       const marker = createEmojiMarker(restaurant);
       marker.bindPopup(`
         <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
@@ -166,6 +197,7 @@ export default function ExploreRestaurants() {
           <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
         </div>
       `);
+      
       if (mapInstanceRef.current) {
         marker.addTo(mapInstanceRef.current);
         markersRef.current.push(marker);
@@ -179,10 +211,13 @@ export default function ExploreRestaurants() {
       );
       const map = mapInstanceRef.current;
       if (map) {
-        map.fitBounds(latlngs, { padding: MAP_STYLES.boundsOptions.padding });
+        // Add a small delay to ensure all markers are rendered
+        setTimeout(() => {
+          map.fitBounds(latlngs, { padding: [20, 20] });
+        }, 100);
       }
     }
-  }, [selectedFilter]);
+  }, [restaurants, selectedFilter]);
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     if (selectedFilter === "all") return true;

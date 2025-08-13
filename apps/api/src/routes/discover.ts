@@ -45,7 +45,7 @@ router.get('/tonight', async (req, res) => {
     // Group slots by restaurant
     const restaurantSlots = new Map();
 
-    availableSlots.forEach((slot) => {
+    availableSlots.forEach((slot: any) => {
       const restaurant = slot.restaurant;
       const key = restaurant.id;
 
@@ -110,7 +110,7 @@ router.get('/week', async (req, res) => {
 
       // Group by restaurant for picks
       const restaurantSlots = new Map();
-      availableSlots.forEach((slot) => {
+      availableSlots.forEach((slot: any) => {
         const restaurant = slot.restaurant;
         const key = restaurant.id;
 
@@ -199,7 +199,7 @@ router.get('/tonight-near-you', async (req, res) => {
     // Get unique restaurants that have available slots
     const restaurantMap = new Map();
 
-    availableSlots.forEach((slot) => {
+    availableSlots.forEach((slot: any) => {
       const restaurant = slot.restaurant;
       const key = restaurant.id;
 
