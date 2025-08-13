@@ -236,6 +236,31 @@ export default function RestaurantAdminPanel() {
     }
   };
 
+  // Function to fetch slots, added logging
+  const fetchSlots = async () => {
+    console.log(`🔍 fetchSlots called for date: ${date}`);
+    try {
+      const token = localStorage.getItem("hogu_restaurant_token");
+      console.log("🔍 Token exists:", !!token);
+      const response = await fetch(`/api/admin/slots?date=${date}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("🔍 Slots response status:", response.status);
+      console.log("🔍 Slots response ok:", response.ok);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("🔍 Slots data received:", data);
+        setSlots(data);
+      } else {
+        console.error("🔍 Failed to fetch slots, status:", response.status);
+      }
+    } catch (error) {
+      console.error("🔍 Error fetching slots:", error);
+    }
+  };
+
   const refresh = async () => {
     if (!restaurant) return;
 
