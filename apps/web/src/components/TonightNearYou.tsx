@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -23,29 +22,34 @@ interface TonightNearYouProps {
 
 export default function TonightNearYou({ city }: TonightNearYouProps) {
   const navigate = useNavigate();
-  const [tonightRestaurants, setTonightRestaurants] = useState<SlotSummary[]>([]);
+  const [tonightRestaurants, setTonightRestaurants] = useState<SlotSummary[]>(
+    [],
+  );
   const [tonightLoading, setTonightLoading] = useState(false);
 
   useEffect(() => {
     const fetchAvailableRestaurants = async () => {
       setTonightLoading(true);
       try {
-        console.log('Fetching tonight restaurants from /api/discover/tonight');
-        const response = await fetch('/api/discover/tonight?party_size=2');
-        console.log('Response status:', response.status);
-        
+        console.log("Fetching tonight restaurants from /api/discover/tonight");
+        const response = await fetch("/api/discover/tonight?party_size=2");
+        console.log("Response status:", response.status);
+
         if (response.ok) {
           const data = await response.json();
-          console.log('Tonight API response:', data);
-          
+          console.log("Tonight API response:", data);
+
           // The /api/discover/tonight returns { now: [], later: [] }
           // Combine both now and later arrays
           const allRestaurants = [...(data.now || []), ...(data.later || [])];
-          console.log('Combined restaurants:', allRestaurants);
-          
+          console.log("Combined restaurants:", allRestaurants);
+
           setTonightRestaurants(allRestaurants);
         } else {
-          console.error("Failed to fetch available restaurants, status:", response.status);
+          console.error(
+            "Failed to fetch available restaurants, status:",
+            response.status,
+          );
           const errorText = await response.text();
           console.error("Error response:", errorText);
           setTonightRestaurants([]);
@@ -64,8 +68,18 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
   return (
     <section id="tonight" className="space-y-3">
       <h2 className="text-xl font-semibold flex items-center gap-2">
-        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-5 h-5 text-gray-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         Tonight Near You
       </h2>
@@ -75,9 +89,12 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
 
       {tonightLoading ? (
         <div className="overflow-x-auto">
-          <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+          <div className="flex gap-2 pb-2" style={{ width: "max-content" }}>
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 animate-pulse">
+              <div
+                key={i}
+                className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 animate-pulse"
+              >
                 <div className="h-24 bg-gray-200 rounded-lg mb-2" />
                 <div className="h-3 bg-gray-200 rounded mb-1" />
                 <div className="h-2 bg-gray-200 rounded w-2/3" />
@@ -87,7 +104,7 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
         </div>
       ) : tonightRestaurants.length > 0 ? (
         <div className="overflow-x-auto">
-          <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+          <div className="flex gap-2 pb-2" style={{ width: "max-content" }}>
             {tonightRestaurants.map((restaurant) => (
               <div
                 key={restaurant.restaurant.id}
@@ -96,13 +113,15 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
               >
                 <div className="w-full h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-2 p-3 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{restaurant.restaurant.emoji || '🍽️'}</span>
+                    <span className="text-lg">
+                      {restaurant.restaurant.emoji || "🍽️"}
+                    </span>
                     <div className="text-sm font-bold text-white truncate">
                       {restaurant.restaurant.name}
                     </div>
                   </div>
                   <div className="text-xs text-slate-300">
-                    {restaurant.restaurant.neighborhood || 'Bengaluru'}
+                    {restaurant.restaurant.neighborhood || "Bengaluru"}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
