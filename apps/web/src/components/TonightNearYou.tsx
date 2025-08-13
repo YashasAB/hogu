@@ -93,7 +93,7 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 animate-pulse"
+                className="w-[calc(33.33%-8px)] min-w-[140px] flex-shrink-0 border border-gray-200 rounded-xl p-3 animate-pulse"
               >
                 <div className="h-24 bg-gray-200 rounded-lg mb-2" />
                 <div className="h-3 bg-gray-200 rounded mb-1" />
@@ -108,7 +108,7 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
             {tonightRestaurants.map((restaurant) => (
               <div
                 key={restaurant.restaurant.id}
-                className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
+                className="w-[calc(33.33%-8px)] min-w-[140px] flex-shrink-0 border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
                 onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
               >
                 <div className="w-full h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-2 p-3 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
