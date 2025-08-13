@@ -314,4 +314,4 @@ router.post('/reservations/:id/cancel', authenticateToken, async (req: Authentic
   }
 });
 
-export { router as authRouter };
+export default router;
