@@ -54,12 +54,7 @@ if (isProduction) {
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Hogu API is running',
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    port: PORT
-  });
+  res.status(200).send('OK');
 });
 
 // Additional health check endpoint
