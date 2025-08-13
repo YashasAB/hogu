@@ -1,6 +1,13 @@
 // apps/web/src/sections/Home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+// Extend Window interface to include emergencyLogout
+declare global {
+  interface Window {
+    emergencyLogout?: () => void;
+  }
+}
 import DarkDatePicker from "../components/DarkDatePicker";
 import TonightNearYou from "../components/TonightNearYou"; // Import the new component
 
@@ -239,7 +246,9 @@ const UserReservations = ({
                 {reservation.status === "PENDING" && (
                   <div className="mt-3 text-right">
                     <button
-                      onClick={() => handleCancelReservation(reservation.id)}
+                      onClick={() => {
+                        handleCancelReservation(reservation.id);
+                      }}
                       className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                     >
                       Cancel
@@ -250,11 +259,11 @@ const UserReservations = ({
                 {reservation.status === "HELD" && (
                   <div className="mt-3">
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         navigate(
                           `/r/${reservation.restaurant.slug}/hold/${reservation.id}`,
-                        )
-                      }
+                        );
+                      }}
                       className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Complete Booking
@@ -315,6 +324,13 @@ export default function Home() {
         }
       }
     };
+    
+    // Set up emergency logout function
+    window.emergencyLogout = () => {
+      localStorage.removeItem("hogu_token");
+      setUser(null);
+    };
+    
     checkAuth();
   }, []);
 
