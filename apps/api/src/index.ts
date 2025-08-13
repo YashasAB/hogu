@@ -26,7 +26,7 @@ async function testDatabaseConnection() {
 testDatabaseConnection();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 8080;
+const PORT = Number(process.env.PORT) || 80;
 
 console.log('Environment check:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -111,6 +111,7 @@ if (isProduction) {
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Hogu API listening on http://0.0.0.0:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 server.on('error', (error) => {
