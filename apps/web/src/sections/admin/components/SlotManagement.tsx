@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React from "react";
 
 type SlotStatus = "available" | "cutoff" | "full";
 
@@ -33,7 +32,7 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
   loading,
   onDateChange,
   onSlotStatusChange,
-  onAddSlots
+  onAddSlots,
 }) => {
   const [start, setStart] = React.useState("18:00");
   const [end, setEnd] = React.useState("22:00");
@@ -76,10 +75,14 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
 
       {/* Add Slots Form */}
       <div className="mb-6 p-4 bg-slate-800 rounded-xl">
-        <h3 className="text-md font-medium text-slate-200 mb-4">Add New Slots</h3>
+        <h3 className="text-md font-medium text-slate-200 mb-4">
+          Add New Slots
+        </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Start Time</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Start Time
+            </label>
             <input
               type="time"
               value={start}
@@ -88,7 +91,9 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">End Time</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              End Time
+            </label>
             <input
               type="time"
               value={end}
@@ -97,7 +102,9 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Interval (min)</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Interval (min)
+            </label>
             <input
               type="number"
               value={interval}
@@ -106,7 +113,9 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Capacity</label>
+            <label className="block text-xs text-slate-400 mb-1">
+              Capacity
+            </label>
             <input
               type="number"
               value={capacity}
@@ -128,11 +137,14 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
         <h3 className="text-md font-medium text-slate-200 mb-4">
           Slots for {new Date(date).toLocaleDateString()}
         </h3>
-        
+
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-slate-800 rounded-lg p-3 animate-pulse">
+              <div
+                key={i}
+                className="bg-slate-800 rounded-lg p-3 animate-pulse"
+              >
                 <div className="h-4 bg-slate-700 rounded mb-2"></div>
                 <div className="h-3 bg-slate-700 rounded w-2/3"></div>
               </div>
@@ -144,7 +156,9 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
               <span className="text-xl">🕐</span>
             </div>
             <p className="text-slate-400">No slots found for this date</p>
-            <p className="text-slate-500 text-sm">Use the form above to add new slots</p>
+            <p className="text-slate-500 text-sm">
+              Use the form above to add new slots
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -158,11 +172,12 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
                 <div className="mt-2">
                   <select
                     value={slot.status}
-                    onChange={(e) => onSlotStatusChange(slot.id, e.target.value as SlotStatus)}
+                    onChange={(e) =>
+                      onSlotStatusChange(slot.id, e.target.value as SlotStatus)
+                    }
                     className="w-full bg-slate-700 border border-slate-600 rounded text-xs px-1 py-1"
                   >
                     <option value="available">Available</option>
-                    <option value="cutoff">Cutoff</option>
                     <option value="full">Full</option>
                   </select>
                 </div>
