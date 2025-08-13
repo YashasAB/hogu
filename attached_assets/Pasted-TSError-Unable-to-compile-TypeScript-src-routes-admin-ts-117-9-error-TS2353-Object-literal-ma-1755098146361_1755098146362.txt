@@ -1,0 +1,78 @@
+TSError: ⨯ Unable to compile TypeScript:
+src/routes/admin.ts:117:9 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationInclude<DefaultArgs>'.
+
+117         timeSlot: { select: { date: true, time: true } },
+            ~~~~~~~~
+src/routes/admin.ts:125:15 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+125       date: b.timeSlot.date,
+                  ~~~~~~~~
+src/routes/admin.ts:126:15 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+126       time: b.timeSlot.time,
+                  ~~~~~~~~
+src/routes/admin.ts:127:15 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+127       user: b.user.name || b.user.email,
+                  ~~~~
+src/routes/admin.ts:127:30 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+127       user: b.user.name || b.user.email,
+                                 ~~~~
+src/routes/admin.ts:143:9 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationWhereInput'.
+
+143         timeSlot: {
+            ~~~~~~~~
+src/routes/admin.ts:158:9 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationInclude<DefaultArgs>'.
+
+158         timeSlot: {
+            ~~~~~~~~
+src/routes/admin.ts:167:11 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationOrderByWithRelationInput'.
+
+167         { timeSlot: { date: 'asc' } },
+              ~~~~~~~~
+src/routes/admin.ts:168:11 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationOrderByWithRelationInput'.
+
+168         { timeSlot: { time: 'asc' } },
+              ~~~~~~~~
+src/routes/admin.ts:173:125 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+173     console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.timeSlot.date })));
+                                                                                                                                ~~~~~~~~
+src/routes/admin.ts:183:21 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+183         id: booking.user.id,
+                        ~~~~
+src/routes/admin.ts:184:23 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+184         name: booking.user.name,
+                          ~~~~
+src/routes/admin.ts:185:24 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+185         email: booking.user.email,
+                           ~~~~
+src/routes/admin.ts:186:24 - error TS2339: Property 'user' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+186         phone: booking.user.phone
+                           ~~~~
+src/routes/admin.ts:189:23 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+189         date: booking.timeSlot.date,
+                          ~~~~~~~~
+src/routes/admin.ts:190:23 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+190         time: booking.timeSlot.time,
+                          ~~~~~~~~
+src/routes/admin.ts:191:28 - error TS2339: Property 'timeSlot' does not exist on type '{ status: string; id: string; userId: string; createdAt: Date; restaurantId: string; slotId: string; partySize: number; holdExpiresAt: Date | null; confirmedAt: Date | null; }'.
+
+191         partySize: booking.timeSlot.partySize
+                               ~~~~~~~~
+src/routes/admin.ts:289:11 - error TS2353: Object literal may only specify known properties, and 'timeSlot' does not exist in type 'ReservationInclude<DefaultArgs>'.
+
+289           timeSlot: true,
+              ~~~~~~~~
+
+  node_modules/.prisma/client/index.d.ts:7587:5
+    7587     include?: ReservationInclude<ExtArgs> | null
+             ~~~~~~~
+    The expected type comes from property 'include' which is declared here on type '{ select?: ReservationSelect<DefaultArgs> | null | undefined; include?: ReservationInclude<DefaultArgs> | null | undefined; data: (Without<...> & ReservationUncheckedUpdateInput) | (Without<...> & ReservationUpdateInput); where: ReservationWhereUniqueInput; }'
