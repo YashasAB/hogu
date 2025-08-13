@@ -262,14 +262,19 @@ export default function RestaurantAdminPanel() {
   };
 
   const refresh = async () => {
-    if (!restaurant) return;
+    console.log("🔄 refresh() called, restaurant exists:", !!restaurant);
+    // Remove the restaurant check - we can fetch data even before restaurant profile is loaded
+    // The API calls use the token which contains the restaurant ID
 
+    console.log("🔄 refresh() proceeding to fetch data");
     setLoading(true);
     try {
+      console.log("🔄 About to fetch slots and bookings...");
       const [slotsData, bookingsData] = await Promise.all([
         api.getSlots(date),
         api.getBookings(),
       ]);
+      console.log("🔄 Received slots:", slotsData.length, "bookings:", bookingsData.length);
       setSlots(slotsData);
       setBookings(bookingsData);
 
@@ -417,7 +422,7 @@ export default function RestaurantAdminPanel() {
         {activeTab === "dashboard" ? (
           <>
             {/* Live Status */}
-            <LiveStatusCard 
+            <LiveStatusCard
               pending={liveStatus.pending}
               confirmed={liveStatus.confirmed}
               completed={liveStatus.completed}
@@ -427,14 +432,14 @@ export default function RestaurantAdminPanel() {
             {/* Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Bookings List */}
-              <BookingsList 
+              <BookingsList
                 bookings={bookings}
                 loading={loading}
                 onStatusChange={handleBookingStatusChange}
               />
 
               {/* Slot Management */}
-              <SlotManagement 
+              <SlotManagement
                 date={date}
                 slots={slots}
                 loading={loading}
@@ -446,7 +451,7 @@ export default function RestaurantAdminPanel() {
           </>
         ) : (
           <div className="max-w-2xl mx-auto">
-            <RestaurantProfile 
+            <RestaurantProfile
               restaurant={restaurant}
               profileData={profileData}
               loading={profileLoading}
