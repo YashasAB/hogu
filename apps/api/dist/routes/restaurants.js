@@ -121,12 +121,12 @@ router.get('/:slug/availability', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch availability' });
     }
 });
-// Helper function to format time from 24h to 12h format
+// Helper function to format time from 24h to 12h format for display only
 function formatTime(time) {
     const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:${minutes} ${ampm}`;
+    const hour24 = parseInt(hours);
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    return `${hour12}:${minutes} ${period}`;
 }
 exports.default = router;
