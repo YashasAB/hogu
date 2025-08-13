@@ -81,7 +81,7 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       throw new Error('Failed to upload to storage');
     }
 
-    const heroImageUrl = uploadResult.data.url;
+    const heroImageUrl = uploadResult.url;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
 
     // Update the restaurant's heroImageUrl in the database
