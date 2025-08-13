@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, TimeSlot, Restaurant } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -63,11 +63,14 @@ router.get('/tonight', async (req, res) => {
         });
       }
 
-      restaurantSlots.get(key).slots.push({
-        slot_id: slot.id,
-        time: formatTime(slot.time),
-        party_size: slot.partySize,
-      });
+      const restaurantData = restaurantSlots.get(key);
+      if (restaurantData) {
+        restaurantData.slots.push({
+          slot_id: slot.id,
+          time: formatTime(slot.time),
+          party_size: slot.partySize,
+        });
+      }
     });
 
     const now = Array.from(restaurantSlots.values()).slice(0, 6);
@@ -127,11 +130,14 @@ router.get('/week', async (req, res) => {
           });
         }
 
-        restaurantSlots.get(key).slots.push({
-          slot_id: slot.id,
-          time: formatTime(slot.time),
-          party_size: slot.partySize,
-        });
+        const restaurantData = restaurantSlots.get(key);
+        if (restaurantData) {
+          restaurantData.slots.push({
+            slot_id: slot.id,
+            time: formatTime(slot.time),
+            party_size: slot.partySize,
+          });
+        }
       });
 
       weekDays.push({
@@ -219,11 +225,14 @@ router.get('/tonight-near-you', async (req, res) => {
         });
       }
 
-      restaurantMap.get(key).availableSlots.push({
-        slot_id: slot.id,
-        time: formatTime(slot.time),
-        party_size: slot.partySize,
-      });
+      const restaurantData = restaurantMap.get(key);
+      if (restaurantData) {
+        restaurantData.availableSlots.push({
+          slot_id: slot.id,
+          time: formatTime(slot.time),
+          party_size: slot.partySize,
+        });
+      }
     });
 
     const restaurants = Array.from(restaurantMap.values());
