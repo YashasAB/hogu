@@ -16,75 +16,7 @@ type Restaurant = {
   hot?: boolean;
 };
 
-// Hardcoded fallback data
-const fallbackRestaurants: Restaurant[] = [
-  {
-    id: "1",
-    name: "ZLB 23 (at The Leela Palace)",
-    slug: "zlb",
-    emoji: "🍸",
-    position: { lat: 12.960695, lng: 77.648663 },
-    image: "/api/placeholder/200/150",
-    neighborhood: "Old Airport Rd",
-    category: "cocktails",
-    hot: true,
-  },
-  {
-    id: "2",
-    name: "Soka",
-    slug: "soka",
-    emoji: "🍸",
-    position: { lat: 12.965215, lng: 77.638143 },
-    image: "/api/placeholder/200/150",
-    neighborhood: "Koramangala",
-    category: "cocktails",
-    hot: false,
-  },
-  {
-    id: "3",
-    name: "Bar Spirit Forward",
-    slug: "spirit-forward",
-    emoji: "🥃",
-    position: { lat: 12.975125, lng: 77.602350 },
-    image: "/spirit-forward-image.jpg",
-    neighborhood: "CBD",
-    category: "cocktails",
-    hot: true,
-  },
-  {
-    id: "4",
-    name: "Naru Noodle Bar",
-    slug: "naru",
-    emoji: "🍱",
-    position: { lat: 12.958431, lng: 77.592895 },
-    image: "/api/placeholder/200/150",
-    neighborhood: "CBD",
-    category: "dinner",
-    hot: false,
-  },
-  {
-    id: "8",
-    name: "Pizza 4P's (Indiranagar)",
-    slug: "pizza-4ps",
-    emoji: "🍕",
-    position: { lat: 12.969968, lng: 77.636089 },
-    image: "/api/placeholder/200/150",
-    neighborhood: "Indiranagar",
-    category: "dinner",
-    hot: false,
-  },
-  {
-    id: "9",
-    name: "Dali & Gala",
-    slug: "dali-and-gala",
-    emoji: "🍸",
-    position: { lat: 12.975124, lng: 77.602868 },
-    image: "/api/placeholder/200/150",
-    neighborhood: "CBD",
-    category: "cocktails",
-    hot: false,
-  },
-];
+
 
 // Helper function to get emoji for category
 const getCategoryEmoji = (category: string) => {
@@ -95,7 +27,7 @@ export default function ExploreRestaurants() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(fallbackRestaurants);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -132,18 +64,15 @@ export default function ExploreRestaurants() {
           console.log('Available categories:', categories);
           console.log('Available neighborhoods:', neighborhoods);
         } else {
-          console.log('API returned empty data, using fallback');
-          setRestaurants(fallbackRestaurants);
-          // Set fallback categories and neighborhoods
-          const fallbackCategories = [...new Set(fallbackRestaurants.map(r => r.category))];
-          const fallbackNeighborhoods = [...new Set(fallbackRestaurants.map(r => r.neighborhood))];
-          setAvailableCategories(fallbackCategories);
-          setAvailableNeighborhoods(fallbackNeighborhoods);
+          console.log('API returned empty data');
+          setRestaurants([]);
+          setAvailableCategories([]);
+          setAvailableNeighborhoods([]);
         }
       } catch (error) {
         console.error('Error fetching restaurants:', error);
-        setError('Failed to load restaurants from API, using offline data');
-        setRestaurants(fallbackRestaurants);
+        setError('Failed to load restaurants from API');
+        setRestaurants([]);
       } finally {
         setIsLoading(false);
       }

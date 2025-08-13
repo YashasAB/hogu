@@ -24,94 +24,6 @@ type TimeSlot = {
   available: boolean;
 };
 
-// Local restaurant data (matching ExploreRestaurants)
-const restaurants: Restaurant[] = [
-  {
-    id: "1",
-    name: "ZLB 23 (at The Leela Palace)",
-    slug: "zlb",
-    emoji: "🍸",
-    position: { lat: 12.960695, lng: 77.648663 },
-    image:
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
-    neighborhood: "Old Airport Road",
-    category: "cocktails",
-    hot: true,
-    instagramUrl: "https://instagram.com/zlb23",
-    website: "https://theleela.com",
-    cuisineTags: ["Cocktails", "Fine Dining", "Rooftop"],
-  },
-  {
-    id: "2",
-    name: "Soka",
-    slug: "soka",
-    emoji: "🍸",
-    position: { lat: 12.965215, lng: 77.638143 },
-    image:
-      "https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=1600&auto=format&fit=crop",
-    neighborhood: "Koramangala",
-    category: "cocktails",
-    hot: false,
-    instagramUrl: "https://instagram.com/soka",
-    cuisineTags: ["Cocktails", "Asian Fusion"],
-  },
-  {
-    id: "3",
-    name: "Bar Spirit Forward",
-    slug: "spirit-forward",
-    emoji: "🥃",
-    position: { lat: 12.975125, lng: 77.60287 },
-    image: "/spirit-forward-image.jpg",
-    neighborhood: "CBD",
-    category: "cocktails",
-    hot: true,
-    instagramUrl: "https://instagram.com/spiritforward",
-    cuisineTags: ["Cocktails", "Whiskey", "Bar"],
-  },
-  {
-    id: "4",
-    name: "Naru Noodle Bar",
-    slug: "naru",
-    emoji: "🍱",
-    position: { lat: 12.958431, lng: 77.592895 },
-    image:
-      "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=1600&auto=format&fit=crop",
-    neighborhood: "CBD",
-    category: "dinner",
-    hot: false,
-    instagramUrl: "https://instagram.com/naru",
-    cuisineTags: ["Japanese", "Noodles", "Asian"],
-  },
-  {
-    id: "8",
-    name: "Pizza 4P's (Indiranagar)",
-    slug: "pizza-4ps",
-    emoji: "🍕",
-    position: { lat: 12.969968, lng: 77.636089 },
-    image:
-      "https://images.unsplash.com/photo-1541745537413-b804d1a57a51?q=80&w=1600&auto=format&fit=crop",
-    neighborhood: "Indiranagar",
-    category: "pizza",
-    hot: false,
-    instagramUrl: "https://instagram.com/pizza4ps",
-    cuisineTags: ["Pizza", "Italian", "Cheese"],
-  },
-  {
-    id: "9",
-    name: "Dali & Gala",
-    slug: "dali-and-gala",
-    emoji: "🍸",
-    position: { lat: 12.975125, lng: 77.60287 },
-    image:
-      "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1600&auto=format&fit=crop",
-    neighborhood: "CBD",
-    category: "cocktails",
-    hot: false,
-    instagramUrl: "https://instagram.com/daligala",
-    cuisineTags: ["Cocktails", "Art", "Modern"],
-  },
-];
-
 // Generate demo time slots
 const generateTimeSlots = (): TimeSlot[] => {
   const times = [
@@ -175,27 +87,19 @@ export default function RestaurantDetail() {
   // Fetch restaurant data
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (!slug) {
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       try {
         const response = await fetch(`/api/restaurants/${slug}`);
-
         if (response.ok) {
           const data = await response.json();
           setRestaurant(data);
         } else {
-          // Fallback to hardcoded data if API fails
-          const fallbackRestaurant = restaurants.find((r) => r.slug === slug);
-          setRestaurant(fallbackRestaurant || restaurants[0]);
+          console.error('Restaurant not found in API');
+          setRestaurant(null);
         }
       } catch (error) {
-        console.error('Failed to fetch restaurant:', error);
-        // Fallback to hardcoded data on error
-        const fallbackRestaurant = restaurants.find((r) => r.slug === slug);
-        setRestaurant(fallbackRestaurant || restaurants[0]);
+        console.error('Error fetching restaurant:', error);
+        setRestaurant(null);
       } finally {
         setLoading(false);
       }
@@ -296,7 +200,7 @@ export default function RestaurantDetail() {
       navigate('/login');
       return;
     }
-    
+
     if (selectedSlot) {
       handleReserveNow();
     } else {
