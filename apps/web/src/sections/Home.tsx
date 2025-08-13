@@ -360,7 +360,7 @@ export default function Home() {
     [selectedDate],
   );
 
-  // --- helpers ---
+  // --- UI ---
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
     <h2 className="text-xl font-semibold">{children}</h2>
   );
@@ -749,7 +749,7 @@ export default function Home() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
                   1
                 </div>
                 <div className="font-medium">Search & Pick</div>
@@ -761,7 +761,7 @@ export default function Home() {
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
                   2
                 </div>
                 <div className="font-medium">Hold & Confirm</div>
@@ -773,7 +773,7 @@ export default function Home() {
             </div>
             <div className="bg-white/10 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-white text-brand flex items-center justify-center text-sm font-bold">
+                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
                   3
                 </div>
                 <div className="font-medium">Get Notified</div>
