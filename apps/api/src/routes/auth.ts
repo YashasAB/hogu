@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken'; // Assuming you have jwt installed
-import { PrismaClient } from '@prisma/client'; // Assuming you have prisma installed
-import bcrypt from 'bcrypt'; // Import bcrypt for password hashing
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
@@ -165,43 +165,36 @@ router.post('/restaurant-login', async (req, res) => {
   const { email, password } = parse.data;
 
   try {
-    // For demo purposes, we'll use hardcoded credentials
-    // In production, you'd store these in the database with proper hashing
-    if (email === 'demo-restaurant@hogu.com' && password === 'restaurant123') {
-      // Find a demo restaurant or create one
-      let restaurant = await prisma.restaurant.findFirst({
-        where: { name: 'Demo Restaurant' }
-      });
-
-      if (!restaurant) {
-        restaurant = await prisma.restaurant.create({
-          data: {
-            name: 'Demo Restaurant',
-            slug: 'demo-restaurant',
-            emoji: '🏪',
-            latitude: 12.971599,
-            longitude: 77.594566,
-            neighborhood: 'Bangalore',
-            category: 'fine-dining',
-            isHot: true,
-          },
-        });
+    // Find restaurant auth record
+    const restaurantAuth = await prisma.restaurantAuth.findUnique({
+      where: { email },
+      include: {
+        restaurant: true
       }
+    });
 
-      const token = jwt.sign({ restaurantId: restaurant.id }, JWT_SECRET, { expiresIn: '24h' });
-
-      res.json({
-        token,
-        restaurantId: restaurant.id,
-        restaurant: {
-          id: restaurant.id,
-          name: restaurant.name,
-          email: email,
-        },
-      });
-    } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+    if (!restaurantAuth) {
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
+
+    // Verify password
+    const isValid = await bcrypt.compare(password, restaurantAuth.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token for restaurant
+    const token = jwt.sign({ restaurantId: restaurantAuth.restaurantId }, JWT_SECRET, { expiresIn: '24h' });
+
+    res.json({
+      token,
+      restaurantId: restaurantAuth.restaurantId,
+      restaurant: {
+        id: restaurantAuth.restaurant.id,
+        name: restaurantAuth.restaurant.name,
+        email: email,
+      },
+    });
   } catch (error) {
     console.error('Restaurant login error:', error);
     res.status(500).json({ error: 'Login failed' });
@@ -217,16 +210,26 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(401).json({ error: 'No user ID in token' });
     }
 
-    // Here you would typically fetch user data from database
-    // For now, return mock data
-    const user = {
-      id: userId,
-      name: 'yashas ab', // This would come from your database
-      username: 'yashasab', // This would come from your database
-      email: 'yashasab.ab@gmail.com' // This would come from your database
-    };
+    // Fetch user data from database using userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        details: true
+      }
+    });
 
-    res.json(user);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      id: user.id,
+      username: user.userAuth?.username, // Assuming userAuth is related and includes username
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      preferredHood: user.details?.preferredHood
+    });
   } catch (error) {
     console.error('Error getting user info:', error);
     res.status(500).json({ error: 'Internal server error' });

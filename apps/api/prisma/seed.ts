@@ -67,26 +67,23 @@ async function main() {
   const hashedUserPassword1 = await bcrypt.hash('user123', 10);
   const hashedUserPassword2 = await bcrypt.hash('jane123', 10);
 
-  // Create restaurant authentication records
-  await prisma.restaurantAuth.upsert({
-    where: { restaurantId: restaurant1.id },
-    update: {},
-    create: {
-      restaurantId: restaurant1.id,
-      username: 'demo-restaurant',
-      passwordHash: hashedRestaurantPassword
-    }
-  });
-
-  await prisma.restaurantAuth.upsert({
-    where: { restaurantId: restaurant2.id },
-    update: {},
-    create: {
-      restaurantId: restaurant2.id,
-      username: 'sample-bar',
-      passwordHash: hashedRestaurantPassword
-    }
-  });
+  // Create restaurant authentication records for all restaurants
+  const allRestaurants = [restaurant1, restaurant2, restaurant3, restaurant4, restaurant5, restaurant6, restaurant7, restaurant8, restaurant9, restaurant10, restaurant11, restaurant12, restaurant13];
+  
+  for (let i = 0; i < allRestaurants.length; i++) {
+    const restaurant = allRestaurants[i];
+    const username = restaurant.slug; // Use slug as username for uniqueness
+    
+    await prisma.restaurantAuth.upsert({
+      where: { restaurantId: restaurant.id },
+      update: {},
+      create: {
+        restaurantId: restaurant.id,
+        username: username,
+        passwordHash: hashedRestaurantPassword // Same password for all: 'restaurant123'
+      }
+    });
+  }
 
   // Create user authentication records
   await prisma.userAuth.upsert({

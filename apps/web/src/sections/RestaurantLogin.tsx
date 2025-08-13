@@ -55,14 +55,14 @@ export default function RestaurantLogin() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Restaurant Email
+                Restaurant Username
               </label>
               <input
-                type="email"
+                type="text"
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="restaurant@example.com"
+                placeholder="restaurant-slug"
                 required
               />
             </div>
@@ -102,13 +102,27 @@ export default function RestaurantLogin() {
 
         {/* Demo Credentials */}
         <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-3">Demo Restaurant Account</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Available Restaurant Accounts</h3>
           <p className="text-sm text-gray-600 mb-3">
-            Use these credentials to test the restaurant dashboard:
+            Use any of these restaurant usernames with password "restaurant123":
           </p>
-          <div className="bg-gray-50 p-4 rounded-lg font-mono text-sm">
-            <div className="text-gray-700">Email: demo-restaurant@hogu.com</div>
-            <div className="text-gray-700">Password: restaurant123</div>
+          <div className="bg-gray-50 p-4 rounded-lg space-y-2 max-h-48 overflow-y-auto">
+            <div className="text-xs text-gray-500 mb-2">Username (use as email) | Password</div>
+            <div className="space-y-1 text-sm font-mono">
+              <div className="text-gray-700">zlb-23-at-the-leela-palace | restaurant123</div>
+              <div className="text-gray-700">soka | restaurant123</div>
+              <div className="text-gray-700">bar-spirit-forward | restaurant123</div>
+              <div className="text-gray-700">naru-noodle-bar | restaurant123</div>
+              <div className="text-gray-700">pizza-4ps-indiranagar | restaurant123</div>
+              <div className="text-gray-700">dali-and-gala | restaurant123</div>
+              <div className="text-gray-700">the-permit-room | restaurant123</div>
+              <div className="text-gray-700">toit-brewpub | restaurant123</div>
+              <div className="text-gray-700">byg-brewski-brewing-company | restaurant123</div>
+              <div className="text-gray-700">truffles | restaurant123</div>
+              <div className="text-gray-700">glen-s-bakehouse | restaurant123</div>
+              <div className="text-gray-700">koshy-s | restaurant123</div>
+              <div className="text-gray-700">vidyarthi-bhavan | restaurant123</div>
+            </div>
           </div>
         </div>
 
