@@ -270,23 +270,34 @@ export default function RestaurantAdminPanel() {
     setLoading(true);
     try {
       console.log("🔄 About to fetch slots and bookings...");
-      const [slotsData, bookingsData] = await Promise.all([
+      const [slotsData, bookingsResponse] = await Promise.all([
         api.getSlots(date),
         api.getBookings(),
       ]);
+      
+      // Handle the new response format
+      const bookingsData = bookingsResponse.bookings || bookingsResponse;
+      const liveStatusData = bookingsResponse.liveStatus;
+      
       console.log("🔄 Received slots:", slotsData.length, "bookings:", bookingsData.length);
       setSlots(slotsData);
       setBookings(bookingsData);
 
-      // Calculate live status from bookings
-      const pending = bookingsData.filter((b) => b.status === "PENDING" || b.status === "HELD").length;
-      const confirmed = bookingsData.filter(
-        (b) => b.status === "CONFIRMED" || b.status === "SEATED",
-      ).length;
-      const completed = bookingsData.filter(
-        (b) => b.status === "COMPLETED",
-      ).length;
-      setLiveStatus({ pending, confirmed, completed });
+      // Use live status from API if available, otherwise calculate locally
+      if (liveStatusData) {
+        console.log("🔄 Using live status from API:", liveStatusData);
+        setLiveStatus(liveStatusData);
+      } else {
+        // Fallback to local calculation for backward compatibility
+        const pending = bookingsData.filter((b) => b.status === "PENDING" || b.status === "HELD").length;
+        const confirmed = bookingsData.filter(
+          (b) => b.status === "CONFIRMED" || b.status === "SEATED",
+        ).length;
+        const completed = bookingsData.filter(
+          (b) => b.status === "COMPLETED",
+        ).length;
+        setLiveStatus({ pending, confirmed, completed });
+      }
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {

@@ -134,6 +134,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
     });
     console.log('All restaurants in database:', allRestaurants);
 
+    // Fetch upcoming bookings (excluding completed/cancelled)
     const bookings = await prisma.reservation.findMany({
       where: {
         restaurantId: restaurantId,
@@ -172,6 +173,26 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
     console.log('Raw bookings found:', bookings.length);
     console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.slot.date })));
 
+    // Fetch all bookings for today to calculate live status
+    const todayBookings = await prisma.reservation.findMany({
+      where: {
+        restaurantId: restaurantId,
+        slot: {
+          date: today
+        }
+      },
+      select: {
+        status: true
+      }
+    });
+
+    // Calculate live status from today's bookings
+    const liveStatus = {
+      pending: todayBookings.filter(b => b.status === 'PENDING' || b.status === 'HELD').length,
+      confirmed: todayBookings.filter(b => b.status === 'CONFIRMED' || b.status === 'SEATED').length,
+      completed: todayBookings.filter(b => b.status === 'COMPLETED').length,
+    };
+
     // Transform to match frontend format
     const formattedBookings = bookings.map(booking => ({
       id: booking.id,
@@ -192,10 +213,16 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
       }
     }));
 
+    console.log('Live status calculated:', liveStatus);
     console.log('Successfully fetched upcoming bookings:', formattedBookings.length, 'bookings found');
-    res.json(formattedBookings);
+
+    // Return both bookings and live status
+    res.json({
+      bookings: formattedBookings,
+      liveStatus: liveStatus
+    });
   } catch (error) {
-    console.error('Error fetching bookings:', error);
+    console.error('Error fetching upcoming bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 });
