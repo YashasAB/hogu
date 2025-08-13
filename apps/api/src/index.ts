@@ -26,7 +26,7 @@ async function testDatabaseConnection() {
 testDatabaseConnection();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 80;
+const PORT = Number(process.env.PORT) || 8080;
 
 console.log('Environment check:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
