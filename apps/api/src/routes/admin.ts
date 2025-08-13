@@ -108,30 +108,86 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
     const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
     console.log(`Attempting to upload to filename: ${fileName}`);
     
-    // Test storage client by trying to list files (this will help diagnose auth issues)
+    // Debug environment variables
+    console.log('Environment debug:', {
+      REPL_ID: process.env.REPL_ID,
+      nodeEnv: process.env.NODE_ENV,
+      replUser: process.env.REPL_USER,
+      replSlug: process.env.REPL_SLUG
+    });
+
     try {
       console.log('Testing storage client connectivity...');
-      const testResult = await storageClient.list({ maxResults: 1 });
-      console.log('Storage client test result:', testResult.ok ? 'SUCCESS' : 'FAILED');
-      if (!testResult.ok) {
-        console.error('Storage client test failed:', testResult.error);
+      
+      // First test: Try to list files
+      try {
+        const listResult = await storageClient.list({ maxResults: 1 });
+        console.log('Storage list test result:', listResult.ok ? 'SUCCESS' : 'FAILED');
+        if (!listResult.ok) {
+          console.error('Storage list test failed:', JSON.stringify(listResult.error, null, 2));
+        }
+      } catch (listError) {
+        console.error('Storage list test threw error:', listError);
       }
-    } catch (testError) {
-      console.error('Storage client test threw error:', testError);
-    }
-    
-    try {
+
+      // Second test: Try a simple upload with minimal data
+      try {
+        const testBuffer = Buffer.from('test-content');
+        const testFileName = `test-${Date.now()}.txt`;
+        console.log('Attempting test upload with minimal buffer...');
+        
+        const testUpload = await storageClient.uploadFromBytes(testFileName, testBuffer);
+        console.log('Test upload result:', JSON.stringify(testUpload, null, 2));
+        
+        // Clean up test file if successful
+        if (testUpload.ok) {
+          try {
+            await storageClient.delete(testFileName);
+            console.log('Test file cleaned up successfully');
+          } catch (cleanupError) {
+            console.log('Test file cleanup failed (non-critical):', cleanupError);
+          }
+        }
+      } catch (testUploadError) {
+        console.error('Test upload threw error:', testUploadError);
+      }
+
       console.log('Buffer details:', {
         bufferExists: !!file.buffer,
         bufferLength: file.buffer?.length,
-        bufferType: typeof file.buffer
+        bufferType: typeof file.buffer,
+        isBuffer: Buffer.isBuffer(file.buffer)
       });
 
+      // Try the actual upload
+      console.log('Attempting actual file upload...');
       const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
       console.log('Upload result:', JSON.stringify(uploadResult, null, 2));
 
       if (!uploadResult.ok) {
         console.error('Upload failed with result:', JSON.stringify(uploadResult, null, 2));
+        
+        // Try alternative: save as base64 string temporarily
+        const base64Data = file.buffer.toString('base64');
+        const altFileName = `${restaurantId}/heroImage.base64`;
+        console.log('Trying alternative base64 upload...');
+        
+        const altUploadResult = await storageClient.uploadFromText(altFileName, base64Data);
+        if (altUploadResult.ok) {
+          console.log('Base64 upload succeeded, but this is not ideal for images');
+          const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${altFileName}`;
+          
+          const updatedRestaurant = await prisma.restaurant.update({
+            where: { id: restaurantId },
+            data: { heroImageUrl },
+          });
+
+          return res.json({ 
+            message: 'Hero image uploaded as base64 (temporary solution)', 
+            imageUrl: updatedRestaurant.heroImageUrl 
+          });
+        }
+        
         const errorMessage = uploadResult.error?.message || JSON.stringify(uploadResult.error) || 'Unknown storage error';
         throw new Error(`Storage upload failed: ${errorMessage}`);
       }
