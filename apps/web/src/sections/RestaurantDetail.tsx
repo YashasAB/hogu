@@ -248,7 +248,6 @@ export default function RestaurantDetail() {
 
     const token = localStorage.getItem('hogu_token');
     if (!token) {
-      alert("Please log in to make a reservation");
       navigate('/login');
       return;
     }
@@ -292,6 +291,12 @@ export default function RestaurantDetail() {
   };
 
   const handleMobileCTA = () => {
+    const token = localStorage.getItem('hogu_token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    
     if (selectedSlot) {
       handleReserveNow();
     } else {
