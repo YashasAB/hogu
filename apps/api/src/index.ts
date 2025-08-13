@@ -30,7 +30,7 @@ const PORT = Number(process.env.PORT) || 5000;
 
 console.log('Environment check:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT || 8080);
+console.log('PORT:', process.env.PORT || 5000);
 console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
 
 // Set DATABASE_URL if not present (for deployment)
