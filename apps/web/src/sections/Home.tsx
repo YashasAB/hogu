@@ -366,16 +366,16 @@ export default function Home() {
         console.log('Fetching tonight restaurants from /api/discover/tonight');
         const response = await fetch('/api/discover/tonight?party_size=2');
         console.log('Response status:', response.status);
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('Tonight API response:', data);
-          
+
           // The /api/discover/tonight returns { now: [], later: [] }
           // Combine both now and later arrays
           const allRestaurants = [...(data.now || []), ...(data.later || [])];
           console.log('Combined restaurants:', allRestaurants);
-          
+
           setTonightRestaurants(allRestaurants);
         } else {
           console.error("Failed to fetch available restaurants, status:", response.status);
@@ -698,32 +698,47 @@ export default function Home() {
         ) : tonightRestaurants.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {tonightRestaurants.slice(0, 6).map((restaurant) => (
+              // --- START MODIFIED CODE ---
               <div
-                key={restaurant.id}
-                className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer"
-                onClick={() => navigate(`/r/${restaurant.slug}`)}
+                key={restaurant.restaurant.id}
+                className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow"
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{restaurant.emoji}</span>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{restaurant.name}</h3>
-                    <p className="text-sm text-gray-600">{restaurant.neighborhood}</p>
-                    {restaurant.availableSlots && restaurant.availableSlots.length > 0 && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {restaurant.availableSlots.length} slots available
-                      </p>
-                    )}
+                <div
+                  className="w-full h-32 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-3 p-4 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300 cursor-pointer"
+                  onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{restaurant.restaurant.emoji || '🍽️'}</span>
+                    <div className="text-lg font-bold text-white truncate">
+                      {restaurant.restaurant.name}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-slate-400">
+                      {restaurant.slots.length > 0 ? `${restaurant.slots[0].time} onwards` : 'Available'}
+                    </div>
+                    <div className="text-xs text-brand font-medium">
+                      Click to reserve →
+                    </div>
                   </div>
                 </div>
-
-                <div className="mt-3">
-                  <img
-                    src={restaurant.hero_image_url || '/api/placeholder/400/300'}
-                    alt={restaurant.name}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
+                <div className="text-sm text-muted mb-2">
+                  {restaurant.restaurant.neighborhood || "Bengaluru"}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {restaurant.slots.slice(0, 3).map((slot) => (
+                    <span key={slot.slot_id} className="text-xs px-2 py-1 bg-slate-800 rounded border border-white/10 text-slate-300">
+                      {slot.time}
+                    </span>
+                  ))}
+                  {restaurant.slots.length > 3 && (
+                    <span className="text-xs px-2 py-1 text-slate-400">
+                      +{restaurant.slots.length - 3} more
+                    </span>
+                  )}
                 </div>
               </div>
+              // --- END MODIFIED CODE ---
             ))}
           </div>
         ) : (
