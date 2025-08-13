@@ -446,7 +446,7 @@ export default function RestaurantAdminPanel() {
             {/* Today's Bookings Section */}
             <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70">
               <SectionTitle>Today's Bookings ({new Date().toLocaleDateString()})</SectionTitle>
-              
+
               <div className="mt-6 overflow-hidden">
                 {loading ? (
                   <div className="space-y-3">
@@ -480,7 +480,7 @@ export default function RestaurantAdminPanel() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -495,7 +495,7 @@ export default function RestaurantAdminPanel() {
                           >
                             {booking.status}
                           </span>
-                          
+
                           {booking.status === "PENDING" && (
                             <button
                               onClick={() => handleBookingStatusChange(booking.id, "CONFIRMED")}
@@ -504,7 +504,7 @@ export default function RestaurantAdminPanel() {
                               Confirm
                             </button>
                           )}
-                          
+
                           {booking.status === "CONFIRMED" && (
                             <button
                               onClick={() => handleBookingStatusChange(booking.id, "SEATED")}
@@ -513,7 +513,7 @@ export default function RestaurantAdminPanel() {
                               Seat
                             </button>
                           )}
-                          
+
                           {booking.status === "SEATED" && (
                             <button
                               onClick={() => handleBookingStatusChange(booking.id, "COMPLETED")}
