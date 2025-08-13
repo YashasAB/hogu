@@ -74,22 +74,24 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
       </div>
 
       {tonightLoading ? (
-        <div className="grid grid-cols-3 gap-3 overflow-x-auto">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="min-w-[200px] border border-gray-200 rounded-xl p-3 animate-pulse">
-              <div className="h-24 bg-gray-200 rounded-lg mb-2" />
-              <div className="h-3 bg-gray-200 rounded mb-1" />
-              <div className="h-2 bg-gray-200 rounded w-2/3" />
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 animate-pulse">
+                <div className="h-24 bg-gray-200 rounded-lg mb-2" />
+                <div className="h-3 bg-gray-200 rounded mb-1" />
+                <div className="h-2 bg-gray-200 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : tonightRestaurants.length > 0 ? (
         <div className="overflow-x-auto">
-          <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
+          <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
             {tonightRestaurants.map((restaurant) => (
               <div
                 key={restaurant.restaurant.id}
-                className="min-w-[200px] max-w-[200px] border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
+                className="w-[calc(30vw-8px)] min-w-[120px] max-w-[160px] border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
                 onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
               >
                 <div className="w-full h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-2 p-3 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
