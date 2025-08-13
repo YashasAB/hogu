@@ -356,6 +356,11 @@ export default function RestaurantAdminPanel() {
       const updatedRestaurant = await api.updateRestaurant(profileData);
       setRestaurant(updatedRestaurant);
       alert("Profile updated successfully!");
+      
+      // Redirect to dashboard after a brief delay
+      setTimeout(() => {
+        setActiveTab("dashboard");
+      }, 1000);
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Failed to update profile");
