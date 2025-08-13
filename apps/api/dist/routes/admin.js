@@ -1,19 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
-const multer_1 = __importDefault(require("multer"));
-const object_storage_1 = require("@replit/object-storage");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
-// Initialize Replit Object Storage client
-const storageClient = new object_storage_1.Client();
-// Multer configuration for file uploads
-const upload = (0, multer_1.default)({ storage: multer_1.default.diskStorage({}) });
 // Get restaurant profile
 router.get('/restaurant', auth_1.authenticateRestaurant, async (req, res) => {
     try {
@@ -56,37 +47,6 @@ router.put('/restaurant', auth_1.authenticateRestaurant, async (req, res) => {
     catch (error) {
         console.error('Error updating restaurant:', error);
         res.status(500).json({ error: 'Failed to update restaurant' });
-    }
-});
-// Upload hero image for a restaurant
-router.post('/restaurant/hero-image', auth_1.authenticateRestaurant, upload.single('heroImage'), async (req, res) => {
-    try {
-        const restaurantId = req.restaurantId;
-        const file = req.file;
-        if (!file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-        console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
-        // Upload the file to Replit Object Storage
-        const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
-        const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
-        if (!uploadResult.ok) {
-            throw new Error('Failed to upload to storage');
-        }
-        // Construct the URL for the uploaded file
-        const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
-        console.log(`File uploaded successfully to: ${heroImageUrl}`);
-        // Update the restaurant's heroImageUrl in the database
-        const updatedRestaurant = await prisma.restaurant.update({
-            where: { id: restaurantId },
-            data: { heroImageUrl },
-        });
-        console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
-        res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
-    }
-    catch (error) {
-        console.error('Error uploading hero image:', error);
-        res.status(500).json({ error: 'Failed to upload hero image' });
     }
 });
 // Get slots for a date
