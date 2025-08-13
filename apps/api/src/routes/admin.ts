@@ -152,8 +152,8 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
     } catch (storageError) {
       console.error('Storage upload error details:', {
         error: storageError,
-        message: storageError.message,
-        stack: storageError.stack
+        message: storageError instanceof Error ? storageError.message : String(storageError),
+        stack: storageError instanceof Error ? storageError.stack : undefined
       });
       throw storageError;
     }
