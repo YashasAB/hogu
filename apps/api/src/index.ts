@@ -52,13 +52,14 @@ if (isProduction) {
   console.log('Serving static files from:', webDistPath);
 }
 
-// Health check endpoint
+// Health check endpoint for deployment
 app.get('/', (req, res) => {
   res.status(200).json({
     message: 'Hogu API is running',
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: PORT,
+    env: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -71,7 +72,8 @@ app.get('/health', async (req, res) => {
       status: 'ok',
       database: 'connected',
       uptime: process.uptime(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      port: PORT
     });
   } catch (error) {
     console.error('Database health check failed:', error);
@@ -82,6 +84,14 @@ app.get('/health', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   }
+});
+
+// Readiness check endpoint
+app.get('/ready', (req, res) => {
+  res.status(200).json({
+    status: 'ready',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Routes
