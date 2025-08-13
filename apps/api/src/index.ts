@@ -30,8 +30,12 @@ const PORT = Number(process.env.PORT) || 8080;
 
 console.log('Environment check:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT || 8080);
+console.log('PORT:', process.env.PORT);
 console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+console.log('REPL_ID set:', !!process.env.REPL_ID);
+if (process.env.REPL_ID) {
+  console.log('REPL_ID:', process.env.REPL_ID);
+}
 
 // Set DATABASE_URL if not present (for deployment)
 if (!process.env.DATABASE_URL) {

@@ -90,27 +90,44 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
     }
 
     console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
+    console.log(`File details - name: ${file.originalname}, size: ${file.size}, mimetype: ${file.mimetype}`);
+
+    // Check if REPL_ID is available
+    if (!process.env.REPL_ID) {
+      console.error('REPL_ID environment variable is not set');
+      return res.status(500).json({ error: 'Storage configuration missing' });
+    }
 
     // Upload the file to Replit Object Storage
     const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
-    const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
+    console.log(`Attempting to upload to filename: ${fileName}`);
+    
+    try {
+      const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
+      console.log('Upload result:', uploadResult);
 
-    if (!uploadResult.ok) {
-      throw new Error('Failed to upload to storage');
+      if (!uploadResult.ok) {
+        console.error('Upload failed with result:', uploadResult);
+        throw new Error(`Storage upload failed: ${uploadResult.error || 'Unknown error'}`);
+      }
+
+      // Construct the URL for the uploaded file
+      const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
+      console.log(`File uploaded successfully to: ${heroImageUrl}`);
+
+      // Update the restaurant's heroImageUrl in the database
+      const updatedRestaurant = await prisma.restaurant.update({
+        where: { id: restaurantId },
+        data: { heroImageUrl },
+      });
+
+      console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
+      res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
+
+    } catch (storageError) {
+      console.error('Storage upload error:', storageError);
+      throw storageError;
     }
-
-    // Construct the URL for the uploaded file
-    const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
-    console.log(`File uploaded successfully to: ${heroImageUrl}`);
-
-    // Update the restaurant's heroImageUrl in the database
-    const updatedRestaurant = await prisma.restaurant.update({
-      where: { id: restaurantId },
-      data: { heroImageUrl },
-    });
-
-    console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
-    res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
 
   } catch (error) {
     console.error('Error uploading hero image:', error);
