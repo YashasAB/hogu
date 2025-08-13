@@ -288,7 +288,6 @@ const UserReservations = ({
           </div>
         )}
       </section>
-    )
   );
 };
 
