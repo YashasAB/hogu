@@ -206,7 +206,7 @@ export default function Home() {
     </svg>
   );
 
-  const renderUserGreeting = () => {
+  const renderUserGreeting = (): React.ReactNode => {
     if (!user) {
       return null;  // Explicitly return null if the user is not available
     }
