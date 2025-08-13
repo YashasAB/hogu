@@ -639,6 +639,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TONIGHT NEAR YOU */}
+      <section id="tonight" className="space-y-3">
+        <TonightNearYou city={city} />
+      </section>
+
       {/* QUICK FILTERS — compact, hero-styled */}
       <section className="relative -mt-8 overflow-hidden rounded-2xl">
         {/* same gradient style as your hero */}
@@ -757,11 +762,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* TONIGHT NEAR YOU */}
-      <section id="tonight" className="space-y-3">
-        <TonightNearYou city={city} />
       </section>
 
       {/* HOW IT WORKS — 1-2-3 */}
