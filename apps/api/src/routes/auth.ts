@@ -151,7 +151,7 @@ router.post('/login', async (req, res) => {
 });
 
 const RestaurantLoginSchema = z.object({
-  email: z.string().email(),
+  username: z.string().min(1),
   password: z.string().min(1),
 });
 
@@ -162,25 +162,25 @@ router.post('/restaurant-login', async (req, res) => {
     return res.status(400).json({ error: 'Invalid input', details: parse.error.flatten() });
   }
 
-  const { email, password } = parse.data;
+  const { username, password } = parse.data;
 
   try {
     // Find restaurant auth record
     const restaurantAuth = await prisma.restaurantAuth.findUnique({
-      where: { email },
+      where: { username },
       include: {
         restaurant: true
       }
     });
 
     if (!restaurantAuth) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Verify password
     const isValid = await bcrypt.compare(password, restaurantAuth.passwordHash);
     if (!isValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Generate JWT token for restaurant
@@ -192,7 +192,7 @@ router.post('/restaurant-login', async (req, res) => {
       restaurant: {
         id: restaurantAuth.restaurant.id,
         name: restaurantAuth.restaurant.name,
-        email: email,
+        username: username,
       },
     });
   } catch (error) {
@@ -214,7 +214,8 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        details: true
+        details: true,
+        auth: true
       }
     });
 
@@ -224,7 +225,7 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     res.json({
       id: user.id,
-      username: user.userAuth?.username, // Assuming userAuth is related and includes username
+      username: user.auth?.username,
       name: user.name,
       email: user.email,
       phone: user.phone,

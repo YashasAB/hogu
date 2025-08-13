@@ -1,12 +1,21 @@
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function RestaurantLogin() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,7 +25,7 @@ export default function RestaurantLogin() {
       const response = await fetch('/api/auth/restaurant-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify(formData)
       })
 
       const data = await response.json()
@@ -59,10 +68,11 @@ export default function RestaurantLogin() {
               </label>
               <input
                 type="text"
+                name="username"
+                placeholder="Restaurant username"
+                value={formData.username}
+                onChange={handleInputChange}
                 className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="restaurant-slug"
                 required
               />
             </div>
@@ -73,9 +83,10 @@ export default function RestaurantLogin() {
               </label>
               <input
                 type="password"
+                name="password"
                 className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleInputChange}
                 placeholder="Your password"
                 required
               />
@@ -107,7 +118,7 @@ export default function RestaurantLogin() {
             Use any of these restaurant usernames with password "restaurant123":
           </p>
           <div className="bg-gray-50 p-4 rounded-lg space-y-2 max-h-48 overflow-y-auto">
-            <div className="text-xs text-gray-500 mb-2">Username (use as email) | Password</div>
+            <div className="text-xs text-gray-500 mb-2">Username | Password</div>
             <div className="space-y-1 text-sm font-mono">
               <div className="text-gray-700">zlb-23-at-the-leela-palace | restaurant123</div>
               <div className="text-gray-700">soka | restaurant123</div>
