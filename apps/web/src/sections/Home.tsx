@@ -643,61 +643,6 @@ export default function Home() {
         <TonightNearYou city={city} />
       </section>
 
-      {/* FEATURES GRID — everything Hogu offers */}
-      <section
-        id="features"
-        className="relative overflow-hidden rounded-2xl text-white"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
-        <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
-          <h2 className="text-xl font-semibold">Why Hogu works</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Fair Access (No Bots)</div>
-              <div className="opacity-90 text-sm">
-                Verified identity, device checks, and rate-limits stop hoarding
-                & resale. Everyone gets a fair shot.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Drops You Can Trust</div>
-              <div className="opacity-90 text-sm">
-                Transparent release windows. Join once; we'll notify you in
-                order. No constant refreshing.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Instant Notifies</div>
-              <div className="opacity-90 text-sm">
-                When cancels happen, we ping you immediately and auto-hold a
-                table for a short window.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Card Holds & Deposits</div>
-              <div className="opacity-90 text-sm">
-                Restaurants reduce no-shows; diners get more real availability,
-                not ghost slots.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Plan the Entire Week</div>
-              <div className="opacity-90 text-sm">
-                Browse day-by-day inventory and lock plans with friends in
-                minutes.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">Tonight Inventory</div>
-              <div className="opacity-90 text-sm">
-                See what's actually available right now — counters, bar seats,
-                and last-minute releases.
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* HOW IT WORKS — 1-2-3 */}
       <section
         id="how"
