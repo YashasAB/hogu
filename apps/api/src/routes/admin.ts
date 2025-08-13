@@ -177,7 +177,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
       id: booking.id,
       slotId: booking.slotId,
       partySize: booking.partySize,
-      status: booking.status.toLowerCase(),
+      status: booking.status,
       createdAt: booking.createdAt.toISOString(),
       user: {
         id: booking.user.id,
