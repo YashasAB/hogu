@@ -105,7 +105,7 @@ router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRestaurant
 router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
-    console.log('Getting bookings for restaurant:', restaurantId);
+    console.log('Fetching upcoming bookings for restaurant ID:', restaurantId);
 
     const today = new Date().toISOString().split('T')[0];
     console.log('Today date for filtering:', today);
@@ -192,7 +192,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
       }
     }));
 
-    console.log('Formatted bookings to return:', formattedBookings.length);
+    console.log('Successfully fetched upcoming bookings:', formattedBookings.length, 'bookings found');
     res.json(formattedBookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
