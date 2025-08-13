@@ -114,7 +114,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
     const allBookingsForRestaurant = await prisma.reservation.findMany({
       where: { restaurantId: restaurantId },
       include: {
-        timeSlot: { select: { date: true, time: true } },
+        slot: { select: { date: true, time: true } },
         user: { select: { name: true, email: true } }
       }
     });
@@ -122,8 +122,8 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
     console.log('All bookings details:', allBookingsForRestaurant.map(b => ({
       id: b.id,
       status: b.status,
-      date: b.timeSlot.date,
-      time: b.timeSlot.time,
+      date: b.slot.date,
+      time: b.slot.time,
       user: b.user.name || b.user.email,
       restaurantId: b.restaurantId
     })));
@@ -140,7 +140,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
         status: {
           in: ['PENDING', 'CONFIRMED', 'HELD', 'SEATED']
         },
-        timeSlot: {
+        slot: {
           date: {
             gte: today
           }
@@ -155,7 +155,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
             phone: true
           }
         },
-        timeSlot: {
+        slot: {
           select: {
             date: true,
             time: true,
@@ -164,13 +164,13 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
         }
       },
       orderBy: [
-        { timeSlot: { date: 'asc' } },
-        { timeSlot: { time: 'asc' } },
+        { slot: { date: 'asc' } },
+        { slot: { time: 'asc' } },
       ],
     });
 
     console.log('Raw bookings found:', bookings.length);
-    console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.timeSlot.date })));
+    console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.slot.date })));
 
     // Transform to match frontend format
     const formattedBookings = bookings.map(booking => ({
@@ -185,10 +185,10 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
         email: booking.user.email,
         phone: booking.user.phone
       },
-      timeSlot: {
-        date: booking.timeSlot.date,
-        time: booking.timeSlot.time,
-        partySize: booking.timeSlot.partySize
+      slot: {
+        date: booking.slot.date,
+        time: booking.slot.time,
+        partySize: booking.slot.partySize
       }
     }));
 
@@ -286,7 +286,7 @@ router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedR
           confirmedAt: normalizedStatus === 'CONFIRMED' ? new Date() : undefined,
         },
         include: {
-          timeSlot: true,
+          slot: true,
         },
       });
 
