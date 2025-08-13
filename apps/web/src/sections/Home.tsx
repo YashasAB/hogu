@@ -210,7 +210,7 @@ export default function Home() {
   return (
     <div className="space-y-8 mx-4 sm:mx-6 lg:mx-8">
       {/* USER GREETING WITH DROPDOWN */}
-      {user && (
+      {user ? (
         <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -236,7 +236,6 @@ export default function Home() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowUserDropdown(!showUserDropdown);
-                  return;
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
               >
@@ -326,7 +325,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* YOUR RESERVATIONS SECTION */}
       {console.log(
