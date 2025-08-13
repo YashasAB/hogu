@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -180,10 +179,10 @@ export default function RestaurantDetail() {
         setLoading(false);
         return;
       }
-      
+
       try {
         const response = await fetch(`/api/restaurants/${slug}`);
-        
+
         if (response.ok) {
           const data = await response.json();
           setRestaurant(data);
@@ -220,7 +219,7 @@ export default function RestaurantDetail() {
   useEffect(() => {
     const fetchAvailability = async () => {
       if (!restaurant || !date || !partySize) return;
-      
+
       try {
         const response = await fetch(`/api/restaurants/${restaurant.slug}/availability?date=${date}&partySize=${partySize}`);
         if (response.ok) {
@@ -282,7 +281,7 @@ export default function RestaurantDetail() {
       alert(
         `Reservation created! Status: ${data.status}\n${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`
       );
-      
+
       // Reset selection and navigate to home
       setSelectedSlot(null);
       navigate('/');
@@ -479,7 +478,7 @@ export default function RestaurantDetail() {
               <label className="block text-sm mb-1">Date</label>
               <input
                 type="date"
-                className="w-full mb-3 px-3 py-2 h-12 rounded-xl bg-slate-800 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
                 value={date}
                 min={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setDate(e.target.value)}
