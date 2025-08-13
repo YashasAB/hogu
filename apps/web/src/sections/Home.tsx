@@ -1,3 +1,4 @@
+
 // apps/web/src/sections/Home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -327,229 +328,202 @@ export default function Home() {
         </section>
       )}
 
-      {/* YOUR RESERVATIONS SECTION */}
-      {console.log(
-        "Debug - user:",
-        !!user,
-        "userReservations.length:",
-        userReservations.length,
-        "userReservations:",
-        userReservations,
+      {/* USER RESERVATIONS SECTION */}
+      {user && (
+        <UserReservations
+          user={user}
+          userReservations={userReservations}
+          loadingReservations={loadingReservations}
+          onReservationsUpdate={fetchReservations}
+        />
       )}
-      <UserReservations
-        user={user}
-        userReservations={userReservations}
-        loadingReservations={loadingReservations}
-        onReservationsUpdate={fetchReservations}
-      />
 
-      {/* HERO SECTION — what Hogu is */}
+      {/* HERO SECTION */}
       <section className="relative overflow-hidden rounded-2xl text-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
-        <div className="relative z-10 px-5 py-8 sm:px-8">
-          <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
-            <Spark /> <span>Now live in Bengaluru</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold leading-tight">
-            Plan your week in BLR — guaranteed.
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-blue-600 to-teal-500 opacity-90"></div>
+        <div className="absolute inset-0 bg-[url('/api/placeholder/800/400')] bg-cover bg-center opacity-30"></div>
+        <div className="relative z-10 p-8 sm:p-12 lg:p-16">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <span className="inline-block">
+              Discover Bengaluru's
+              <br />
+              Hottest Tables <Spark />
+            </span>
           </h1>
-          <p className="mt-2 max-w-2xl opacity-90">
-            Hogu finds you real, bookable tables at the city's hardest spots.
-            Fair access, stress-free planning, and protection against bots &
-            fake accounts.
+          <p className="text-xl sm:text-2xl mb-8 max-w-2xl opacity-90">
+            Beat the crowds. Book prime-time slots at the city's most coveted
+            restaurants through our exclusive drop system.
           </p>
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            {token ? (
-              <Link to="/explore-tonight" className="btn btn-accent">
-                Find a table tonight
+          {!user && (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/login"
+                className="bg-white text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center"
+              >
+                Sign In
               </Link>
-            ) : (
-              <Link to="/login" className="btn btn-accent">
-                Find a table tonight
+              <Link
+                to="/signup"
+                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition-colors text-center"
+              >
+                Join Hogu
               </Link>
-            )}
-            <a href="#week" className="btn bg-white text-brand">
-              Plan the week
-            </a>
-            {!token && (
-              <Link to="/login" className="btn btn-primary">
-                Log in
-              </Link>
-            )}
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm opacity-95">
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium">Fair drops & notifies</div>
-              <div className="opacity-90">
-                Structured releases & instant pings. No FOMO refresh wars.
-              </div>
             </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium">No-bot protection</div>
-              <div className="opacity-90">
-                Verified identities & throttling keep access clean.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium">Card holds & deposits</div>
-              <div className="opacity-90">
-                Reduces no-shows so more real seats are available.
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* TONIGHT NEAR YOU */}
-      <section id="tonight" className="space-y-3">
-        <TonightNearYou city={city} />
-      </section>
+      {/* FILTERS SECTION */}
+      <section className="relative z-1 mt-8 rounded-2xl bg-slate-900 text-white p-6 sm:p-8">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold mb-6 text-center">
+            Find Your Perfect Table
+          </h3>
 
-      {/* WHAT PROBLEMS WE SOLVE */}
-      <section
-        id="why"
-        className="relative overflow-hidden rounded-2xl text-white"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
-        <div className="relative z-10 px-5 py-8 sm:px-8">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">
-                "Everything sells out in minutes."
-              </div>
-              <div className="opacity-90 text-sm">
-                We run timed <strong>drops</strong> & fair queues. No spam, no
-                scalpers.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">
-                "I hate refreshing for cancels."
-              </div>
-              <div className="opacity-90 text-sm">
-                <strong>Notify</strong> pings you instantly and auto-holds a
-                table for a short window.
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Party Size Selector */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-300">
+                Party Size
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[1, 2, 3, 4].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setParty(size)}
+                    className={`p-3 rounded-lg border text-center font-medium transition-all ${
+                      party === size
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "border-slate-600 text-slate-300 hover:border-slate-500 hover:text-white"
+                    }`}
+                  >
+                    {size === 4 ? "4+" : size}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="font-medium mb-1">
-                "Last-minute plans? Forget it."
-              </div>
-              <div className="opacity-90 text-sm">
-                <strong>Tonight Near You</strong> shows live inventory for the
-                next few hours.
-              </div>
+
+            {/* Date Picker */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-300">
+                Select Date
+              </label>
+              <DarkDatePicker
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                today={today}
+              />
             </div>
           </div>
+
+          {/* Search Status */}
+          {party === "" || selectedDate === "" ? (
+            <div className="text-center py-8">
+              <div className="text-slate-400 text-lg">
+                <Spark /> Select party size and date to discover available tables
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-green-400 font-medium">
+              <Spark /> Searching for tables for {party} people on{" "}
+              {new Date(selectedDate).toLocaleDateString()}...
+            </div>
+          )}
         </div>
       </section>
 
-      {/* HOW IT WORKS — 1-2-3 */}
-      <section
-        id="how"
-        className="relative overflow-hidden rounded-2xl text-white"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand/80" />
-        <div className="relative z-10 px-5 py-8 sm:px-8 space-y-3">
-          <h2 className="text-xl font-semibold">How it works</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
-                  1
+      {/* TONIGHT NEAR YOU SECTION */}
+      <TonightNearYou tonight={tonight} todayLabel={todayLabel} />
+
+      {/* WEEK VIEW */}
+      {party !== "" && selectedDate && (
+        <section>
+          <SectionTitle>This Week</SectionTitle>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+            {week.days.map((day) => (
+              <div
+                key={day.date}
+                className={`p-4 rounded-lg border ${
+                  day.date === selectedDate
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="font-medium text-sm text-gray-500 mb-1">
+                    {new Date(day.date).toLocaleDateString(undefined, {
+                      weekday: "short",
+                    })}
+                  </div>
+                  <div className="font-bold text-lg mb-2">
+                    {new Date(day.date).getDate()}
+                  </div>
+                  <div
+                    className={`text-xs ${
+                      day.available_count > 0
+                        ? "text-green-600"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {day.available_count > 0
+                      ? `${day.available_count} available`
+                      : "No spots"}
+                  </div>
                 </div>
-                <div className="font-medium">Search & Pick</div>
               </div>
-              <div className="opacity-90 text-sm">
-                Choose party size and the day — we show live inventory from top
-                spots.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
-                  2
-                </div>
-                <div className="font-medium">Hold & Confirm</div>
-              </div>
-              <div className="opacity-90 text-sm">
-                Tap a time to hold it. If a deposit's required, add a card and
-                you're locked.
-              </div>
-            </div>
-            <div className="bg-white/10 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
-                  3
-                </div>
-                <div className="font-medium">Get Notified</div>
-              </div>
-              <div className="opacity-90 text-sm">
-                Join Notifies for sold-out times. If a table opens, we'll ping
-                you instantly.
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* TRUST / ANTI-SCAM */}
-      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-4">
-        <p className="font-medium">No bots. No fake accounts. No resale.</p>
-        <p className="text-sm mt-1">
-          Hogu verifies identities and uses queue fairness, throttling, and
-          chargeable holds to keep things clean. Your booking is yours — not a
-          scalper's.
-        </p>
-      </section>
-
-      {/* FOOTNOTE: separate restaurant endpoint */}
-      <footer className="text-muted text-xs">
-        Are you a restaurant?{" "}
-        <Link to="/restaurant/login" className="underline">
-          Sign in here
-        </Link>
-        .
-      </footer>
-    </div>
-  );
-}
-
-/** Inline components to keep this file drop-in friendly */
-function Feature({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card">
-      <div className="font-medium mb-1">{title}</div>
-      <div className="text-muted text-sm">{children}</div>
-    </div>
-  );
-}
-function Step({
-  n,
-  title,
-  children,
-}: {
-  n: number;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center text-sm">
-          {n}
-        </div>
-        <div className="font-medium">{title}</div>
-      </div>
-      <div className="text-muted text-sm">{children}</div>
+      {/* CURRENT DAY DETAILS */}
+      {weekToday && weekToday.picks.length > 0 && (
+        <section>
+          <SectionTitle>
+            Available Now - {todayLabel} {Spark()}
+          </SectionTitle>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {weekToday.picks.map((summary) => (
+              <div
+                key={summary.restaurant.id}
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      {summary.restaurant.emoji && (
+                        <span>{summary.restaurant.emoji}</span>
+                      )}
+                      {summary.restaurant.name}
+                    </h3>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {summary.restaurant.neighborhood}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {summary.slots.map((slot) => (
+                      <Link
+                        key={slot.slot_id}
+                        to={
+                          token
+                            ? `/r/${summary.restaurant.slug}?slot_id=${slot.slot_id}`
+                            : "/login"
+                        }
+                        className="flex justify-between items-center p-2 bg-gray-50 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        <span className="font-medium">{slot.time}</span>
+                        <span className="text-xs text-gray-600">
+                          Party of {slot.party_size}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
