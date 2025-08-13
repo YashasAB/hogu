@@ -148,3 +148,69 @@ function formatTime(time: string): string {
 }
 
 export default router;
+// Get restaurants with available slots for today
+router.get('/tonight-near-you', async (req, res) => {
+  try {
+    const { party_size } = req.query;
+    const partySize = parseInt(party_size as string) || 2;
+
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+    const currentHour = new Date().getHours();
+
+    // Get all available slots for today from current time onwards
+    const availableSlots = await prisma.timeSlot.findMany({
+      where: {
+        date: today,
+        partySize: partySize,
+        status: 'AVAILABLE',
+        time: {
+          gte: `${currentHour.toString().padStart(2, '0')}:00`,
+        },
+      },
+      include: {
+        restaurant: true,
+      },
+      orderBy: {
+        time: 'asc',
+      },
+    });
+
+    // Get unique restaurants that have available slots
+    const restaurantMap = new Map();
+    
+    availableSlots.forEach((slot: TimeSlot & { restaurant: Restaurant }) => {
+      const restaurant = slot.restaurant;
+      const key = restaurant.id;
+
+      if (!restaurantMap.has(key)) {
+        restaurantMap.set(key, {
+          id: restaurant.id,
+          name: restaurant.name,
+          slug: restaurant.slug,
+          emoji: restaurant.emoji,
+          neighborhood: restaurant.neighborhood,
+          hero_image_url: restaurant.heroImageUrl,
+          position: {
+            lat: restaurant.latitude,
+            lng: restaurant.longitude,
+          },
+          availableSlots: [],
+        });
+      }
+
+      restaurantMap.get(key).availableSlots.push({
+        slot_id: slot.id,
+        time: formatTime(slot.time),
+        party_size: slot.partySize,
+      });
+    });
+
+    const restaurants = Array.from(restaurantMap.values());
+    
+    res.json({ restaurants });
+  } catch (error) {
+    console.error('Error fetching tonight near you restaurants:', error);
+    res.status(500).json({ error: 'Failed to fetch restaurants' });
+  }
+});

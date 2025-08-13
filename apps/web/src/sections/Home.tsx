@@ -354,6 +354,39 @@ export default function Home() {
     }
   }, [city, party, selectedDate]); // Depend on selectedDate as well
 
+  // State for tonight restaurants
+  const [tonightRestaurants, setTonightRestaurants] = useState<any[]>([]);
+  const [tonightLoading, setTonightLoading] = useState(false);
+
+  // Fetch restaurants with available slots for today
+  useEffect(() => {
+    const fetchAvailableRestaurants = async () => {
+      setTonightLoading(true);
+      try {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const formattedToday = today.toISOString().split('T')[0];
+
+        const response = await fetch(`/api/restaurants/available?city=${city}&date=${formattedToday}&status=Available`);
+        if (response.ok) {
+          const data = await response.json();
+          setTonightRestaurants(data);
+        } else {
+          console.error("Failed to fetch available restaurants");
+          setTonightRestaurants([]);
+        }
+      } catch (error) {
+        console.error("Error fetching available restaurants:", error);
+        setTonightRestaurants([]);
+      } finally {
+        setTonightLoading(false);
+      }
+    };
+
+    fetchAvailableRestaurants();
+  }, [city]);
+
   const weekToday = week.days.find(day => day.date === selectedDate);
   const todayLabel = useMemo(
     () => selectedDate ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long" }) : 'Select a Date',
@@ -640,39 +673,64 @@ export default function Home() {
           plans.
         </div>
 
-        {/* Horizontal Carousel */}
-        <div className="overflow-x-auto">
-          <div className="flex gap-4 pb-4">
-            {[...(tonight.now || []), ...(tonight.later || [])].map((card) => (
-              <Link
-                to={`/r/${card.restaurant.slug}`}
-                key={card.restaurant.id}
-                className="card hover:shadow-lg transition group flex-shrink-0 w-80"
-              >
-                {card.restaurant.hero_image_url && (
-                  <img
-                    src={card.restaurant.hero_image_url}
-                    className="w-full h-40 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-                    alt={card.restaurant.name}
-                  />
-                )}
-                <div className="text-xl font-bold text-brand mb-2">
-                  {card.restaurant.name}
+        {tonightLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-xl p-4 animate-pulse">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  </div>
                 </div>
-                <div className="text-muted mb-4">
-                  {card.restaurant.neighborhood || "Bengaluru"}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {card.slots.map((s) => (
-                    <span key={s.slot_id} className="pill border-ink">
-                      {s.time}
-                    </span>
-                  ))}
-                </div>
-              </Link>
+                <div className="w-full h-32 bg-gray-200 rounded-lg"></div>
+              </div>
             ))}
           </div>
-        </div>
+        ) : tonightRestaurants.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {tonightRestaurants.slice(0, 6).map((restaurant) => (
+              <div
+                key={restaurant.id}
+                className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer"
+                onClick={() => navigate(`/r/${restaurant.slug}`)}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{restaurant.emoji}</span>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{restaurant.name}</h3>
+                    <p className="text-sm text-gray-600">{restaurant.neighborhood}</p>
+                    {restaurant.availableSlots && restaurant.availableSlots.length > 0 && (
+                      <p className="text-xs text-green-600 mt-1">
+                        {restaurant.availableSlots.length} slots available
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <img
+                    src={restaurant.hero_image_url || '/api/placeholder/400/300'}
+                    alt={restaurant.name}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-2">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <p className="text-gray-600">No restaurants with available slots for tonight</p>
+            <p className="text-sm text-gray-500 mt-1">Check back later or explore other options</p>
+          </div>
+        )}
+
 
         {/* Explore More Button */}
         <div className="flex justify-center mt-4">
