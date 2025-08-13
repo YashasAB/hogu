@@ -14,7 +14,7 @@
     "@aws-sdk/client-s3": "^3.637.0",
     "@aws-sdk/s3-presigned-post": "^3.637.0",
     "@prisma/client": "^5.22.0",
-    "@replit/object-storage": "^1.0.0",
+    "@replit/object-storage": "^2.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.5",
     "bcrypt": "^5.1.1",
