@@ -62,7 +62,7 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
 });
 
 // Upload hero image for a restaurant
-router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('heroImage'), async (req: AuthenticatedRestaurantRequest, res: Response) => {
+router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('heroImage'), async (req: any, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const file = req.file;
@@ -74,11 +74,15 @@ router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('her
     console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
 
     // Upload the file to Replit Object Storage
-    const uploadResult = await storageClient.putFile(`${restaurantId}/heroImage`, file.buffer, {
+    const uploadResult = await storageClient.uploadFromBuffer(`${restaurantId}/heroImage.${file.originalname.split('.').pop()}`, file.buffer, {
       contentType: file.mimetype,
     });
 
-    const heroImageUrl = uploadResult.url;
+    if (!uploadResult.ok) {
+      throw new Error('Failed to upload to storage');
+    }
+
+    const heroImageUrl = `https://storage.googleapis.com/replit-objects/${process.env.REPL_SLUG}/${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
 
     // Update the restaurant's heroImageUrl in the database

@@ -49,10 +49,10 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('heroImage', file);
 
       const token = localStorage.getItem('hogu_restaurant_token');
-      const response = await fetch('/api/admin/upload-photo', {
+      const response = await fetch('/api/admin/restaurant/hero-image', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
