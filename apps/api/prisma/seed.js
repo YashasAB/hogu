@@ -1,4 +1,3 @@
-
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 
@@ -125,99 +124,38 @@ async function main() {
       email: "daligala@example.com",
       cuisineTagIds: [createdCuisineTags.find(t => t.name === 'cocktails').id],
     },
-    {
-      name: "The Permit Room",
-      slug: "the-permit-room",
-      emoji: "🍸",
-      latitude: 12.9716,
-      longitude: 77.5946,
-      neighborhood: "Indiranagar",
-      category: "cocktails",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "permitroom@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'cocktails').id],
-    },
-    {
-      name: "Toit Brewpub",
-      slug: "toit-brewpub",
-      emoji: "🍺",
-      latitude: 12.9352,
-      longitude: 77.6245,
-      neighborhood: "Koramangala",
-      category: "dinner",
-      isHot: true,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "toit@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    },
-    {
-      name: "Byg Brewski Brewing Company",
-      slug: "byg-brewski-brewing-company",
-      emoji: "🍺",
-      latitude: 12.8438,
-      longitude: 77.6632,
-      neighborhood: "Sarjapur",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "bygbrewski@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    },
-    {
-      name: "Truffles",
-      slug: "truffles",
-      emoji: "🍔",
-      latitude: 12.9716,
-      longitude: 77.5946,
-      neighborhood: "Koramangala",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "truffles@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    },
-    {
-      name: "Glen's Bakehouse",
-      slug: "glens-bakehouse",
-      emoji: "🥐",
-      latitude: 12.9716,
-      longitude: 77.5946,
-      neighborhood: "Lavelle Road",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "glens@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    },
-    {
-      name: "Koshy's",
-      slug: "koshys",
-      emoji: "☕",
-      latitude: 12.9716,
-      longitude: 77.5946,
-      neighborhood: "St. Marks Road",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "koshys@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    },
-    {
-      name: "Vidyarthi Bhavan",
-      slug: "vidyarthi-bhavan",
-      emoji: "🥘",
-      latitude: 12.9716,
-      longitude: 77.5946,
-      neighborhood: "Basavanagudi",
-      category: "dinner",
-      isHot: true,
-      heroImageUrl: "/api/placeholder/400/300",
-      email: "vidyarthibhavan@example.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner').id],
-    }
   ];
 
+  // First, clean up any existing auth records for restaurants that don't exist
+  console.log('Cleaning up orphaned restaurant auth records...');
+
+  // Get all existing restaurants
+  const existingRestaurants = await prisma.restaurant.findMany({
+    select: { id: true, slug: true }
+  });
+  const existingRestaurantIds = new Set(existingRestaurants.map(r => r.id));
+
+  // Delete auth records for restaurants that don't exist
+  const orphanedAuthRecords = await prisma.restaurantAuth.findMany({
+    where: {
+      restaurantId: {
+        notIn: Array.from(existingRestaurantIds)
+      }
+    }
+  });
+
+  if (orphanedAuthRecords.length > 0) {
+    await prisma.restaurantAuth.deleteMany({
+      where: {
+        restaurantId: {
+          notIn: Array.from(existingRestaurantIds)
+        }
+      }
+    });
+    console.log(`🗑️ Deleted ${orphanedAuthRecords.length} orphaned auth records`);
+  }
+
+  // Create/update restaurants and their auth records
   for (const restaurantData of restaurants) {
     const { cuisineTagIds, ...restaurant } = restaurantData;
 
@@ -246,7 +184,7 @@ async function main() {
       }
     }
 
-    // Create restaurant authentication record
+    // Create restaurant authentication record only for restaurants that exist
     await prisma.restaurantAuth.upsert({
       where: { restaurantId: createdRestaurant.id },
       update: {},
@@ -344,11 +282,27 @@ async function main() {
     }
   });
 
+  // Final cleanup: ensure we only have auth records for existing restaurants
+  const finalRestaurants = await prisma.restaurant.findMany({
+    select: { id: true, slug: true }
+  });
+  const finalRestaurantIds = finalRestaurants.map(r => r.id);
+
+  // Delete any remaining orphaned auth records
+  await prisma.restaurantAuth.deleteMany({
+    where: {
+      restaurantId: {
+        notIn: finalRestaurantIds
+      }
+    }
+  });
+
   console.log('✅ Database seeded successfully!');
   console.log('📊 Created:');
   console.log(`- ${restaurants.length} Restaurants with auth records`);
   console.log('- 2 Users');
   console.log('- Time slots for today and tomorrow');
+  console.log('- Cleaned up orphaned auth records');
   console.log('\n🔑 Restaurant Login Credentials:');
   console.log('Username: [restaurant-slug] | Password: restaurant123');
   console.log('Examples:');
