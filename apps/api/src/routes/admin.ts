@@ -28,8 +28,8 @@ if (hasAWSCredentials) {
   });
 }
 
-// Multer configuration for file uploads
-const upload = multer({ storage: multer.diskStorage({}) });
+// Multer configuration for file uploads (use memory storage for buffer access)
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Get restaurant profile
 router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
