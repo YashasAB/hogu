@@ -53,7 +53,7 @@ export const BookingsList: React.FC<BookingsListProps> = ({
 
   return (
     <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70">
-      <h2 className="text-lg sm:text-xl font-semibold mb-6">Today's Bookings ({new Date().toLocaleDateString()})</h2>
+      <h2 className="text-lg sm:text-xl font-semibold mb-6">Upcoming Bookings</h2>
 
       <div className="mt-6 overflow-hidden">
         {loading ? (
@@ -89,6 +89,7 @@ export const BookingsList: React.FC<BookingsListProps> = ({
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-sm text-slate-400">
+                      <span>📅 {new Date(booking.slot.date).toLocaleDateString()}</span>
                       <span>🕐 {booking.slot.time}</span>
                       <span>📧 {booking.user.email}</span>
                       {booking.user.phone && <span>📞 {booking.user.phone}</span>}

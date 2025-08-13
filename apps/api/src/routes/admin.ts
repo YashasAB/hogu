@@ -89,19 +89,22 @@ router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, r
   }
 });
 
-// Get bookings
+// Get all upcoming bookings for the restaurant (pending/confirmed from today onwards)
 router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    
+    const restaurantId = req.restaurantId;
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
     const bookings = await prisma.reservation.findMany({
       where: {
-        restaurantId: req.restaurantId,
-        slot: {
-          date: today
-        },
+        restaurantId: restaurantId,
         status: {
-          in: ['PENDING', 'HELD', 'CONFIRMED', 'SEATED', 'COMPLETED']
+          in: ['PENDING', 'CONFIRMED']
+        },
+        slot: {
+          date: {
+            gte: today
+          }
         }
       },
       include: {
@@ -121,9 +124,10 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        { slot: { date: 'asc' } },
+        { slot: { time: 'asc' } },
+      ],
     });
 
     // Transform to match frontend format
