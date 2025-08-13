@@ -1,14 +1,32 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateRestaurant, AuthenticatedRestaurantRequest } from '../middleware/auth';
-import multer from 'multer';
 import { Client } from '@replit/object-storage';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import multer from 'multer';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // Initialize Replit Object Storage client
 const storageClient = new Client();
+
+// Initialize S3 client only if AWS credentials are available
+let s3Client: S3Client | null = null;
+const hasAWSCredentials = process.env.AWS_ACCESS_KEY_ID && 
+                         process.env.AWS_SECRET_ACCESS_KEY && 
+                         process.env.S3_BUCKET_NAME;
+
+if (hasAWSCredentials) {
+  s3Client = new S3Client({
+    region: process.env.AWS_REGION || 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  });
+}
 
 // Multer configuration for file uploads
 const upload = multer({ storage: multer.diskStorage({}) });
@@ -501,6 +519,74 @@ router.post('/bookings/:id/reject', authenticateRestaurant, async (req: Authenti
   } catch (error) {
     console.error('Error rejecting booking:', error);
     res.status(500).json({ error: 'Failed to reject booking' });
+  }
+});
+
+// Upload photo to S3
+router.post('/:restaurantId/hero-image', upload.single('image'), async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file provided' });
+  }
+
+  if (!s3Client || !hasAWSCredentials) {
+    return res.status(503).json({ 
+      error: 'S3 upload not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME environment variables.' 
+    });
+  }
+
+  try {
+    const restaurantId = req.params.restaurantId;
+    const fileName = `hero-images/${restaurantId}-${Date.now()}.jpg`;
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: fileName,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    });
+
+    await s3Client.send(command);
+
+    const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${fileName}`;
+
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Error uploading to S3:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+// Generate presigned URL for S3 upload
+router.post('/:restaurantId/photos/presign', async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  if (!s3Client || !hasAWSCredentials) {
+    return res.status(503).json({ 
+      error: 'S3 upload not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME environment variables.' 
+    });
+  }
+
+  try {
+    const restaurantId = req.params.restaurantId;
+    const { fileName, contentType } = req.body;
+
+    if (!fileName || !contentType) {
+      return res.status(400).json({ error: 'fileName and contentType are required' });
+    }
+
+    const key = `photos/${restaurantId}/${Date.now()}-${fileName}`;
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+
+    res.json({ uploadUrl, imageUrl });
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    res.status(500).json({ error: 'Failed to generate upload URL' });
   }
 });
 
