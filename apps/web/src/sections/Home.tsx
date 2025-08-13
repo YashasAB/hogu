@@ -336,12 +336,14 @@ export default function Home() {
         "userReservations:",
         userReservations,
       )}
-      <UserReservations
-        user={user}
-        userReservations={userReservations}
-        loadingReservations={loadingReservations}
-        onReservationsUpdate={fetchReservations}
-      />
+      {user && userReservations.length > 0 ? (
+        <UserReservations
+          user={user}
+          userReservations={userReservations}
+          loadingReservations={loadingReservations}
+          onReservationsUpdate={fetchReservations}
+        />
+      ) : null}
 
       {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
