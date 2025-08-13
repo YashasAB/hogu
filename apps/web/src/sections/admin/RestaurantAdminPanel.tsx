@@ -205,12 +205,12 @@ export default function RestaurantAdminPanel() {
     fetchRestaurant();
   }, [restaurantId, navigate]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 5 minutes
   useEffect(() => {
     const timer = setInterval(() => {
       setLiveTick((tick) => tick + 1);
       refresh();
-    }, 30000);
+    }, 300000);
     return () => clearInterval(timer);
   }, []);
 
