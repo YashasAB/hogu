@@ -363,15 +363,26 @@ export default function Home() {
     const fetchAvailableRestaurants = async () => {
       setTonightLoading(true);
       try {
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const formattedToday = today.toISOString().split('T')[0];
-
-        const response = await fetch(`/api/restaurants/available?city=${city}&date=${formattedToday}&status=Available`);
+        const response = await fetch(`/api/discover/tonight?party_size=2`);
         if (response.ok) {
           const data = await response.json();
-          setTonightRestaurants(data);
+          // Transform the API response to match the expected format
+          const formattedRestaurants = data.restaurants.map((restaurant: any) => ({
+            restaurant: {
+              id: restaurant.id,
+              name: restaurant.name,
+              slug: restaurant.slug,
+              neighborhood: restaurant.neighborhood,
+              hero_image_url: restaurant.hero_image_url,
+              emoji: restaurant.emoji
+            },
+            slots: restaurant.availableSlots.map((slot: any) => ({
+              slot_id: slot.slot_id,
+              time: slot.time,
+              party_size: slot.party_size
+            }))
+          }));
+          setTonightRestaurants(formattedRestaurants);
         } else {
           console.error("Failed to fetch available restaurants");
           setTonightRestaurants([]);
