@@ -130,17 +130,30 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
       ],
     });
 
+    console.log('Raw bookings found:', bookings.length);
+    console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.slot.date })));
+
     // Transform to match frontend format
     const formattedBookings = bookings.map(booking => ({
       id: booking.id,
       slotId: booking.slotId,
-      guestName: booking.user.name || 'Unknown',
-      phone: booking.user.phone,
       partySize: booking.partySize,
       status: booking.status.toLowerCase(),
       createdAt: booking.createdAt.toISOString(),
+      user: {
+        id: booking.user.id,
+        name: booking.user.name,
+        email: booking.user.email,
+        phone: booking.user.phone
+      },
+      slot: {
+        date: booking.slot.date,
+        time: booking.slot.time,
+        partySize: booking.slot.partySize
+      }
     }));
 
+    console.log('Formatted bookings to return:', formattedBookings.length);
     res.json(formattedBookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
