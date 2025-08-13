@@ -248,9 +248,7 @@ const UserReservations = ({
                 {reservation.status === "PENDING" && (
                   <div className="mt-3 text-right">
                     <button
-                      onClick={() => {
-                        handleCancelReservation(reservation.id);
-                      }}
+                      onClick={() => handleCancelReservation(reservation.id)}
                       className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                     >
                       Cancel
