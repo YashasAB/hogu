@@ -8,6 +8,10 @@ export interface AuthenticatedRequest extends Request {
   user?: { userId: string };
 }
 
+export interface AuthenticatedRestaurantRequest extends Request {
+  restaurantId?: string;
+}
+
 export const authenticateRestaurant = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
