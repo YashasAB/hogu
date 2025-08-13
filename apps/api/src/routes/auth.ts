@@ -20,6 +20,15 @@ const LoginSchema = z.object({
   password: z.string().min(1)
 });
 
+// Health check endpoint
+router.get('/ping', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Auth service is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // User signup
 router.post('/signup', async (req, res) => {
   try {
