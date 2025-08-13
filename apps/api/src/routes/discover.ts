@@ -110,7 +110,7 @@ router.get('/week', async (req, res) => {
 
       // Group by restaurant for picks
       const restaurantSlots = new Map();
-      availableSlots.forEach((slot: TimeSlot & { restaurant: Restaurant }) => {
+      availableSlots.forEach((slot) => {
         const restaurant = slot.restaurant;
         const key = restaurant.id;
 
