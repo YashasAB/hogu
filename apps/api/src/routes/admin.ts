@@ -95,20 +95,45 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
     // Check if REPL_ID is available
     if (!process.env.REPL_ID) {
       console.error('REPL_ID environment variable is not set');
-      return res.status(500).json({ error: 'Storage configuration missing' });
+      return res.status(500).json({ error: 'Storage configuration missing - REPL_ID not found' });
+    }
+
+    // Verify storage client is initialized
+    if (!storageClient) {
+      console.error('Storage client is not initialized');
+      return res.status(500).json({ error: 'Storage client not available' });
     }
 
     // Upload the file to Replit Object Storage
     const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
     console.log(`Attempting to upload to filename: ${fileName}`);
     
+    // Test storage client by trying to list files (this will help diagnose auth issues)
     try {
+      console.log('Testing storage client connectivity...');
+      const testResult = await storageClient.list({ maxResults: 1 });
+      console.log('Storage client test result:', testResult.ok ? 'SUCCESS' : 'FAILED');
+      if (!testResult.ok) {
+        console.error('Storage client test failed:', testResult.error);
+      }
+    } catch (testError) {
+      console.error('Storage client test threw error:', testError);
+    }
+    
+    try {
+      console.log('Buffer details:', {
+        bufferExists: !!file.buffer,
+        bufferLength: file.buffer?.length,
+        bufferType: typeof file.buffer
+      });
+
       const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
-      console.log('Upload result:', uploadResult);
+      console.log('Upload result:', JSON.stringify(uploadResult, null, 2));
 
       if (!uploadResult.ok) {
-        console.error('Upload failed with result:', uploadResult);
-        throw new Error(`Storage upload failed: ${uploadResult.error || 'Unknown error'}`);
+        console.error('Upload failed with result:', JSON.stringify(uploadResult, null, 2));
+        const errorMessage = uploadResult.error?.message || JSON.stringify(uploadResult.error) || 'Unknown storage error';
+        throw new Error(`Storage upload failed: ${errorMessage}`);
       }
 
       // Construct the URL for the uploaded file
@@ -125,7 +150,11 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
 
     } catch (storageError) {
-      console.error('Storage upload error:', storageError);
+      console.error('Storage upload error details:', {
+        error: storageError,
+        message: storageError.message,
+        stack: storageError.stack
+      });
       throw storageError;
     }
 
