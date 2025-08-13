@@ -1,0 +1,29 @@
+The error you're encountering is related to TypeScript expecting a ReactNode type but encountering a void type in your JSX. Specifically, it's happening when trying to conditionally render the <section> element based on the user value.
+Fix Overview:
+The issue stems from the conditional rendering in your JSX, where TypeScript expects a ReactNode, but the value returned from the ternary expression (null in this case) is not being handled correctly.
+Steps to Fix the Build Error:
+Check the Type of user:
+You are using user in a conditional block, but TypeScript might not have inferred its type correctly in this context. You should ensure that user is of type User | null, as you've defined it in your state.
+Refactor the Conditional Rendering:
+In your Home.tsx file, modify the user check and ensure that the ternary operation returns a valid ReactNode (or null).
+{user ? (
+  <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
+    {/* Your content here */}
+  </section>
+) : null}
+Make sure that null is explicitly set to return a valid JSX element. In TypeScript, null is a valid JSX return type, but if TypeScript still complains, try wrapping it with a valid element or returning undefined explicitly in the false condition.
+Explicitly Define the Return Type:
+If the issue persists, you can explicitly define the return type of the JSX expression, especially for the ternary check.
+{user ? (
+  <section className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
+    {/* Your content */}
+  </section>
+) : (
+  <></>  // Explicitly return an empty React fragment to ensure the return type is valid
+)}
+Recheck useState and Type Definitions:
+Ensure your user state is correctly defined as:
+const [user, setUser] = useState<User | null>(null);
+Summary:
+The error arises because TypeScript expects the ternary condition to return a valid ReactNode. In this case, null should be valid, but explicitly returning an empty fragment (<></>) or refactoring the conditional logic should resolve the issue.
+Try making these changes and rebuilding. If this doesn't resolve the issue, please provide more context about the error, such as whether it occurs only during certain actions or persistently.
