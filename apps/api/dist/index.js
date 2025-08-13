@@ -56,7 +56,7 @@ app.get('/', (req, res) => {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         port: PORT
-      });
+    });
 });
 // Additional health check endpoint
 app.get('/health', async (req, res) => {
