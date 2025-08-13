@@ -95,6 +95,32 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
     const restaurantId = req.restaurantId;
     const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
+    console.log('Bookings query details:');
+    console.log('Restaurant ID:', restaurantId);
+    console.log('Today date:', today);
+    console.log('Query filter:', {
+      restaurantId: restaurantId,
+      status: { in: ['PENDING', 'CONFIRMED'] },
+      slot: { date: { gte: today } }
+    });
+
+    // First, let's check if there are ANY reservations for this restaurant
+    const allBookingsForRestaurant = await prisma.reservation.findMany({
+      where: { restaurantId: restaurantId },
+      include: {
+        slot: { select: { date: true, time: true } },
+        user: { select: { name: true, email: true } }
+      }
+    });
+    console.log('ALL bookings for this restaurant:', allBookingsForRestaurant.length);
+    console.log('All bookings details:', allBookingsForRestaurant.map(b => ({
+      id: b.id,
+      status: b.status,
+      date: b.slot.date,
+      time: b.slot.time,
+      user: b.user.name || b.user.email
+    })));
+
     const bookings = await prisma.reservation.findMany({
       where: {
         restaurantId: restaurantId,
