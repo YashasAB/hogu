@@ -86,9 +86,9 @@ app.get('/health', async (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/discover', discoverRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 
 // In production, serve the React app for all non-API routes

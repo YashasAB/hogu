@@ -363,28 +363,24 @@ export default function Home() {
     const fetchAvailableRestaurants = async () => {
       setTonightLoading(true);
       try {
-        const response = await fetch(`/api/discover/tonight?party_size=2`);
+        console.log('Fetching tonight restaurants from /api/discover/tonight');
+        const response = await fetch('/api/discover/tonight?party_size=2');
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          // Transform the API response to match the expected format
-          const formattedRestaurants = data.restaurants.map((restaurant: any) => ({
-            restaurant: {
-              id: restaurant.id,
-              name: restaurant.name,
-              slug: restaurant.slug,
-              neighborhood: restaurant.neighborhood,
-              hero_image_url: restaurant.hero_image_url,
-              emoji: restaurant.emoji
-            },
-            slots: restaurant.availableSlots.map((slot: any) => ({
-              slot_id: slot.slot_id,
-              time: slot.time,
-              party_size: slot.party_size
-            }))
-          }));
-          setTonightRestaurants(formattedRestaurants);
+          console.log('Tonight API response:', data);
+          
+          // The /api/discover/tonight returns { now: [], later: [] }
+          // Combine both now and later arrays
+          const allRestaurants = [...(data.now || []), ...(data.later || [])];
+          console.log('Combined restaurants:', allRestaurants);
+          
+          setTonightRestaurants(allRestaurants);
         } else {
-          console.error("Failed to fetch available restaurants");
+          console.error("Failed to fetch available restaurants, status:", response.status);
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
           setTonightRestaurants([]);
         }
       } catch (error) {
