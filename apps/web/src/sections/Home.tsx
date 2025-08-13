@@ -326,13 +326,13 @@ export default function Home() {
         }
       }
     };
-    
+
     // Set up emergency logout function
     window.emergencyLogout = () => {
       localStorage.removeItem("hogu_token");
       setUser(null);
     };
-    
+
     checkAuth();
   }, []);
 
