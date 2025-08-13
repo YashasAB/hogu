@@ -89,7 +89,7 @@ const api = {
     return response.json();
   },
 
-  async getBookings(): Promise<Booking[]> {
+  async getBookings(): Promise<{bookings: Booking[], liveStatus?: {pending: number, confirmed: number, completed: number}} | Booking[]> {
     const token = localStorage.getItem("hogu_restaurant_token");
     const response = await fetch("/api/admin/bookings", {
       headers: {
@@ -276,8 +276,8 @@ export default function RestaurantAdminPanel() {
       ]);
       
       // Handle the new response format
-      const bookingsData = bookingsResponse.bookings || bookingsResponse;
-      const liveStatusData = bookingsResponse.liveStatus;
+      const bookingsData = (bookingsResponse as any).bookings || bookingsResponse;
+      const liveStatusData = (bookingsResponse as any).liveStatus;
       
       console.log("🔄 Received slots:", slotsData.length, "bookings:", bookingsData.length);
       setSlots(slotsData);
@@ -289,12 +289,12 @@ export default function RestaurantAdminPanel() {
         setLiveStatus(liveStatusData);
       } else {
         // Fallback to local calculation for backward compatibility
-        const pending = bookingsData.filter((b) => b.status === "PENDING" || b.status === "HELD").length;
+        const pending = bookingsData.filter((b: Booking) => b.status === "PENDING" || b.status === "HELD").length;
         const confirmed = bookingsData.filter(
-          (b) => b.status === "CONFIRMED" || b.status === "SEATED",
+          (b: Booking) => b.status === "CONFIRMED" || b.status === "SEATED",
         ).length;
         const completed = bookingsData.filter(
-          (b) => b.status === "COMPLETED",
+          (b: Booking) => b.status === "COMPLETED",
         ).length;
         setLiveStatus({ pending, confirmed, completed });
       }
