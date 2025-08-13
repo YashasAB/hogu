@@ -1,0 +1,34 @@
+   return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/routes/admin.ts:65:63 - error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type 'import("/home/runner/workspace/node_modules/@types/express/index").RequestHandler<import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").ParamsDictionary, any, any, qs.ParsedQs, Record<string, any>>' is not assignable to type 'import("/home/runner/workspace/apps/api/node_modules/@types/express-serve-static-core/index").RequestHandler<import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").ParamsDictionary, any, any, qs.ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'import("/home/runner/workspace/apps/api/node_modules/@types/express-serve-static-core/index").Request<import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").ParamsDictionary, any, any, qs.ParsedQs, Record<string, any>>' is not assignable to type 'import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").Request<import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").ParamsDictionary, any, any, qs.ParsedQs, Record<string, any>>'.
+            The types of 'app.get' are incompatible between these types.
+              Type '((name: string) => any) & import("/home/runner/workspace/apps/api/node_modules/@types/express-serve-static-core/index").IRouterMatcher<import("/home/runner/workspace/apps/api/node_modules/@types/express-serve-static-core/index").Application<Record<string, any>>, any>' is not assignable to type '((name: string) => any) & import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").IRouterMatcher<import("/home/runner/workspace/node_modules/@types/express-serve-static-core/index").Application<Record<string, any>>, any>'.
+                Type '((name: string) => any) & IRouterMatcher<Application<Record<string, any>>, any>' is not assignable to type 'IRouterMatcher<Application<Record<string, any>>, any>'.
+                  Types of parameters 'name' and 'path' are incompatible.
+                    Type 'PathParams' is not assignable to type 'string'.
+                      Type 'RegExp' is not assignable to type 'string'.
+
+65 router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('heroImage'), async (req: AuthenticatedRestaurantRequest, res: Response) => {
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@types/express-serve-static-core/index.d.ts:153:5
+    153     <
+            ~
+    154         P = ParamsDictionary,
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ... 
+    162         ...handlers: Array<RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, LocalsObj>>
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    163     ): T;
+        ~~~~~~~~~
+    The last overload is declared here.
+src/routes/admin.ts:77:46 - error TS2339: Property 'putFile' does not exist on type 'Client'.
+
+77     const uploadResult = await storageClient.putFile(`${restaurantId}/heroImage`, file.buffer, {
+                                                ~~~~~~~
