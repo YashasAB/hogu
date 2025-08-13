@@ -5,7 +5,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,magenta \"pnpm -C apps/api dev\" \"pnpm -C apps/web dev\"",
+    "dev": "concurrently -n api,web -c blue,magenta \"cd apps/api && npm run dev\" \"cd apps/web && npm run dev\"",
     "build": "pnpm -C apps/web build && pnpm -C apps/api build",
     "start": "pnpm -C apps/api start"
   },
