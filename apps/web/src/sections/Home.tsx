@@ -126,9 +126,11 @@ const UserReservations = ({
     }
   };
 
+  if (!user || userReservations.length === 0) {
+    return null;
+  }
+
   return (
-    user &&
-    userReservations.length > 0 && (
       <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold flex items-center gap-2">
