@@ -1,13 +1,18 @@
 
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateRestaurant, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateRestaurant } from '../middleware/auth';
+import { Request, Response } from 'express';
 
 const router = Router();
 const prisma = new PrismaClient();
 
+interface AuthenticatedRequest extends Request {
+  restaurantId?: string;
+}
+
 // Get restaurant profile
-router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     console.log('Fetching restaurant profile for ID:', restaurantId);
@@ -29,7 +34,7 @@ router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedReque
 });
 
 // Update restaurant profile
-router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const { name, neighborhood, instagramUrl, website, heroImageUrl } = req.body;
@@ -55,7 +60,7 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedReque
 });
 
 // Get slots for a date
-router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const { date } = req.query;
@@ -102,7 +107,7 @@ router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRequest, r
 });
 
 // Get all upcoming bookings for the restaurant (pending/confirmed from today onwards)
-router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     console.log('Getting bookings for restaurant:', restaurantId);
@@ -138,7 +143,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
       where: {
         restaurantId: restaurantId,
         status: {
-          in: ['PENDING', 'CONFIRMED']
+          in: ['PENDING', 'CONFIRMED', 'HELD', 'SEATED']
         },
         slot: {
           date: {
@@ -201,7 +206,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRequest
 });
 
 // Add multiple slots
-router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const { date, start, end, interval, capacity } = req.body;
@@ -241,7 +246,7 @@ router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRequ
 });
 
 // Update slot status
-router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const { id } = req.params;
@@ -267,7 +272,7 @@ router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRequ
 });
 
 // Update booking status
-router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedRequest, res) => {
+router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const restaurantId = req.restaurantId!;
     const { id } = req.params;
