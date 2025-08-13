@@ -9,7 +9,7 @@ run = ["sh", "-c", "cd apps/api && npm run start"]
 build = ["sh", "-c", "cd apps/api && npm run build"]
 
 [objectStorage]
-defaultBucketID = "restaurant-photos"
+defaultBucketID = "replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a"
 
 [workflows]
 runButton = "Development"
