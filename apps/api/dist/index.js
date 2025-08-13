@@ -49,13 +49,14 @@ if (isProduction) {
     app.use(express_1.default.static(webDistPath));
     console.log('Serving static files from:', webDistPath);
 }
-// Health check endpoint
+// Health check endpoint for deployment
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'Hogu API is running',
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        port: PORT
+        port: PORT,
+        env: process.env.NODE_ENV || 'development'
     });
 });
 // Additional health check endpoint
@@ -67,7 +68,8 @@ app.get('/health', async (req, res) => {
             status: 'ok',
             database: 'connected',
             uptime: process.uptime(),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            port: PORT
         });
     }
     catch (error) {
@@ -79,6 +81,13 @@ app.get('/health', async (req, res) => {
             timestamp: new Date().toISOString()
         });
     }
+});
+// Readiness check endpoint
+app.get('/ready', (req, res) => {
+    res.status(200).json({
+        status: 'ready',
+        timestamp: new Date().toISOString()
+    });
 });
 // Routes
 app.use('/api/auth', auth_1.default);
@@ -95,6 +104,7 @@ if (isProduction) {
 }
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Hogu API listening on http://0.0.0.0:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 server.on('error', (error) => {
     console.error('Server error:', error);
