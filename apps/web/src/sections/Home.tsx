@@ -153,29 +153,6 @@ export default function Home() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("hogu_token") : null;
 
-  // --- data fetch ---
-  useEffect(() => {
-    // Only fetch if party and selectedDate are valid
-    if (party !== "" && selectedDate) {
-      fetch(
-        `/api/discover/tonight?city=${city}&party_size=${party}&start_date=${selectedDate}`,
-      )
-        .then((r) => r.json())
-        .then(setTonight)
-        .catch(() => {});
-      fetch(
-        `/api/discover/week?city=${city}&start=${selectedDate}&days=7&party_size=${party}`,
-      )
-        .then((r) => r.json())
-        .then(setWeek)
-        .catch(() => {});
-    } else {
-      // Reset data if selections are invalid
-      setTonight({ now: [], later: [] });
-      setWeek({ days: [] });
-    }
-  }, [city, party, selectedDate]); // Depend on selectedDate as well
-
   const weekToday = week.days.find((day) => day.date === selectedDate);
   const todayLabel = useMemo(
     () =>
