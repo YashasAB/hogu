@@ -202,30 +202,39 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     console.log(`Created/found slot: ${slot.id} for restaurant: ${restaurant.id}`);
 
-    // Create the reservation with the correct restaurant ID
-    const reservation = await prisma.reservation.create({
-      data: {
-        userId,
-        restaurantId: restaurant.id, // Explicitly use the found restaurant's ID
-        slotId: slot.id,
-        partySize: parseInt(partySize),
-        status: 'PENDING'
-      },
-      include: {
-        restaurant: {
-          select: {
-            name: true,
-            slug: true,
-            emoji: true
-          }
+    // Create the reservation with the correct restaurant ID and update slot status
+    const reservation = await prisma.$transaction(async (tx) => {
+      // Update the time slot status to REQUESTED
+      await tx.timeSlot.update({
+        where: { id: slot.id },
+        data: { status: 'REQUESTED' }
+      });
+
+      // Create the reservation
+      return await tx.reservation.create({
+        data: {
+          userId,
+          restaurantId: restaurant.id, // Explicitly use the found restaurant's ID
+          slotId: slot.id,
+          partySize: parseInt(partySize),
+          status: 'PENDING'
         },
-        slot: {
-          select: {
-            date: true,
-            time: true
+        include: {
+          restaurant: {
+            select: {
+              name: true,
+              slug: true,
+              emoji: true
+            }
+          },
+          slot: {
+            select: {
+              date: true,
+              time: true
+            }
           }
         }
-      }
+      });
     });
 
     console.log(`Created reservation: ${reservation.id} for restaurant: ${reservation.restaurantId}`);
@@ -272,6 +281,65 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => 
     res.json(reservation);
   } catch (error) {
     console.error('Get reservation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Cancel a reservation
+router.post('/:id/cancel', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user!.userId;
+    const reservationId = req.params.id;
+
+    // Find the reservation first to ensure it belongs to the user
+    const existingReservation = await prisma.reservation.findFirst({
+      where: {
+        id: reservationId,
+        userId,
+        status: { in: ['PENDING', 'CONFIRMED'] } // Only allow cancelling pending or confirmed reservations
+      }
+    });
+
+    if (!existingReservation) {
+      return res.status(404).json({ error: 'Reservation not found or cannot be cancelled' });
+    }
+
+    // Cancel the reservation and update slot status in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update the reservation status to CANCELLED
+      const cancelledReservation = await tx.reservation.update({
+        where: { id: reservationId },
+        data: { status: 'CANCELLED' },
+        include: {
+          restaurant: {
+            select: {
+              name: true,
+              slug: true,
+              emoji: true
+            }
+          },
+          slot: {
+            select: {
+              date: true,
+              time: true
+            }
+          }
+        }
+      });
+
+      // Update the time slot status back to AVAILABLE
+      await tx.timeSlot.update({
+        where: { id: existingReservation.slotId },
+        data: { status: 'AVAILABLE' }
+      });
+
+      return cancelledReservation;
+    });
+
+    console.log(`Cancelled reservation: ${reservationId} by user: ${userId}`);
+    res.json(result);
+  } catch (error) {
+    console.error('Cancel reservation error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

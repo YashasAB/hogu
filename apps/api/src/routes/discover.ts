@@ -19,7 +19,7 @@ router.get('/tonight', async (req, res) => {
       where: {
         date: today,
         partySize: partySize,
-        status: 'AVAILABLE',
+        status: 'AVAILABLE', // Only show truly available slots
         time: {
           gte: `${currentHour.toString().padStart(2, '0')}:00`,
         },
@@ -178,7 +178,7 @@ router.get('/tonight-near-you', async (req, res) => {
       where: {
         date: today,
         partySize: partySize,
-        status: 'AVAILABLE',
+        status: 'AVAILABLE', // Only show truly available slots
         time: {
           gte: `${currentHour.toString().padStart(2, '0')}:00`,
         },

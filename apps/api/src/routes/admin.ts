@@ -321,4 +321,113 @@ router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedR
   }
 });
 
+// Accept a booking request
+router.post('/bookings/:id/accept', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  try {
+    const restaurantId = req.restaurantId!;
+    const reservationId = req.params.id;
+    console.log(`Restaurant ${restaurantId} accepting booking ${reservationId}`);
+
+    // First verify the reservation belongs to this restaurant and is pending
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        id: reservationId,
+        restaurantId: restaurantId,
+        status: 'PENDING'
+      }
+    });
+
+    if (!reservation) {
+      console.log(`Reservation ${reservationId} not found or not pending for restaurant ${restaurantId}`);
+      return res.status(404).json({ error: 'Reservation not found or already processed' });
+    }
+
+    // Update the reservation status to CONFIRMED and slot status to FULL in a transaction
+    const updatedReservation = await prisma.$transaction(async (tx) => {
+      // Update the reservation status to CONFIRMED
+      const confirmedReservation = await tx.reservation.update({
+        where: { id: reservationId },
+        data: { 
+          status: 'CONFIRMED',
+          confirmedAt: new Date()
+        },
+        include: {
+          user: { select: { name: true, email: true } },
+          slot: { select: { date: true, time: true } }
+        }
+      });
+
+      // Update the time slot status to FULL
+      await tx.timeSlot.update({
+        where: { id: reservation.slotId },
+        data: { status: 'FULL' }
+      });
+
+      return confirmedReservation;
+    });
+
+    console.log(`Successfully accepted reservation ${reservationId}`);
+    res.json({ 
+      message: 'Booking accepted successfully',
+      reservation: updatedReservation
+    });
+  } catch (error) {
+    console.error('Error accepting booking:', error);
+    res.status(500).json({ error: 'Failed to accept booking' });
+  }
+});
+
+// Reject a booking request
+router.post('/bookings/:id/reject', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  try {
+    const restaurantId = req.restaurantId!;
+    const reservationId = req.params.id;
+    console.log(`Restaurant ${restaurantId} rejecting booking ${reservationId}`);
+
+    // First verify the reservation belongs to this restaurant and is pending
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        id: reservationId,
+        restaurantId: restaurantId,
+        status: 'PENDING'
+      }
+    });
+
+    if (!reservation) {
+      console.log(`Reservation ${reservationId} not found or not pending for restaurant ${restaurantId}`);
+      return res.status(404).json({ error: 'Reservation not found or already processed' });
+    }
+
+    // Update the reservation status to CANCELLED and slot status back to AVAILABLE in a transaction
+    const updatedReservation = await prisma.$transaction(async (tx) => {
+      // Update the reservation status to CANCELLED
+      const cancelledReservation = await tx.reservation.update({
+        where: { id: reservationId },
+        data: { status: 'CANCELLED' },
+        include: {
+          user: { select: { name: true, email: true } },
+          slot: { select: { date: true, time: true } }
+        }
+      });
+
+      // Update the time slot status back to AVAILABLE
+      await tx.timeSlot.update({
+        where: { id: reservation.slotId },
+        data: { status: 'AVAILABLE' }
+      });
+
+      return cancelledReservation;
+    });
+
+    console.log(`Successfully rejected reservation ${reservationId}`);
+    res.json({ 
+      message: 'Booking rejected successfully',
+      reservation: updatedReservation
+    });
+  } catch (error) {
+    console.error('Error rejecting booking:', error);
+    res.status(500).json({ error: 'Failed to reject booking' });
+  }
+});
+
 export default router;
