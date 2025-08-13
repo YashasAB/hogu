@@ -325,7 +325,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-      ) : <> </>}
+      ) : null}
 
       {/* YOUR RESERVATIONS SECTION */}
       {console.log(
@@ -343,7 +343,7 @@ export default function Home() {
           loadingReservations={loadingReservations}
           onReservationsUpdate={fetchReservations}
         />
-      ) : <> </>}
+      ) : null}
 
       {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
