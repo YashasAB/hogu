@@ -236,6 +236,7 @@ export default function Home() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowUserDropdown(!showUserDropdown);
+                  return;
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
               >
