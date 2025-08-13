@@ -1,14 +1,20 @@
+
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateRestaurant, AuthenticatedRestaurantRequest } from '../middleware/auth';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key'; // Ensure JWT_SECRET is properly configured
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 
-// Add logging to restaurant authentication middleware
+// Define the authenticated request interface
+interface AuthenticatedRestaurantRequest extends Request {
+  restaurant?: { restaurantId: string };
+}
+
+// Restaurant authentication middleware
 function authenticateRestaurant(req: AuthenticatedRestaurantRequest, res: Response, next: NextFunction) {
   const authHeader = req.header('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
@@ -30,7 +36,7 @@ function authenticateRestaurant(req: AuthenticatedRestaurantRequest, res: Respon
 }
 
 // Get restaurant profile
-router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     console.log('Fetching restaurant profile for ID:', restaurantId);
@@ -52,7 +58,7 @@ router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
 });
 
 // Update restaurant profile
-router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     const { name, neighborhood, instagramUrl, website, heroImageUrl } = req.body;
@@ -78,7 +84,7 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
 });
 
 // Get slots for a date
-router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     const { date } = req.query;
@@ -125,7 +131,7 @@ router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRestaurant
 });
 
 // Get all upcoming bookings for the restaurant (pending/confirmed from today onwards)
-router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     console.log('Getting bookings for restaurant:', restaurantId);
@@ -225,7 +231,7 @@ router.get('/bookings', authenticateRestaurant, async (req: AuthenticatedRestaur
 });
 
 // Add multiple slots
-router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     const { date, start, end, interval, capacity } = req.body;
@@ -265,7 +271,7 @@ router.post('/slots/bulk', authenticateRestaurant, async (req: AuthenticatedRest
 });
 
 // Update slot status
-router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     const { id } = req.params;
@@ -291,7 +297,7 @@ router.patch('/slots/:id', authenticateRestaurant, async (req: AuthenticatedRest
 });
 
 // Update booking status
-router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res) => {
+router.patch('/bookings/:id', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
     const restaurantId = req.restaurant!.restaurantId;
     const { id } = req.params;
