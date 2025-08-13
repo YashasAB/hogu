@@ -81,13 +81,8 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       throw new Error('Failed to upload to storage');
     }
 
-    // Get the download URL for the uploaded file
-    const urlResult = await storageClient.downloadAsURL(fileName);
-    if (!urlResult.ok) {
-      throw new Error('Failed to get download URL');
-    }
-    
-    const heroImageUrl = urlResult.url;
+    // Construct the URL for the uploaded file
+    const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
 
     // Update the restaurant's heroImageUrl in the database
