@@ -278,4 +278,40 @@ router.get('/reservations/pending', authenticateToken, async (req: Authenticated
   }
 });
 
-export default router;
+// Cancel a reservation
+router.post('/reservations/:id/cancel', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user!.userId; // Assuming userId is correctly set by authenticateToken
+  const reservationId = req.params.id;
+
+  try {
+    // Find the reservation and verify ownership
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        id: reservationId,
+        userId: userId
+      }
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reservation not found or you do not own it.' });
+    }
+
+    // Check if reservation can be cancelled (only PENDING and HELD reservations)
+    if (!['PENDING', 'HELD'].includes(reservation.status)) {
+      return res.status(400).json({ error: 'Reservation cannot be cancelled. Status must be PENDING or HELD.' });
+    }
+
+    // Update reservation status to CANCELLED
+    await prisma.reservation.update({
+      where: { id: reservationId },
+      data: { status: 'CANCELLED' }
+    });
+
+    res.json({ message: 'Reservation cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling reservation:', error);
+    return res.status(500).json({ error: 'Failed to cancel reservation' });
+  }
+});
+
+export { router as authRouter };
