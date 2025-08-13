@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DarkDatePicker from "../components/DarkDatePicker";
+import TonightNearYou from "../components/TonightNearYou"; // Import the new component
 
 // Define types for better type safety
 type Slot = { slot_id: string; time: string; party_size: number };
@@ -354,46 +355,6 @@ export default function Home() {
     }
   }, [city, party, selectedDate]); // Depend on selectedDate as well
 
-  // State for tonight restaurants
-  const [tonightRestaurants, setTonightRestaurants] = useState<any[]>([]);
-  const [tonightLoading, setTonightLoading] = useState(false);
-
-  // Fetch restaurants with available slots for today
-  useEffect(() => {
-    const fetchAvailableRestaurants = async () => {
-      setTonightLoading(true);
-      try {
-        console.log('Fetching tonight restaurants from /api/discover/tonight');
-        const response = await fetch('/api/discover/tonight?party_size=2');
-        console.log('Response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Tonight API response:', data);
-
-          // The /api/discover/tonight returns { now: [], later: [] }
-          // Combine both now and later arrays
-          const allRestaurants = [...(data.now || []), ...(data.later || [])];
-          console.log('Combined restaurants:', allRestaurants);
-
-          setTonightRestaurants(allRestaurants);
-        } else {
-          console.error("Failed to fetch available restaurants, status:", response.status);
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          setTonightRestaurants([]);
-        }
-      } catch (error) {
-        console.error("Error fetching available restaurants:", error);
-        setTonightRestaurants([]);
-      } finally {
-        setTonightLoading(false);
-      }
-    };
-
-    fetchAvailableRestaurants();
-  }, [city]);
-
   const weekToday = week.days.find(day => day.date === selectedDate);
   const todayLabel = useMemo(
     () => selectedDate ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long" }) : 'Select a Date',
@@ -679,94 +640,7 @@ export default function Home() {
           Grab something within the next 4 hours — perfect for spontaneous
           plans.
         </div>
-
-        {tonightLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="border border-gray-200 rounded-xl p-4 animate-pulse">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                  </div>
-                </div>
-                <div className="w-full h-32 bg-gray-200 rounded-lg"></div>
-              </div>
-            ))}
-          </div>
-        ) : tonightRestaurants.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tonightRestaurants.slice(0, 6).map((restaurant) => (
-              // --- START MODIFIED CODE ---
-              <div
-                key={restaurant.restaurant.id}
-                className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow"
-              >
-                <div
-                  className="w-full h-32 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-3 p-4 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300 cursor-pointer"
-                  onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{restaurant.restaurant.emoji || '🍽️'}</span>
-                    <div className="text-lg font-bold text-white truncate">
-                      {restaurant.restaurant.name}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-slate-400">
-                      {restaurant.slots.length > 0 ? `${restaurant.slots[0].time} onwards` : 'Available'}
-                    </div>
-                    <div className="text-xs text-brand font-medium">
-                      Click to reserve →
-                    </div>
-                  </div>
-                </div>
-                <div className="text-sm text-muted mb-2">
-                  {restaurant.restaurant.neighborhood || "Bengaluru"}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {restaurant.slots.slice(0, 3).map((slot) => (
-                    <span key={slot.slot_id} className="text-xs px-2 py-1 bg-slate-800 rounded border border-white/10 text-slate-300">
-                      {slot.time}
-                    </span>
-                  ))}
-                  {restaurant.slots.length > 3 && (
-                    <span className="text-xs px-2 py-1 text-slate-400">
-                      +{restaurant.slots.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-              // --- END MODIFIED CODE ---
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-gray-400 mb-2">
-              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <p className="text-gray-600">No restaurants with available slots for tonight</p>
-            <p className="text-sm text-gray-500 mt-1">Check back later or explore other options</p>
-          </div>
-        )}
-
-
-        {/* Explore More Button */}
-        <div className="flex justify-center mt-4">
-          <Link to="/explore-tonight" className="btn btn-primary">
-            Explore More Tonight
-          </Link>
-        </div>
-
-        {!(tonight.now?.length || tonight.later?.length) && (
-          <div className="text-muted text-sm">
-            No live inventory in the next few hours. Check back soon or explore
-            week planning above.
-          </div>
-        )}
+        <TonightNearYou city={city} />
       </section>
 
       {/* FEATURES GRID — everything Hogu offers */}
