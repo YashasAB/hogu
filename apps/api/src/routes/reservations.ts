@@ -150,7 +150,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Find the restaurant
+    // Find the restaurant by slug
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug: restaurantSlug }
     });
@@ -158,6 +158,8 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found' });
     }
+
+    console.log(`Creating reservation for restaurant: ${restaurant.name} (ID: ${restaurant.id})`);
 
     // Convert time to 24-hour format if it's in 12-hour format
     let normalizedTime = time;
@@ -178,11 +180,11 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       }
     }
 
-    // Create or find the time slot using normalized time
+    // Create or find the time slot using the correct restaurant ID
     const slot = await prisma.timeSlot.upsert({
       where: {
         restaurantId_date_time_partySize: {
-          restaurantId: restaurant.id,
+          restaurantId: restaurant.id, // Use the found restaurant's ID
           date,
           time: normalizedTime,
           partySize: parseInt(partySize)
@@ -190,7 +192,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       },
       update: {},
       create: {
-        restaurantId: restaurant.id,
+        restaurantId: restaurant.id, // Use the found restaurant's ID
         date,
         time: normalizedTime,
         partySize: parseInt(partySize),
@@ -198,11 +200,13 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
       }
     });
 
-    // Create the reservation
+    console.log(`Created/found slot: ${slot.id} for restaurant: ${restaurant.id}`);
+
+    // Create the reservation with the correct restaurant ID
     const reservation = await prisma.reservation.create({
       data: {
         userId,
-        restaurantId: restaurant.id,
+        restaurantId: restaurant.id, // Explicitly use the found restaurant's ID
         slotId: slot.id,
         partySize: parseInt(partySize),
         status: 'PENDING'
@@ -223,6 +227,8 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
         }
       }
     });
+
+    console.log(`Created reservation: ${reservation.id} for restaurant: ${reservation.restaurantId}`);
 
     res.status(201).json(reservation);
   } catch (error) {
