@@ -108,12 +108,20 @@ export const BookingsList: React.FC<BookingsListProps> = ({
                     </span>
 
                     {booking.status === "PENDING" && (
-                      <button
-                        onClick={() => onStatusChange(booking.id, "CONFIRMED")}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Confirm
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onStatusChange(booking.id, "CONFIRMED")}
+                          className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => onStatusChange(booking.id, "CANCELLED")}
+                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     )}
 
                     {booking.status === "CONFIRMED" && (
