@@ -81,7 +81,13 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       throw new Error('Failed to upload to storage');
     }
 
-    const heroImageUrl = uploadResult.url;
+    // Get the download URL for the uploaded file
+    const urlResult = await storageClient.downloadAsURL(fileName);
+    if (!urlResult.ok) {
+      throw new Error('Failed to get download URL');
+    }
+    
+    const heroImageUrl = urlResult.url;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
 
     // Update the restaurant's heroImageUrl in the database
