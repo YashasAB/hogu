@@ -5,9 +5,10 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
-deploymentTarget = "cloudrun"
-build = ["sh", "-c", "cd apps/api && npx prisma generate && npx prisma migrate deploy && cd ../.. && pnpm -C apps/web build && pnpm -C apps/api build"]
+run = ["sh", "-c", "cd apps/api && npm run start"]
+
+[objectStorage]
+defaultBucketID = "restaurant-photos"
 
 [workflows]
 runButton = "Development"

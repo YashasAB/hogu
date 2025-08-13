@@ -1,10 +1,17 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateRestaurant, AuthenticatedRestaurantRequest } from '../middleware/auth';
-import { Request, Response } from 'express';
+import multer from 'multer';
+import { Client } from '@replit/object-storage';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Initialize Replit Object Storage client
+const storageClient = new Client();
+
+// Multer configuration for file uploads
+const upload = multer({ storage: multer.diskStorage({}) });
 
 // Get restaurant profile
 router.get('/restaurant', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
@@ -53,6 +60,42 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
     res.status(500).json({ error: 'Failed to update restaurant' });
   }
 });
+
+// Upload hero image for a restaurant
+router.post('/restaurant/hero-image', authenticateRestaurant, upload.single('heroImage'), async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  try {
+    const restaurantId = req.restaurantId!;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
+
+    // Upload the file to Replit Object Storage
+    const uploadResult = await storageClient.putFile(`${restaurantId}/heroImage`, file.buffer, {
+      contentType: file.mimetype,
+    });
+
+    const heroImageUrl = uploadResult.url;
+    console.log(`File uploaded successfully to: ${heroImageUrl}`);
+
+    // Update the restaurant's heroImageUrl in the database
+    const updatedRestaurant = await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { heroImageUrl },
+    });
+
+    console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
+    res.json({ message: 'Hero image updated successfully', heroImageUrl: updatedRestaurant.heroImageUrl });
+
+  } catch (error) {
+    console.error('Error uploading hero image:', error);
+    res.status(500).json({ error: 'Failed to upload hero image' });
+  }
+});
+
 
 // Get slots for a date
 router.get('/slots', authenticateRestaurant, async (req: AuthenticatedRestaurantRequest, res: Response) => {
