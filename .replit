@@ -5,7 +5,7 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && npm run start:prod"]
+run = ["sh", "-c", "cd apps/api && PORT=80 npm run start"]
 build = ["sh", "-c", "cd apps/api && npm run build"]
 
 [objectStorage]
