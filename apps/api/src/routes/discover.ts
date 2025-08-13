@@ -25,7 +25,16 @@ router.get('/tonight', async (req, res) => {
         },
       },
       include: {
-        restaurant: true,
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            neighborhood: true,
+            heroImageUrl: true,
+            emoji: true,
+          },
+        },
       },
       orderBy: {
         time: 'asc',
@@ -48,6 +57,7 @@ router.get('/tonight', async (req, res) => {
             slug: restaurant.slug,
             neighborhood: restaurant.neighborhood,
             hero_image_url: restaurant.heroImageUrl,
+            emoji: restaurant.emoji,
           },
           slots: [],
         });
@@ -147,7 +157,6 @@ function formatTime(time: string): string {
   return `${displayHour}:${minutes} ${ampm}`;
 }
 
-export default router;
 // Get restaurants with available slots for today
 router.get('/tonight-near-you', async (req, res) => {
   try {
@@ -169,7 +178,18 @@ router.get('/tonight-near-you', async (req, res) => {
         },
       },
       include: {
-        restaurant: true,
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            emoji: true,
+            neighborhood: true,
+            heroImageUrl: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
       },
       orderBy: {
         time: 'asc',
@@ -178,7 +198,7 @@ router.get('/tonight-near-you', async (req, res) => {
 
     // Get unique restaurants that have available slots
     const restaurantMap = new Map();
-    
+
     availableSlots.forEach((slot: TimeSlot & { restaurant: Restaurant }) => {
       const restaurant = slot.restaurant;
       const key = restaurant.id;
@@ -207,10 +227,12 @@ router.get('/tonight-near-you', async (req, res) => {
     });
 
     const restaurants = Array.from(restaurantMap.values());
-    
+
     res.json({ restaurants });
   } catch (error) {
     console.error('Error fetching tonight near you restaurants:', error);
     res.status(500).json({ error: 'Failed to fetch restaurants' });
   }
 });
+
+export default router;

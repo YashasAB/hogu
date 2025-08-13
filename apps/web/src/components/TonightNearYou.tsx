@@ -74,51 +74,53 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
       </div>
 
       {tonightLoading ? (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="border border-gray-200 rounded-xl p-4 animate-pulse">
-              <div className="h-32 bg-gray-200 rounded-lg mb-3" />
-              <div className="h-4 bg-gray-200 rounded mb-2" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
+        <div className="grid grid-cols-3 gap-3 overflow-x-auto">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="min-w-[200px] border border-gray-200 rounded-xl p-3 animate-pulse">
+              <div className="h-24 bg-gray-200 rounded-lg mb-2" />
+              <div className="h-3 bg-gray-200 rounded mb-1" />
+              <div className="h-2 bg-gray-200 rounded w-2/3" />
             </div>
           ))}
         </div>
       ) : tonightRestaurants.length > 0 ? (
-        <div className="space-y-3">
-          {tonightRestaurants.map((restaurant) => (
-            <div
-              key={restaurant.restaurant.id}
-              className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer"
-              onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
-            >
-              <div className="w-full h-32 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-3 p-4 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{restaurant.restaurant.emoji || '🍽️'}</span>
-                  <div className="text-lg font-bold text-white truncate">
-                    {restaurant.restaurant.name}
+        <div className="overflow-x-auto">
+          <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
+            {tonightRestaurants.map((restaurant) => (
+              <div
+                key={restaurant.restaurant.id}
+                className="min-w-[200px] max-w-[200px] border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
+                onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
+              >
+                <div className="w-full h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-2 p-3 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{restaurant.restaurant.emoji || '🍽️'}</span>
+                    <div className="text-sm font-bold text-white truncate">
+                      {restaurant.restaurant.name}
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-300">
+                    {restaurant.restaurant.neighborhood || 'Bengaluru'}
                   </div>
                 </div>
-                <div className="text-sm text-slate-300">
-                  {restaurant.restaurant.neighborhood || 'Bengaluru'}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {restaurant.slots.slice(0, 3).map((slot, index) => (
+                <div className="flex flex-wrap gap-1">
+                  {restaurant.slots.slice(0, 2).map((slot, index) => (
                     <span
                       key={slot.slot_id || index}
-                      className="px-2 py-1 bg-white/10 rounded text-xs text-white"
+                      className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-700"
                     >
                       {slot.time}
                     </span>
                   ))}
-                  {restaurant.slots.length > 3 && (
-                    <span className="px-2 py-1 bg-white/10 rounded text-xs text-white">
-                      +{restaurant.slots.length - 3} more
+                  {restaurant.slots.length > 2 && (
+                    <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-700">
+                      +{restaurant.slots.length - 2}
                     </span>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ) : (
         <div className="text-center py-8">
