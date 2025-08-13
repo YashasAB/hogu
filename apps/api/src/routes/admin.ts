@@ -75,9 +75,11 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
 
     // Upload the file to Replit Object Storage
     const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
-    const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer, {
-      contentType: file.mimetype,
-    });
+    const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
+
+    if (!uploadResult.ok) {
+      throw new Error('Failed to upload to storage');
+    }
 
     const heroImageUrl = uploadResult.url;
     console.log(`File uploaded successfully to: ${heroImageUrl}`);
