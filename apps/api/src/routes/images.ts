@@ -5,8 +5,6 @@ import { Client } from '@replit/object-storage';
 const router = Router();
 const storageClient = new Client();
 
-const storageClient = new Client();
-
 // Serve images from Object Storage
 router.get('/*', async (req, res) => {
   console.log('=== IMAGE REQUEST RECEIVED ===');
@@ -82,7 +80,7 @@ router.get('/*', async (req, res) => {
 router.get('/storage/*', async (req, res) => {
   try {
     // Extract the path after /storage/
-    const imagePath = req.params[0];
+    const imagePath = (req.params as any)[0];
     
     if (!imagePath) {
       return res.status(400).json({ error: 'No image path provided' });
@@ -123,7 +121,7 @@ router.get('/storage/*', async (req, res) => {
     
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    res.send(Buffer.from(result.value));
+    res.send(result.value);
     
   } catch (error) {
     console.error('Error proxying storage image:', error);
