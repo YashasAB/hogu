@@ -107,19 +107,46 @@ app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/images', imagesRouter);
 
-// Image proxy route for Replit storage
+// Image proxy route for Replit storage - handles both old and new URL formats
 app.get('/api/images/storage/:replId/:filename', async (req, res) => {
   try {
     const { replId, filename } = req.params;
-    const storageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${replId}/${filename}`;
+    
+    console.log(`=== IMAGE PROXY REQUEST ===`);
+    console.log(`Request path: ${req.path}`);
+    console.log(`replId: ${replId}, filename: ${filename}`);
+    
+    // Try multiple storage URL formats
+    const storageUrls = [
+      // Direct Object Storage format (current preferred format)
+      `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(replId + '/' + filename)}?alt=media`,
+      // Legacy storage format
+      `https://storage.replit.com/${process.env.REPL_ID}/${replId}/${filename}`,
+      // Alternative bucket format
+      `https://storage.replit.com/${replId}/${filename}`
+    ];
 
-    console.log(`Proxying image request: ${req.path} -> ${storageUrl}`);
+    let response = null;
+    let usedUrl = '';
 
-    // Fetch the image from Replit storage
-    const response = await fetch(storageUrl);
+    for (const storageUrl of storageUrls) {
+      console.log(`Trying: ${storageUrl}`);
+      try {
+        response = await fetch(storageUrl);
+        if (response.ok) {
+          usedUrl = storageUrl;
+          console.log(`✅ Success with: ${storageUrl}`);
+          break;
+        } else {
+          console.log(`❌ Failed with ${response.status}: ${storageUrl}`);
+        }
+      } catch (err) {
+        console.log(`❌ Error with: ${storageUrl}`, err.message);
+      }
+    }
 
-    if (!response.ok) {
-      console.error(`Failed to fetch image from storage: ${response.status} ${response.statusText}`);
+    if (!response || !response.ok) {
+      console.error(`All storage URLs failed for ${replId}/${filename}`);
       return res.status(404).send('Image not found');
     }
 
@@ -150,38 +177,173 @@ app.get('/testimg', (req, res) => {
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Image Test</title>
+        <title>Image Test - Enhanced Debug</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+            .test { 
+                margin: 20px 0; 
+                padding: 20px; 
+                border: 2px solid #ddd; 
+                background: white; 
+                border-radius: 8px;
+            }
+            img { 
+                max-width: 500px; 
+                border: 2px solid #ccc; 
+                margin: 10px 0; 
+                display: block;
+            }
+            .url { 
+                background: #f0f0f0; 
+                padding: 10px; 
+                word-break: break-all; 
+
+
+// Test endpoint to check database image URLs
+app.get('/test-db-images', async (req, res) => {
+  try {
+    const restaurants = await prisma.restaurant.findMany({
+      where: {
+        heroImageUrl: {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        heroImageUrl: true
+      },
+      take: 5
+    });
+
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Database Images Test</title>
         <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
-            img { max-width: 100%; border: 1px solid #ccc; margin: 10px 0; }
-            .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+            .restaurant { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+            img { max-width: 300px; height: 200px; object-fit: cover; margin: 10px 0; }
+            .url { background: #f5f5f5; padding: 8px; font-family: monospace; word-break: break-all; }
         </style>
     </head>
     <body>
-        <h1>Image Test</h1>
+        <h1>🍽️ Database Images Test</h1>
+    `;
+
+    restaurants.forEach(restaurant => {
+      html += `
+        <div class="restaurant">
+          <h3>${restaurant.name}</h3>
+          <div class="url">${restaurant.heroImageUrl}</div>
+          <img src="${restaurant.heroImageUrl}" alt="${restaurant.name}" 
+               onload="console.log('✅ Loaded: ${restaurant.name}')"
+               onerror="console.log('❌ Failed: ${restaurant.name}', this.src)" />
+        </div>
+      `;
+    });
+
+    html += `
+    </body>
+    </html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
+  } catch (error) {
+    console.error('Database test error:', error);
+    res.status(500).json({ error: 'Database test failed' });
+  }
+});
+
+                font-family: monospace;
+                border-radius: 4px;
+                margin: 10px 0;
+            }
+            .status {
+                padding: 10px;
+                margin: 10px 0;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+            .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+            .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        </style>
+    </head>
+    <body>
+        <h1>🖼️ Enhanced Image Test - Object Storage Debug</h1>
 
         <div class="test">
             <h2>Test 1: Direct Object Storage URL</h2>
-            <p>URL: https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media</p>
-            <img src="https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media" 
-                 onload="console.log('Direct URL loaded')" 
-                 onerror="console.log('Direct URL failed')" />
+            <div class="url">https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media</div>
+            <div id="status1" class="status info">Loading...</div>
+            <img id="img1" src="https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media" 
+                 onload="showSuccess('status1', 'Direct URL loaded successfully!')" 
+                 onerror="showError('status1', 'Direct URL failed to load')" />
         </div>
 
         <div class="test">
             <h2>Test 2: Via API Proxy</h2>
-            <p>URL: /api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg</p>
-            <img src="/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg" 
-                 onload="console.log('Proxy URL loaded')" 
-                 onerror="console.log('Proxy URL failed')" />
+            <div class="url">/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg</div>
+            <div id="status2" class="status info">Loading...</div>
+            <img id="img2" src="/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg" 
+                 onload="showSuccess('status2', 'Proxy URL loaded successfully!')" 
+                 onerror="showError('status2', 'Proxy URL failed to load')" />
         </div>
 
         <div class="test">
-            <h2>Server Info</h2>
-            <p>Port: ${PORT}</p>
-            <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
-            <p>REPL_ID: ${process.env.REPL_ID || 'not set'}</p>
+            <h2>Test 3: Alternative Direct Format</h2>
+            <div class="url">https://replit.com/object-storage/storage/v1/b/replit-objstore-${process.env.REPL_ID || 'a5596f5b-0e64-44d2-9f7e-86e86ceed4ae'}/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media</div>
+            <div id="status3" class="status info">Loading...</div>
+            <img id="img3" src="https://replit.com/object-storage/storage/v1/b/replit-objstore-${process.env.REPL_ID || 'a5596f5b-0e64-44d2-9f7e-86e86ceed4ae'}/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media" 
+                 onload="showSuccess('status3', 'Alternative direct URL loaded successfully!')" 
+                 onerror="showError('status3', 'Alternative direct URL failed to load')" />
         </div>
+
+        <div class="test">
+            <h2>📋 Server Info</h2>
+            <div class="info">
+                <p><strong>Port:</strong> ${PORT}</p>
+                <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+                <p><strong>REPL_ID:</strong> ${process.env.REPL_ID || 'not set'}</p>
+                <p><strong>Current URL:</strong> ${req.get('host')}</p>
+            </div>
+        </div>
+
+        <script>
+            function showSuccess(statusId, message) {
+                const status = document.getElementById(statusId);
+                status.className = 'status success';
+                status.textContent = '✅ ' + message;
+                console.log('✅', message);
+            }
+
+            function showError(statusId, message) {
+                const status = document.getElementById(statusId);
+                status.className = 'status error';
+                status.textContent = '❌ ' + message;
+                console.error('❌', message);
+            }
+
+            // Test fetch API as well
+            setTimeout(() => {
+                console.log('🔍 Testing fetch API for proxy endpoint...');
+                fetch('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')
+                    .then(response => {
+                        console.log('Fetch response status:', response.status);
+                        console.log('Fetch response headers:', [...response.headers.entries()]);
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        console.log('Fetch successful, blob size:', blob.size, 'type:', blob.type);
+                    })
+                    .catch(error => {
+                        console.error('Fetch failed:', error);
+                    });
+            }, 2000);
+        </script>
     </body>
     </html>
   `);
@@ -210,30 +372,42 @@ app.get('/api/images/*', async (req, res) => {
 
     console.log('Cleaned image path:', imagePath);
 
-    // Try multiple bucket IDs for compatibility (current bucket first)
-    const bucketIds = [
-      process.env.REPL_ID || '0a421abc-4a91-43c3-a052-c47f2fa08f7a', // Current bucket (priority)
-      'a5596f5b-0e64-44d2-9f7e-86e86ceed4ae'  // Original bucket (fallback)
+    // Try multiple storage URL formats
+    const storageUrls = [
+      // Direct Object Storage format with current bucket
+      `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(imagePath)}?alt=media`,
+      // Direct Object Storage format with REPL_ID bucket
+      `https://replit.com/object-storage/storage/v1/b/replit-objstore-${process.env.REPL_ID}/o/${encodeURIComponent(imagePath)}?alt=media`,
+      // Legacy storage format with current bucket
+      `https://storage.replit.com/0a421abc-4a91-43c3-a052-c47f2fa08f7a/${imagePath}`,
+      // Legacy storage format with REPL_ID bucket
+      `https://storage.replit.com/${process.env.REPL_ID}/${imagePath}`,
+      // Alternative bucket format
+      `https://storage.replit.com/a5596f5b-0e64-44d2-9f7e-86e86ceed4ae/${imagePath}`
     ];
 
     let response = null;
-    let storageUrl = '';
+    let usedUrl = '';
 
-    for (const bucketId of bucketIds) {
-      storageUrl = `https://storage.replit.com/${bucketId}/${imagePath}`;
+    for (const storageUrl of storageUrls) {
       console.log('Attempting to fetch from:', storageUrl);
-      response = await fetch(storageUrl);
-      if (response.ok) {
-        console.log('✅ Successfully fetched image from storage');
-        break;
-      } else {
-        console.error(`Failed to fetch image from ${storageUrl}: ${response.status} ${response.statusText}`);
-        response = null; // Reset response if not ok
+      try {
+        response = await fetch(storageUrl);
+        if (response.ok) {
+          usedUrl = storageUrl;
+          console.log('✅ Successfully fetched image from:', storageUrl);
+          break;
+        } else {
+          console.error(`❌ Failed to fetch from ${storageUrl}: ${response.status} ${response.statusText}`);
+        }
+      } catch (err) {
+        console.error(`❌ Error fetching from ${storageUrl}:`, err.message);
       }
+      response = null; // Reset response if not ok
     }
 
     if (!response || !response.ok) {
-      console.error('Image not found in any bucket. Last attempted URL:', storageUrl);
+      console.error('Image not found in any storage location for path:', imagePath);
       return res.status(404).send('Image not found');
     }
 
@@ -241,6 +415,7 @@ app.get('/api/images/*', async (req, res) => {
     const contentType = response.headers.get('content-type') || 'image/jpeg';
 
     console.log('Content-Type:', contentType);
+    console.log('Successfully served image from:', usedUrl);
 
     // Set appropriate headers
     res.set({
