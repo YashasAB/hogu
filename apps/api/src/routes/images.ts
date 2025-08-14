@@ -43,7 +43,7 @@ router.get('/:restaurantId/:filename', async (req, res) => {
     
     res.set('Content-Type', contentType);
     res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-    res.send(Buffer.from(result.value));
+    res.send(result.value);
     
   } catch (error) {
     console.error('Error serving image:', error);
