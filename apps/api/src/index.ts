@@ -9,6 +9,7 @@ import reservationRoutes from "./routes/reservations";
 import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
 import multer from "multer"; // Import multer
+import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -223,10 +224,10 @@ app.get("/api/images/list", async (req, res) => {
 });
 
 // Upload endpoint for testing
-app.post("/api/upload", upload.single("image"), async (req, res) => {
+app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaurantRequest, res) => {
   try {
     const file = req.file;
-    const restaurantId = req.restaurantId;
+    const restaurantId = req.body.restaurantId; // Get from form data instead
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
