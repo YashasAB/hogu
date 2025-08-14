@@ -5,13 +5,15 @@ const ImageDisplay = () => {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Move these to component state so they're accessible in JSX
+  const replId = 'cme996hfm000bj4h1cu57rrca';
+  const filename = 'heroImage.jpg';
 
   useEffect(() => {
     const fetchImage = async () => {
       try {
-        // Use the API proxy endpoint we already have - split into replId and filename
-        const replId = 'cme996hfm000bj4h1cu57rrca';
-        const filename = 'heroImage.jpg';
+        // Use the API proxy endpoint we already have
         const response = await fetch(`/api/images/storage/${replId}/${filename}`);
         
         if (!response.ok) {
@@ -38,7 +40,7 @@ const ImageDisplay = () => {
         URL.revokeObjectURL(imageSrc);
       }
     };
-  }, []);
+  }, [replId, filename]);
 
   return (
     <div className="p-6">
