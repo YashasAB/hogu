@@ -154,8 +154,8 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           )}
 
           {/* File Upload */}
-          <div className="mb-4"></div>
-            <input
+          <div className="mb-4">
+            <input</div>
               type="file"
               accept="image/*"
               onChange={handlePhotoUpload}
