@@ -104,6 +104,37 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       return res.status(500).json({ error: 'Storage client not available' });
     }
 
+    // Check if restaurant already has an image and delete it
+    const existingRestaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { heroImageUrl: true }
+    });
+
+    if (existingRestaurant?.heroImageUrl) {
+      console.log(`Found existing hero image: ${existingRestaurant.heroImageUrl}`);
+      
+      // Extract the file path from the existing URL
+      // URLs are in format: /api/images/storage/{restaurantId}/heroImage.{ext}
+      const urlMatch = existingRestaurant.heroImageUrl.match(/\/api\/images\/storage\/(.+)/);
+      if (urlMatch) {
+        const existingFilePath = urlMatch[1];
+        console.log(`Attempting to delete existing file: ${existingFilePath}`);
+        
+        try {
+          const deleteResult = await storageClient.delete(existingFilePath);
+          if (deleteResult.ok) {
+            console.log(`✅ Successfully deleted existing hero image: ${existingFilePath}`);
+          } else {
+            console.warn(`⚠️ Failed to delete existing hero image: ${deleteResult.error}`);
+            // Don't fail the upload if deletion fails, just log the warning
+          }
+        } catch (deleteError) {
+          console.warn(`⚠️ Error deleting existing hero image: ${deleteError}`);
+          // Don't fail the upload if deletion fails, just log the warning
+        }
+      }
+    }
+
     // Upload the file to Replit Object Storage
     const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
     console.log(`Attempting to upload to filename: ${fileName}`);
