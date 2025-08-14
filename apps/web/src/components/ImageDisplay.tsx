@@ -9,9 +9,10 @@ const ImageDisplay = () => {
   useEffect(() => {
     const fetchImage = async () => {
       try {
-        // Use the API proxy endpoint we already have
-        const imagePath = 'cme996hfm000bj4h1cu57rrca/heroImage.jpg';
-        const response = await fetch(`/api/images/storage/${imagePath}`);
+        // Use the API proxy endpoint we already have - split into replId and filename
+        const replId = 'cme996hfm000bj4h1cu57rrca';
+        const filename = 'heroImage.jpg';
+        const response = await fetch(`/api/images/storage/${replId}/${filename}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch image: ${response.statusText}`);
@@ -52,8 +53,8 @@ const ImageDisplay = () => {
             className="max-w-full w-full h-80 object-cover border-2 border-gray-300 rounded-lg shadow-lg"
           />
           <div className="text-sm text-gray-500">
-            <p>Image path: cme996hfm000bj4h1cu57rrca/heroImage.jpg</p>
-            <p>Loaded via API proxy endpoint</p>
+            <p>Image path: {replId}/{filename}</p>
+            <p>Loaded via API proxy endpoint: /api/images/storage/{replId}/{filename}</p>
           </div>
         </div>
       )}
