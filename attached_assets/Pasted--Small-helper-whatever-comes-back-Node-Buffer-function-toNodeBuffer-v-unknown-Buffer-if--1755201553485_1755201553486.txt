@@ -1,0 +1,135 @@
+/ Small helper: whatever comes back -> Node Buffer
+function toNodeBuffer(v: unknown): Buffer {
+  if (Buffer.isBuffer(v)) return v;
+  if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+  if (Array.isArray(v) && v[0]) {
+    const first = (v as any[])[0];
+    if (Buffer.isBuffer(first)) return first;
+    if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+  }
+  throw new Error("Unexpected storage value type");
+}
+
+// Minimal signature sniff (fallback to extension)
+function detectContentType(buf: Buffer, filename: string): string {
+  const hex4 = buf.subarray(0, 4).toString("hex");
+  if (hex4.startsWith("ffd8")) return "image/jpeg";
+  if (hex4 === "89504e47") return "image/png";
+  if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+  if (hex4.startsWith("4749")) return "image/gif";
+  if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
+  const ext = filename.split(".").pop()?.toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "gif") return "image/gif";
+  if (ext === "webp") return "image/webp";
+  return "application/octet-stream";
+}
+
+// Image proxy route
+app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
+  try {
+    const { tenantId, filename } = req.params;
+    const key = `${tenantId}/${filename}`;
+
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    const out: any = await storage.downloadAsBytes(key);
+    if (!out?.ok || !out?.value) {
+      return res.status(404).json({ error: "Image not found", key, details: out?.error });
+    }
+
+    // Ensure we have raw binary
+    const buf = toNodeBuffer(out.value);
+
+    // Pick the correct image/* (NO charset)
+    const ct = detectContentType(buf, filename);
+
+    // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
+    res.setHeader("Content-Type", ct);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    // Ensure no conflicting header sneaks in from global CORS middleware:
+    res.removeHeader?.("Access-Control-Allow-Credentials");
+
+    // Let Express compute Content-Length; just send bytes
+    return res.end(buf);
+  } catch (err) {
+    console.error("image proxy error:", err);
+    return res.status(500).json({ error: "Error loading image" });
+  }
+});
+
+// (Optional) HEAD – nice for CDNs/proxies
+app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
+  // You can reuse logic above to set headers without sending the body,
+  // or simply 200 with cache headers if you don't need exact length.
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.sendStatus(200);
+});
+
+// Image list route
+app.get("/api/images/list", async (req, res) => {
+  try {
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // List all objects in the bucket
+    const { ok, value, error } = await storage.list();
+
+    if (!ok) {
+      return res.status(500).json({ error: "Failed to list images", details: error });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const images = value.map((item: any) => ({
+      key: item.key,
+      size: item.size,
+      lastModified: item.lastModified,
+      publicUrl: `${baseUrl}/api/images/storage/${item.key}`
+    }));
+
+    res.json({
+      totalImages: images.length,
+      images: images
+    });
+  } catch (error) {
+    console.error("Error listing images:", error);
+    res.status(500).json({ error: "Failed to list images" });
+  }
+});
+
+// Upload endpoint for testing
+app.post("/api/upload", upload.single("image"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    console.log(`Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
+
+    // Generate a unique filename
+    const timestamp = Date.now();
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const filename = `test-${timestamp}.${ext}`;
+    const objectKey = `test-uploads/${filename}`;
+
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // Upload to storage
+    const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
+
+    if (!uploadResult.ok) {
+      console.error("Storage upload failed:", uploadResult.error);
+      return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
+    }
+
+    // Return the proxy URL
+    const imageUrl = `/api/images/storage/${objectKey}`;
+    console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
+
+    res.json({
