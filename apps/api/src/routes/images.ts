@@ -69,8 +69,15 @@ router.get('/*', async (req, res) => {
         break;
     }
     
+    console.log(`Setting content type: ${contentType} for extension: ${extension}`);
+    console.log(`Image data size: ${result.value.length} bytes`);
+    
     res.set('Content-Type', contentType);
     res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    res.set('Content-Length', result.value.length.toString());
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
     res.send(result.value);
     
   } catch (error) {

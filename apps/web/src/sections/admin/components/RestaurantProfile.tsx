@@ -149,7 +149,19 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                   console.error('Image failed to load:', e.currentTarget.src);
                   console.error('Photo preview:', photoPreview);
                   console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
-                  // Don't clear the preview, just log the error
+                  console.error('Image element:', e.currentTarget);
+                  // Try to fetch the image URL directly to see what's happening
+                  fetch(e.currentTarget.src)
+                    .then(response => {
+                      console.log('Direct fetch response:', response.status, response.headers.get('content-type'));
+                      return response.blob();
+                    })
+                    .then(blob => {
+                      console.log('Blob size:', blob.size, 'Type:', blob.type);
+                    })
+                    .catch(fetchError => {
+                      console.error('Direct fetch failed:', fetchError);
+                    });
                 }}
                 onLoad={() => {
                   console.log('Image loaded successfully:', photoPreview || profileData.heroImageUrl);
