@@ -141,7 +141,7 @@ app.get('/api/images/storage/:replId/:filename', async (req, res) => {
           console.log(`❌ Failed with ${response.status}: ${storageUrl}`);
         }
       } catch (err) {
-        console.log(`❌ Error with: ${storageUrl}`, err.message);
+        console.log(`❌ Error with: ${storageUrl}`, (err as Error).message);
       }
     }
 
