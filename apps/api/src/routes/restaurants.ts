@@ -30,6 +30,7 @@ router.get('/', async (_req, res) => {
       category: restaurant.category,
       hot: restaurant.isHot,
       image: restaurant.heroImageUrl || '/api/placeholder/200/150',
+      heroImageUrl: restaurant.heroImageUrl,
       instagramUrl: restaurant.instagramUrl,
       website: restaurant.website,
       cuisineTags: restaurant.cuisineTags.map(ct => ct.cuisineTag.name),
@@ -79,8 +80,8 @@ router.get('/:slug', async (req, res) => {
       category: restaurant.category,
       hot: restaurant.isHot,
       image: restaurant.heroImageUrl || '/api/placeholder/200/150',
-      instagramUrl: restaurant.instagramUrl,
       heroImageUrl: restaurant.heroImageUrl,
+      instagramUrl: restaurant.instagramUrl,
       website: restaurant.website,
       cuisineTags: restaurant.cuisineTags.map(ct => ct.cuisineTag.name),
     };

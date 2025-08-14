@@ -145,6 +145,9 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 src={photoPreview || profileData.heroImageUrl}
                 alt="Restaurant hero"
                 className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                onError={(e) => {
+                  console.error('Image failed to load:', e.currentTarget.src);
+                }}
               />
               {photoPreview && (
                 <p className="text-sm text-green-400 mt-2">
