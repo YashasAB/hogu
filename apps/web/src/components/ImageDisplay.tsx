@@ -13,20 +13,33 @@ const ImageDisplay = () => {
   useEffect(() => {
     const fetchImage = async () => {
       try {
+        console.log(`🖼️ Fetching image: /api/images/storage/${replId}/${filename}`);
+        
         // Use the API proxy endpoint we already have
         const response = await fetch(`/api/images/storage/${replId}/${filename}`);
         
+        console.log(`📡 Response status: ${response.status}`);
+        console.log(`📡 Response headers:`, response.headers);
+        
         if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error(`❌ Response error:`, errorText);
+          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
+        console.log(`📦 Response content-type: ${response.headers.get('content-type')}`);
+        
         // Convert response to blob and create object URL
         const blob = await response.blob();
+        console.log(`🎯 Blob created, size: ${blob.size} bytes, type: ${blob.type}`);
+        
         const objectUrl = URL.createObjectURL(blob);
+        console.log(`🔗 Object URL created: ${objectUrl}`);
+        
         setImageSrc(objectUrl);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching image:', err);
+        console.error('❌ Error fetching image:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setLoading(false);
       }

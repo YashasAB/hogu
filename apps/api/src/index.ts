@@ -118,6 +118,8 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     console.log(`=== IMAGE PROXY REQUEST ===`);
     console.log(`Request path: ${req.path}`);
     console.log(`Downloading file: ${filePath}`);
+    console.log(`User Agent: ${req.get('User-Agent')}`);
+    console.log(`Origin: ${req.get('Origin')}`);
 
     // Import the Object Storage client
     const { Client } = await import("@replit/object-storage");
@@ -132,10 +134,11 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
 
     if (!ok) {
       console.error(`❌ Failed to download image: ${filePath}`, error);
-      return res.status(404).send("Image not found");
+      return res.status(404).json({ error: "Image not found", path: filePath, details: error });
     }
 
     console.log(`✅ Successfully downloaded image: ${filePath}`);
+    console.log(`Image size: ${bytesValue?.length || 0} bytes`);
 
     // Determine content type based on file extension
     const ext = filename.split(".").pop()?.toLowerCase();
@@ -160,18 +163,23 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
         break;
     }
 
-    // Set appropriate headers
+    console.log(`Content-Type: ${contentType}`);
+
+    // Set appropriate headers with more permissive CORS
     res.set({
       "Content-Type": contentType,
+      "Content-Length": bytesValue.length.toString(),
       "Cache-Control": "public, max-age=31536000", // Cache for 1 year
       "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Cache-Control",
     });
 
-    // Send the image bytes
-    res.send(bytesValue);
+    // Send the image bytes as a Buffer
+    res.send(Buffer.from(bytesValue));
   } catch (error) {
     console.error("Error downloading image:", error);
-    res.status(500).send("Error loading image");
+    res.status(500).json({ error: "Error loading image", details: error.message });
   }
 });
 
