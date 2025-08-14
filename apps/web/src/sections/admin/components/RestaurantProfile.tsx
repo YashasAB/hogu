@@ -141,37 +141,65 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           {/* Current/Preview Image */}
           {(photoPreview || profileData.heroImageUrl) && (
             <div className="mb-4">
-              <img
-                src={photoPreview || profileData.heroImageUrl}
-                alt="Restaurant hero"
-                className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
-                onError={(e) => {
-                  console.error('Image failed to load:', e.currentTarget.src);
-                  console.error('Photo preview:', photoPreview);
-                  console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
-                  console.error('Image element:', e.currentTarget);
-                  // Try to fetch the image URL directly to see what's happening
-                  fetch(e.currentTarget.src)
-                    .then(response => {
-                      console.log('Direct fetch response:', response.status, response.headers.get('content-type'));
-                      return response.blob();
-                    })
-                    .then(blob => {
-                      console.log('Blob size:', blob.size, 'Type:', blob.type);
-                    })
-                    .catch(fetchError => {
-                      console.error('Direct fetch failed:', fetchError);
+              <div className="relative">
+                <img
+                  src={photoPreview || profileData.heroImageUrl}
+                  alt="Restaurant hero"
+                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600 block"
+                  style={{ display: 'block', maxWidth: '100%', height: '192px' }}
+                  onError={(e) => {
+                    console.error('Image failed to load:', e.currentTarget.src);
+                    console.error('Photo preview:', photoPreview);
+                    console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
+                    console.error('Image element dimensions:', {
+                      width: e.currentTarget.width,
+                      height: e.currentTarget.height,
+                      naturalWidth: e.currentTarget.naturalWidth,
+                      naturalHeight: e.currentTarget.naturalHeight,
+                      complete: e.currentTarget.complete
                     });
-                }}
-                onLoad={() => {
-                  console.log('Image loaded successfully:', photoPreview || profileData.heroImageUrl);
-                }}
-              />
+                    
+                    // Show error state
+                    e.currentTarget.style.display = 'none';
+                    const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (errorDiv && errorDiv.classList.contains('error-placeholder')) {
+                      errorDiv.style.display = 'flex';
+                    }
+                  }}
+                  onLoad={(e) => {
+                    console.log('Image loaded successfully:', photoPreview || profileData.heroImageUrl);
+                    console.log('Image dimensions:', {
+                      width: e.currentTarget.width,
+                      height: e.currentTarget.height,
+                      naturalWidth: e.currentTarget.naturalWidth,
+                      naturalHeight: e.currentTarget.naturalHeight
+                    });
+                    
+                    // Hide error state if shown
+                    const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (errorDiv && errorDiv.classList.contains('error-placeholder')) {
+                      errorDiv.style.display = 'none';
+                    }
+                  }}
+                />
+                <div 
+                  className="error-placeholder w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400"
+                  style={{ display: 'none' }}
+                >
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📷</div>
+                    <div className="text-sm">Image failed to load</div>
+                  </div>
+                </div>
+              </div>
               {photoPreview && (
                 <p className="text-sm text-green-400 mt-2">
                   {photoPreview.startsWith('https://') ? '✓ Image uploaded successfully - click Save to confirm' : 'Preview - click Save to confirm'}
                 </p>
               )}
+              <div className="mt-2 text-xs text-slate-400 break-all">
+                Current URL: {photoPreview || profileData.heroImageUrl}
+              </div>
             </div>
           )}
 

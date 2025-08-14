@@ -266,21 +266,36 @@ export default function RestaurantDetail() {
           <img
             src={restaurant.heroImageUrl || '/api/placeholder/400/300'}
             alt={restaurant.name}
-            className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
+            className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover block"
+            style={{ display: 'block', width: '100%', objectFit: 'cover' }}
             loading="lazy"
             onError={(e) => {
               console.error('=== HERO IMAGE LOAD ERROR ===');
               console.error('Failed to load image URL:', e.currentTarget.src);
               console.error('heroImageUrl from data:', restaurant.heroImageUrl);
+              console.error('Image element state:', {
+                width: e.currentTarget.width,
+                height: e.currentTarget.height,
+                naturalWidth: e.currentTarget.naturalWidth,
+                naturalHeight: e.currentTarget.naturalHeight,
+                complete: e.currentTarget.complete,
+                currentSrc: e.currentTarget.currentSrc
+              });
               console.error('==============================');
               // Fallback to placeholder if hero image fails
               if (e.currentTarget.src !== '/api/placeholder/400/300') {
                 e.currentTarget.src = '/api/placeholder/400/300';
               }
             }}
-            onLoad={() => {
+            onLoad={(e) => {
               console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
               console.log('Loaded image URL:', restaurant.heroImageUrl);
+              console.log('Image dimensions:', {
+                width: e.currentTarget.width,
+                height: e.currentTarget.height,
+                naturalWidth: e.currentTarget.naturalWidth,
+                naturalHeight: e.currentTarget.naturalHeight
+              });
               console.log('======================================');
             }}
           />

@@ -236,4 +236,16 @@
   .hero-overlay {
     background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
   }
+
+  /* Ensure images display properly */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  img[src^="/api/images/"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 }
