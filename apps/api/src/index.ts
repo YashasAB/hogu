@@ -118,9 +118,13 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    const result = await storage.downloadAsBytes(key);
+    // Type-safe approach - no casting needed
+    type DownloadBytesOk = { ok: true; value: Uint8Array };
+    type DownloadBytesErr = { ok: false; error: unknown };
+    
+    const result = await storage.downloadAsBytes(key) as DownloadBytesOk | DownloadBytesErr;
 
-    if (!result.ok || !result.value) {
+    if (!result.ok) {
       console.error("❌ DOWNLOAD FAILED:", result.error);
       return res.status(404).json({
         error: "Image not found",
@@ -130,8 +134,8 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       });
     }
 
-    // value is already Uint8Array
-    const u8 = result.value as Uint8Array;
+    // Already a Uint8Array, no casting needed
+    const u8 = result.value;
 
     // Safest Buffer construction (no TS overload ambiguity)
     const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
