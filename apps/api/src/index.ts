@@ -417,8 +417,8 @@ app.get("/test-db-images", async (req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.send(html);
   } catch (error) {
-    console.error("Database test error:", error);
-    res.status(500).json({ error: "Database test failed" });
+    console.error('Database test error:', error);
+    res.status(500).json({ error: 'Database test failed' });
   }
 });
 
