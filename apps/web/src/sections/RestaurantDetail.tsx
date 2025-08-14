@@ -266,6 +266,14 @@ export default function RestaurantDetail() {
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             loading="lazy"
+            onError={(e) => {
+              console.error('Hero image failed to load:', e.currentTarget.src);
+              console.error('Restaurant data:', restaurant);
+              // You could set a fallback image here if needed
+            }}
+            onLoad={() => {
+              console.log('Hero image loaded successfully:', restaurant.heroImageUrl || restaurant.image);
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">

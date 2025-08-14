@@ -101,8 +101,8 @@ app.get('/ready', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/images', imagesRouter);

@@ -9,25 +9,38 @@ const storageClient = new Client();
 // Serve images from Object Storage
 router.get('/*', async (req, res) => {
   try {
-    const path = req.url.slice(1); // Get the full path after /api/images/ (remove leading slash)
+    // Extract the path after /api/images/
+    let imagePath = req.params['0'] || req.url.slice(1);
     
-    console.log(`Attempting to serve image: ${path}`);
+    console.log(`Attempting to serve image: ${imagePath}`);
+    console.log(`Full request URL: ${req.url}`);
+    console.log(`Request params:`, req.params);
     
     // If the path starts with https://, it's already a full URL - redirect to it
-    if (path.startsWith('https://')) {
-      return res.redirect(path);
+    if (imagePath.startsWith('https://')) {
+      return res.redirect(imagePath);
     }
     
-    // Otherwise, try to serve from Object Storage
-    const result = await storageClient.downloadAsBytes(path);
+    // Clean up the path - remove any leading slashes
+    imagePath = imagePath.replace(/^\/+/, '');
+    
+    if (!imagePath) {
+      return res.status(400).json({ error: 'No image path provided' });
+    }
+    
+    console.log(`Cleaned image path: ${imagePath}`);
+    
+    // Try to serve from Object Storage
+    const result = await storageClient.downloadAsBytes(imagePath);
     
     if (!result.ok) {
-      console.error('Failed to download image:', result.error);
+      console.error('Failed to download image from storage:', result.error);
+      console.error('Attempted path:', imagePath);
       return res.status(404).json({ error: 'Image not found' });
     }
     
     // Set appropriate content type based on file extension
-    const extension = path.split('.').pop()?.toLowerCase();
+    const extension = imagePath.split('.').pop()?.toLowerCase();
     let contentType = 'image/jpeg'; // default
     
     switch (extension) {

@@ -147,7 +147,12 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                 onError={(e) => {
                   console.error('Image failed to load:', e.currentTarget.src);
+                  console.error('Photo preview:', photoPreview);
+                  console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
                   // Don't clear the preview, just log the error
+                }}
+                onLoad={() => {
+                  console.log('Image loaded successfully:', photoPreview || profileData.heroImageUrl);
                 }}
               />
               {photoPreview && (
