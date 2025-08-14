@@ -355,6 +355,14 @@ export default function RestaurantAdminPanel() {
     try {
       const updatedRestaurant = await api.updateRestaurant(profileData);
       setRestaurant(updatedRestaurant);
+      
+      // Clear any preview since we've saved
+      const profileComponent = document.querySelector('[data-component="restaurant-profile"]');
+      if (profileComponent) {
+        // Trigger a re-render to clear preview
+        window.dispatchEvent(new CustomEvent('profile-saved'));
+      }
+      
       alert("Profile updated successfully!");
       
       // Redirect to dashboard after a brief delay
