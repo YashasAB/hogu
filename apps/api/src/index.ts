@@ -117,37 +117,32 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
+// Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v: unknown): Buffer {
-  if (v == null) throw new Error("Empty storage value");
-
-  // Already Buffer
   if (Buffer.isBuffer(v)) return v;
-
-  // Some SDKs wrap as [Buffer] or [Uint8Array]
-  if (Array.isArray(v)) {
-    const first = (v as unknown[])[0];
-    if (Buffer.isBuffer(first)) return first;
-    if (first instanceof Uint8Array) {
-      return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
-    }
-    throw new Error(`Unexpected array element type: ${Object.prototype.toString.call(first)}`);
-  }
-
-  // Typed arrays / ArrayBuffer
   if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
-  if (v instanceof ArrayBuffer) return Buffer.from(v);
-
-  // Strings (base64 or data URL)
-  if (typeof v === "string") {
-    if (v.startsWith("data:image/")) {
-      const base64 = v.split(",")[1] ?? "";
-      return Buffer.from(base64.replace(/\s+/g, ""), "base64");
-    }
-    try { return Buffer.from(v.replace(/\s+/g, ""), "base64"); }
-    catch { return Buffer.from(v, "utf8"); }
+  if (Array.isArray(v) && v[0]) {
+    const first = (v as any[])[0];
+    if (Buffer.isBuffer(first)) return first;
+    if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
   }
+  throw new Error("Unexpected storage value type");
+}
 
-  throw new Error(`Unsupported storage value type: ${Object.prototype.toString.call(v)}`);
+// Minimal signature sniff (fallback to extension)
+function detectContentType(buf: Buffer, filename: string): string {
+  const hex4 = buf.subarray(0, 4).toString("hex");
+  if (hex4.startsWith("ffd8")) return "image/jpeg";
+  if (hex4 === "89504e47") return "image/png";
+  if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+  if (hex4.startsWith("4749")) return "image/gif";
+  if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
+  const ext = filename.split(".").pop()?.toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "gif") return "image/gif";
+  if (ext === "webp") return "image/webp";
+  return "application/octet-stream";
 }
 
 app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
@@ -158,52 +153,28 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    const result = await storage.downloadAsBytes(key);
-    if (!result?.ok) {
-      return res.status(404).json({ error: "Image not found", path: key, details: result?.error });
+    const out: any = await storage.downloadAsBytes(key);
+    if (!out?.ok || !out?.value) {
+      return res.status(404).json({ error: "Image not found", key, details: out?.error });
     }
 
-    // Convert whatever came back → Buffer (handles Buffer, [Buffer], Uint8Array, etc.)
-    let buf = toNodeBuffer((result as any).value);
+    // Ensure we have raw binary
+    const buf = toNodeBuffer(out.value);
 
-    // If someone ever uploaded base64/data-URL text by mistake, decode it
-    const head = buf.subarray(0, 128).toString("utf8");
-    if (head.startsWith("data:image/")) {
-      const base64 = buf.toString("utf8").split(",")[1] ?? "";
-      buf = Buffer.from(base64.replace(/\s+/g, ""), "base64");
-    } else if (/^[A-Za-z0-9+/=\r\n]{24,}$/.test(head)) {
-      try {
-        const dec = Buffer.from(buf.toString("utf8").replace(/\s+/g, ""), "base64");
-        if (dec.length) buf = dec;
-      } catch {}
-    }
+    // Pick the correct image/* (NO charset)
+    const ct = detectContentType(buf, filename);
 
-    // Set a correct mime (sniff first, then fall back to extension)
-    const sig4 = buf.subarray(0, 4).toString("hex");
-    let contentType = "application/octet-stream";
-    if (sig4.startsWith("ffd8")) contentType = "image/jpeg";
-    else if (sig4 === "89504e47") contentType = "image/png";
-    else if (buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP") contentType = "image/webp";
-    else if (sig4.startsWith("4749")) contentType = "image/gif";
-    else if (filename.toLowerCase().endsWith(".svg")) contentType = "image/svg+xml";
-    else {
-      const ext = filename.split(".").pop()?.toLowerCase();
-      if (ext === "jpg" || ext === "jpeg") contentType = "image/jpeg";
-      else if (ext === "png") contentType = "image/png";
-      else if (ext === "gif") contentType = "image/gif";
-      else if (ext === "webp") contentType = "image/webp";
-    }
-
-    res.set({
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000, immutable",
-      "Access-Control-Allow-Origin": "*",
-    });
+    // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
+    res.setHeader("Content-Type", ct);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    // Ensure no conflicting header sneaks in from global CORS middleware:
+    res.removeHeader?.("Access-Control-Allow-Credentials");
 
     // Let Express compute Content-Length; just send bytes
     return res.end(buf);
   } catch (err) {
-    console.error("💥 image proxy error:", err);
+    console.error("image proxy error:", err);
     return res.status(500).json({ error: "Error loading image" });
   }
 });
@@ -256,6 +227,17 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
 
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
+
+
+// (Optional) HEAD – nice for CDNs/proxies
+app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
+  // You can reuse logic above to set headers without sending the body,
+  // or simply 200 with cache headers if you don't need exact length.
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.sendStatus(200);
+});
+
 
     // Upload to storage
     const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
