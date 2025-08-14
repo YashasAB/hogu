@@ -79,6 +79,23 @@ router.put('/restaurant', authenticateRestaurant, async (req: AuthenticatedResta
   }
 });
 
+// Helper to extract the object-storage key from any previously stored URL
+function extractObjectKeyFromUrl(url: string): string | null {
+  // Your proxy URL: /api/images/storage/<restaurantId>/<file>
+  const m1 = url.match(/\/api\/images\/storage\/([^?]+)/);
+  if (m1) return decodeURIComponent(m1[1]);
+
+  // GCS-like path: .../o/<encodedKey>?alt=media
+  const m2 = url.match(/\/o\/([^?]+)/);
+  if (m2) return decodeURIComponent(m2[1]);
+
+  // Legacy: storage.replit.com/<REPL_ID>/<key>
+  const m3 = url.match(/storage\.replit\.com\/[^/]+\/(.+)/);
+  if (m3) return decodeURIComponent(m3[1]);
+
+  return null;
+}
+
 // Upload hero image for a restaurant
 router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('heroImage') as any), async (req: AuthenticatedRestaurantRequest, res: Response) => {
   try {
@@ -89,145 +106,75 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    // Accept only images
+    if (!file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: 'Only image uploads are allowed' });
+    }
+
     console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
     console.log(`File details - name: ${file.originalname}, size: ${file.size}, mimetype: ${file.mimetype}`);
 
-    // Check if REPL_ID is available
-    if (!process.env.REPL_ID) {
-      console.error('REPL_ID environment variable is not set');
-      return res.status(500).json({ error: 'Storage configuration missing - REPL_ID not found' });
-    }
+    // Normalize extension from the MIME type first; fall back to original name
+    const extFromName = (file.originalname.split('.').pop() || '').toLowerCase();
+    const ext = extFromName || 'jpg';
 
-    // Verify storage client is initialized
-    if (!storageClient) {
-      console.error('Storage client is not initialized');
-      return res.status(500).json({ error: 'Storage client not available' });
-    }
+    // Final key in object storage
+    const objectKey = `${restaurantId}/heroImage.${ext}`;
 
-    // Check if restaurant already has an image and delete it
-    const existingRestaurant = await prisma.restaurant.findUnique({
+    // Ensure we have a client each request (avoids "client not initialized")
+    const { Client } = await import('@replit/object-storage');
+    const storageClient = new Client();
+
+    // Delete any existing image first (regardless of URL format previously stored)
+    const existing = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
-      select: { heroImageUrl: true }
+      select: { heroImageUrl: true },
     });
 
-    if (existingRestaurant?.heroImageUrl) {
-      console.log(`Found existing hero image: ${existingRestaurant.heroImageUrl}`);
-      
-      // Extract the file path from the existing URL
-      // URLs are in format: /api/images/storage/{restaurantId}/heroImage.{ext}
-      const urlMatch = existingRestaurant.heroImageUrl.match(/\/api\/images\/storage\/(.+)/);
-      if (urlMatch) {
-        const existingFilePath = urlMatch[1];
-        console.log(`Attempting to delete existing file: ${existingFilePath}`);
-        
+    if (existing?.heroImageUrl) {
+      const oldKey = extractObjectKeyFromUrl(existing.heroImageUrl);
+      if (oldKey) {
         try {
-          const deleteResult = await storageClient.delete(existingFilePath);
-          if (deleteResult.ok) {
-            console.log(`✅ Successfully deleted existing hero image: ${existingFilePath}`);
+          const del = await storageClient.delete(oldKey);
+          if (!del.ok) {
+            console.warn('⚠️ Failed to delete old hero image:', del.error);
           } else {
-            console.warn(`⚠️ Failed to delete existing hero image: ${deleteResult.error}`);
-            // Don't fail the upload if deletion fails, just log the warning
+            console.log('✅ Deleted old hero image:', oldKey);
           }
-        } catch (deleteError) {
-          console.warn(`⚠️ Error deleting existing hero image: ${deleteError}`);
-          // Don't fail the upload if deletion fails, just log the warning
+        } catch (e) {
+          console.warn('⚠️ Error deleting old hero image:', e);
         }
       }
     }
 
-    // Upload the file to Replit Object Storage
-    const fileExtension = file.originalname.split('.').pop() || 'jpg';
-    const fileName = `${restaurantId}/heroImage.${fileExtension}`;
-    console.log(`Attempting to upload to filename: ${fileName}`);
+    // --- Upload RAW BYTES (not text) ---
+    // multer's memory storage gives a Node Buffer (a Uint8Array). Convert explicitly to Uint8Array.
+    const u8 = new Uint8Array(file.buffer);
 
-    // Debug environment variables
-    console.log('Environment debug:', {
-      REPL_ID: process.env.REPL_ID,
-      nodeEnv: process.env.NODE_ENV,
-      replUser: process.env.REPL_USER,
-      replSlug: process.env.REPL_SLUG
+    const upload = await storageClient.uploadFromBytes(objectKey, u8);
+
+    if (!upload.ok) {
+      const msg = (upload as any).error?.message || JSON.stringify(upload.error);
+      return res.status(500).json({ error: `Storage upload failed: ${msg}` });
+    }
+
+    // Store the canonical PROXY URL (your API will serve correct image bytes & headers)
+    const proxyUrl = `/api/images/storage/${restaurantId}/heroImage.${ext}`;
+
+    await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { heroImageUrl: proxyUrl },
     });
 
-    try {
-      console.log('Testing storage client connectivity...');
+    console.log(`✅ Hero image uploaded successfully for ${restaurantId}: ${proxyUrl}`);
 
-      // First test: Try to list files
-      try {
-        const listResult = await storageClient.list({ maxResults: 1 });
-        console.log('Storage list test result:', listResult.ok ? 'SUCCESS' : 'FAILED');
-        if (!listResult.ok) {
-          console.error('Storage list test failed:', JSON.stringify(listResult.error, null, 2));
-        }
-      } catch (listError) {
-        console.error('Storage list test threw error:', listError);
-      }
-
-      // Second test: Try a simple upload with minimal data
-      try {
-        const testBuffer = Buffer.from('test-content');
-        const testFileName = `test-${Date.now()}.txt`;
-        console.log('Attempting test upload with minimal buffer...');
-
-        const testUpload = await storageClient.uploadFromBytes(testFileName, testBuffer);
-        console.log('Test upload result:', JSON.stringify(testUpload, null, 2));
-
-        // Clean up test file if successful
-        if (testUpload.ok) {
-          try {
-            await storageClient.delete(testFileName);
-            console.log('Test file cleaned up successfully');
-          } catch (cleanupError) {
-            console.log('Test file cleanup failed (non-critical):', cleanupError);
-          }
-        }
-      } catch (testUploadError) {
-        console.error('Test upload threw error:', testUploadError);
-      }
-
-      console.log('Buffer details:', {
-        bufferExists: !!file.buffer,
-        bufferLength: file.buffer?.length,
-        bufferType: typeof file.buffer,
-        isBuffer: Buffer.isBuffer(file.buffer)
-      });
-
-      // Try the actual upload
-      console.log('Attempting actual file upload...');
-      const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
-      console.log('Upload result:', JSON.stringify(uploadResult, null, 2));
-
-      if (!uploadResult.ok) {
-        console.error('Upload failed with result:', JSON.stringify(uploadResult, null, 2));
-        const errorMessage = uploadResult.error?.message || JSON.stringify(uploadResult.error) || 'Unknown storage error';
-        throw new Error(`Storage upload failed: ${errorMessage}`);
-      }
-
-      // Construct the direct Replit Object Storage URL
-      const encodedFileName = encodeURIComponent(fileName);
-      const heroImageUrl = `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodedFileName}?alt=media`;
-      console.log(`File uploaded successfully, available at: ${heroImageUrl}`);
-
-      // Update the restaurant's heroImageUrl in the database
-      const updatedRestaurant = await prisma.restaurant.update({
-        where: { id: restaurantId },
-        data: { heroImageUrl },
-      });
-
-      console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
-      res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
-
-    } catch (storageError) {
-      console.error('Storage upload error details:', {
-        error: storageError,
-        message: storageError instanceof Error ? storageError.message : String(storageError),
-        stack: storageError instanceof Error ? storageError.stack : undefined
-      });
-      throw storageError;
-    }
-
-  } catch (error) {
-    console.error('Error uploading hero image:', error);
-    res.status(500).json({ error: 'Failed to upload hero image' });
+    return res.json({
+      message: 'Hero image uploaded successfully',
+      imageUrl: proxyUrl,
+    });
+  } catch (err) {
+    console.error('Error uploading hero image:', err);
+    return res.status(500).json({ error: 'Failed to upload hero image' });
   }
 });
 

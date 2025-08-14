@@ -29,6 +29,9 @@ testDatabaseConnection();
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
+// Trust proxy for proper request handling
+app.set('trust proxy', true);
+
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("PORT:", process.env.PORT);
@@ -186,8 +189,13 @@ app.get("/api/placeholder/:width/:height", (req, res) => {
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {
-  app.get("*", (req, res) => {
-    const webDistPath = path.join(__dirname, "../../web/dist");
+  const webDistPath = path.join(__dirname, "../../web/dist");
+  console.log("Serving static files from:", webDistPath);
+
+  app.use(express.static(webDistPath, { index: false }));
+
+  // Only catch non-API routes for SPA
+  app.get(/^\/(?!api\/).*/, (req, res) => {
     res.sendFile(path.join(webDistPath, "index.html"));
   });
 }
