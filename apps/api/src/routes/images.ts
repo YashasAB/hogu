@@ -31,6 +31,9 @@ router.get('/*', async (req, res) => {
     // Clean up the path - remove any leading slashes
     imagePath = imagePath.replace(/^\/+/, '');
     
+    // Remove 'storage/' prefix if it exists since files were uploaded without it
+    imagePath = imagePath.replace(/^storage\//, '');
+    
     if (!imagePath) {
       return res.status(400).json({ error: 'No image path provided' });
     }
