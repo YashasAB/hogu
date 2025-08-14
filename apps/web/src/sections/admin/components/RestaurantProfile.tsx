@@ -146,7 +146,14 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                   src={photoPreview || profileData.heroImageUrl}
                   alt="Restaurant hero"
                   className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600 block"
-                  style={{ display: 'block', maxWidth: '100%', height: '192px' }}
+                  style={{ 
+                    display: 'block', 
+                    maxWidth: '100%', 
+                    height: '192px',
+                    backgroundColor: '#f3f4f6',
+                    minHeight: '192px',
+                    width: '100%'
+                  }}
                   onError={(e) => {
                     console.error('Image failed to load:', e.currentTarget.src);
                     console.error('Photo preview:', photoPreview);
@@ -167,13 +174,18 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                     }
                   }}
                   onLoad={(e) => {
-                    console.log('Image loaded successfully:', photoPreview || profileData.heroImageUrl);
+                    console.log('=== ADMIN IMAGE LOADED ===');
+                    console.log('Image URL:', photoPreview || profileData.heroImageUrl);
                     console.log('Image dimensions:', {
                       width: e.currentTarget.width,
                       height: e.currentTarget.height,
                       naturalWidth: e.currentTarget.naturalWidth,
                       naturalHeight: e.currentTarget.naturalHeight
                     });
+                    console.log('Image element:', e.currentTarget);
+                    console.log('Image visibility:', window.getComputedStyle(e.currentTarget).visibility);
+                    console.log('Image opacity:', window.getComputedStyle(e.currentTarget).opacity);
+                    console.log('==========================');
                     
                     // Hide error state if shown
                     const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;

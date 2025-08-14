@@ -267,7 +267,13 @@ export default function RestaurantDetail() {
             src={restaurant.heroImageUrl || '/api/placeholder/400/300'}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover block"
-            style={{ display: 'block', width: '100%', objectFit: 'cover' }}
+            style={{ 
+              display: 'block', 
+              width: '100%', 
+              objectFit: 'cover',
+              backgroundColor: '#f3f4f6',
+              minHeight: '38vh'
+            }}
             loading="lazy"
             onError={(e) => {
               console.error('=== HERO IMAGE LOAD ERROR ===');
