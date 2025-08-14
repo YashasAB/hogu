@@ -100,15 +100,13 @@ app.get("/ready", (req, res) => {
   });
 });
 
-// Mount API routes first
+// Register all API routes before SPA wildcard
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
-
-
 
 // Placeholder image route
 app.get("/api/placeholder/:width/:height", (req, res) => {
@@ -134,8 +132,8 @@ if (isProduction) {
   app.use(express.static(webDistPath, { index: false }));
   console.log("Serving static files from:", webDistPath);
   
-  // SPA fallback - only for non-API routes
-  app.get(/^\/(?!api\/).*/, (req, res) => {
+  // SPA fallback - guard wildcard to never match /api
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
     res.sendFile(path.join(webDistPath, "index.html"));
   });
 }
