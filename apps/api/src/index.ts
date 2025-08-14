@@ -197,66 +197,6 @@ app.get('/testimg', (req, res) => {
                 background: #f0f0f0; 
                 padding: 10px; 
                 word-break: break-all; 
-
-
-// Test endpoint to check database image URLs
-app.get('/test-db-images', async (req, res) => {
-  try {
-    const restaurants = await prisma.restaurant.findMany({
-      where: {
-        heroImageUrl: {
-          not: null
-        }
-      },
-      select: {
-        id: true,
-        name: true,
-        heroImageUrl: true
-      },
-      take: 5
-    });
-
-    let html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Database Images Test</title>
-        <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .restaurant { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
-            img { max-width: 300px; height: 200px; object-fit: cover; margin: 10px 0; }
-            .url { background: #f5f5f5; padding: 8px; font-family: monospace; word-break: break-all; }
-        </style>
-    </head>
-    <body>
-        <h1>🍽️ Database Images Test</h1>
-    `;
-
-    restaurants.forEach(restaurant => {
-      html += `
-        <div class="restaurant">
-          <h3>${restaurant.name}</h3>
-          <div class="url">${restaurant.heroImageUrl}</div>
-          <img src="${restaurant.heroImageUrl}" alt="${restaurant.name}" 
-               onload="console.log('✅ Loaded: ${restaurant.name}')"
-               onerror="console.log('❌ Failed: ${restaurant.name}', this.src)" />
-        </div>
-      `;
-    });
-
-    html += `
-    </body>
-    </html>`;
-
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-
-  } catch (error) {
-    console.error('Database test error:', error);
-    res.status(500).json({ error: 'Database test failed' });
-  }
-});
-
                 font-family: monospace;
                 border-radius: 4px;
                 margin: 10px 0;
@@ -330,6 +270,81 @@ app.get('/test-db-images', async (req, res) => {
             // Test fetch API as well
             setTimeout(() => {
                 console.log('🔍 Testing fetch API for proxy endpoint...');
+                fetch('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')
+                    .then(response => {
+                        console.log('Fetch response status:', response.status);
+                        if (response.ok) {
+                            console.log('✅ Fetch test successful');
+                        } else {
+                            console.log('❌ Fetch test failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Fetch test error:', error);
+                    });
+            }, 2000);
+        </script>
+    </body>
+    </html>`);
+});
+
+// Test endpoint to check database image URLs
+app.get('/test-db-images', async (req, res) => {
+  try {
+    const restaurants = await prisma.restaurant.findMany({
+      where: {
+        heroImageUrl: {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        heroImageUrl: true
+      },
+      take: 5
+    });
+
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Database Images Test</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .restaurant { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+            img { max-width: 300px; height: 200px; object-fit: cover; margin: 10px 0; }
+            .url { background: #f5f5f5; padding: 8px; font-family: monospace; word-break: break-all; }
+        </style>
+    </head>
+    <body>
+        <h1>🍽️ Database Images Test</h1>
+    `;
+
+    restaurants.forEach(restaurant => {
+      html += `
+        <div class="restaurant">
+          <h3>${restaurant.name}</h3>
+          <div class="url">${restaurant.heroImageUrl}</div>
+          <img src="${restaurant.heroImageUrl}" alt="${restaurant.name}" 
+               onload="console.log('✅ Loaded: ${restaurant.name}')"
+               onerror="console.log('❌ Failed: ${restaurant.name}', this.src)" />
+        </div>
+      `;
+    });
+
+    html += `
+    </body>
+    </html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
+  } catch (error) {
+    console.error('Database test error:', error);
+    res.status(500).json({ error: 'Database test failed' });
+  }
+});
                 fetch('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')
                     .then(response => {
                         console.log('Fetch response status:', response.status);
