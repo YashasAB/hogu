@@ -1,0 +1,160 @@
+// Test endpoint to check database image URLs
+app.get('/test-db-images', async (req, res) => {
+  try {
+    const restaurants = await prisma.restaurant.findMany({
+      where: {
+        heroImageUrl: {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        heroImageUrl: true
+      },
+      take: 5
+    });
+
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Database Images Test</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .restaurant { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+            img { max-width: 300px; height: 200px; object-fit: cover; margin: 10px 0; }
+            .url { background: #f5f5f5; padding: 8px; font-family: monospace; word-break: break-all; }
+        </style>
+    </head>
+    <body>
+        <h1>🍽️ Database Images Test</h1>
+    `;
+
+    restaurants.forEach(restaurant => {
+      html += `
+        <div class="restaurant">
+          <h3>${restaurant.name}</h3>
+          <div class="url">${restaurant.heroImageUrl}</div>
+          <img src="${restaurant.heroImageUrl}" alt="${restaurant.name}" 
+               onload="console.log('✅ Loaded: ${restaurant.name}')"
+               onerror="console.log('❌ Failed: ${restaurant.name}', this.src)" />
+        </div>
+      `;
+    });
+
+    html += `
+    </body>
+    </html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
+  } catch (error) {
+    console.error('Database test error:', error);
+    res.status(500).json({ error: 'Database test failed' });
+  }
+});
+                fetch('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')
+                    .then(response => {
+                        console.log('Fetch response status:', response.status);
+                        console.log('Fetch response headers:', [...response.headers.entries()]);
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        console.log('Fetch successful, blob size:', blob.size, 'type:', blob.type);
+                    })
+                    .catch(error => {
+                        console.error('Fetch failed:', error);
+                    });
+            }, 2000);
+        </script>
+    </body>
+    </html>
+  `);
+});
+
+
+// Catch-all route for images that handles various URL patterns
+app.get('/api/images/*', async (req, res) => {
+  try {
+    console.log('=== CATCH-ALL IMAGE REQUEST ===');
+    console.log('Full path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+
+    let imagePath = req.path.replace('/api/images/', '');
+
+    // If it starts with storage/, remove that prefix
+    if (imagePath.startsWith('storage/')) {
+      imagePath = imagePath.replace('storage/', '');
+    }
+
+    // If it's already a full https URL, redirect to it
+    if (imagePath.startsWith('https://')) {
+      console.log('Redirecting to external URL:', imagePath);
+      return res.redirect(imagePath);
+    }
+
+    console.log('Cleaned image path:', imagePath);
+
+    // Try multiple storage URL formats
+    
+    const storageUrls = [
+      `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(imagePath)}?alt=media`,
+      // Direct Object Storage format with REPL_ID bucket
+      `https://replit.com/object-storage/storage/v1/b/replit-objstore-${process.env.REPL_ID}/o/${encodeURIComponent(imagePath)}?alt=media`,
+      // Legacy storage format with current bucket
+      `https://storage.replit.com/0a421abc-4a91-43c3-a052-c47f2fa08f7a/${imagePath}`,
+      // Legacy storage format with REPL_ID bucket
+      `https://storage.replit.com/${process.env.REPL_ID}/${imagePath}`,
+      // Alternative bucket format
+      `https://storage.replit.com/a5596f5b-0e64-44d2-9f7e-86e86ceed4ae/${imagePath}`
+    ];
+
+    let response = null;
+    let usedUrl = '';
+
+    for (const storageUrl of storageUrls) {
+      console.log('Attempting to fetch from:', storageUrl);
+      try {
+        response = await fetch(storageUrl);
+        if (response.ok) {
+          usedUrl = storageUrl;
+          console.log('✅ Successfully fetched image from:', storageUrl);
+          break;
+        } else {
+          console.error(`❌ Failed to fetch from ${storageUrl}: ${response.status} ${response.statusText}`);
+        }
+      } catch (err) {
+        console.error(`❌ Error fetching from ${storageUrl}:`, err.message);
+      }
+      response = null; // Reset response if not ok
+    }
+
+    if (!response || !response.ok) {
+      console.error('Image not found in any storage location for path:', imagePath);
+      return res.status(404).send('Image not found');
+    }
+
+    // Get the content type from the response
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    console.log('Content-Type:', contentType);
+    console.log('Successfully served image from:', usedUrl);
+
+    // Set appropriate headers
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*',
+    });
+
+    // Pipe the image data to the response
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
+
+  } catch (error) {
+    console.error('Error in catch-all image route:', error);
+    res.status(500).send('Error loading image');
+  }
+});

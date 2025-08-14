@@ -388,8 +388,8 @@ app.get('/api/images/*', async (req, res) => {
     console.log('Cleaned image path:', imagePath);
 
     // Try multiple storage URL formats
+    
     const storageUrls = [
-      // Direct Object Storage format with current bucket
       `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(imagePath)}?alt=media`,
       // Direct Object Storage format with REPL_ID bucket
       `https://replit.com/object-storage/storage/v1/b/replit-objstore-${process.env.REPL_ID}/o/${encodeURIComponent(imagePath)}?alt=media`,
