@@ -8,7 +8,6 @@ type Restaurant = {
   slug: string;
   emoji: string;
   position: { lat: number; lng: number };
-  image: string;
   neighborhood: string;
   category: string;
   hot?: boolean;
@@ -94,9 +93,7 @@ export default function RestaurantDetail() {
         if (response.ok) {
           const data = await response.json();
           console.log('Restaurant data received from API:', data);
-          console.log('Image URLs in restaurant data:');
-          console.log('- image:', data.image);
-          console.log('- heroImageUrl:', data.heroImageUrl);
+          console.log('Hero image URL in restaurant data:', data.heroImageUrl);
           setRestaurant(data);
         } else {
           console.error('Restaurant not found in API');
@@ -267,7 +264,7 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={restaurant.heroImageUrl || restaurant.image}
+            src={restaurant.heroImageUrl || '/api/placeholder/400/300'}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             loading="lazy"
@@ -275,13 +272,12 @@ export default function RestaurantDetail() {
               console.error('=== HERO IMAGE LOAD ERROR ===');
               console.error('Failed to load image URL:', e.currentTarget.src);
               console.error('heroImageUrl from data:', restaurant.heroImageUrl);
-              console.error('image from data:', restaurant.image);
               console.error('Full restaurant data:', restaurant);
               console.error('==============================');
             }}
             onLoad={() => {
               console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
-              console.log('Loaded image URL:', restaurant.heroImageUrl || restaurant.image);
+              console.log('Loaded image URL:', restaurant.heroImageUrl);
               console.log('======================================');
             }}
           />
