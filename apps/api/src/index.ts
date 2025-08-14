@@ -112,63 +112,98 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-app.get("/api/images/storage/:replId/:filename", async (req, res) => {
+function toNodeBuffer(v: unknown): Buffer {
+  if (v == null) throw new Error("Empty storage value");
+
+  // Already Buffer
+  if (Buffer.isBuffer(v)) return v;
+
+  // Some SDKs wrap as [Buffer] or [Uint8Array]
+  if (Array.isArray(v)) {
+    const first = (v as unknown[])[0];
+    if (Buffer.isBuffer(first)) return first;
+    if (first instanceof Uint8Array) {
+      return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+    }
+    throw new Error(`Unexpected array element type: ${Object.prototype.toString.call(first)}`);
+  }
+
+  // Typed arrays / ArrayBuffer
+  if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+  if (v instanceof ArrayBuffer) return Buffer.from(v);
+
+  // Strings (base64 or data URL)
+  if (typeof v === "string") {
+    if (v.startsWith("data:image/")) {
+      const base64 = v.split(",")[1] ?? "";
+      return Buffer.from(base64.replace(/\s+/g, ""), "base64");
+    }
+    try { return Buffer.from(v.replace(/\s+/g, ""), "base64"); }
+    catch { return Buffer.from(v, "utf8"); }
+  }
+
+  throw new Error(`Unsupported storage value type: ${Object.prototype.toString.call(v)}`);
+}
+
+app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
   try {
-    const { replId, filename } = req.params;
-    const key = `${replId}/${filename}`;
+    const { tenantId, filename } = req.params;
+    const key = `${tenantId}/${filename}`;
 
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    // 🔒 Narrow the union to a clean shape TS understands
-    type BytesOk = { ok: true; value: Uint8Array };
-    type BytesErr = { ok: false; error: unknown };
-    const out = (await storage.downloadAsBytes(key)) as BytesOk | BytesErr;
-
-    if (!out.ok) {
-      console.error("❌ DOWNLOAD FAILED:", out.error);
-      return res.status(404).json({ error: "Image not found", path: key, details: out.error });
+    const result = await storage.downloadAsBytes(key);
+    if (!result?.ok) {
+      return res.status(404).json({ error: "Image not found", path: key, details: result?.error });
     }
 
-    // ✅ out.value is now a Uint8Array
-    const u8 = out.value;
+    // Convert whatever came back → Buffer (handles Buffer, [Buffer], Uint8Array, etc.)
+    let buf = toNodeBuffer((result as any).value);
 
-    // ✅ Use ArrayBuffer+offsets overload (no ambiguity)
-    const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+    // If someone ever uploaded base64/data-URL text by mistake, decode it
+    const head = buf.subarray(0, 128).toString("utf8");
+    if (head.startsWith("data:image/")) {
+      const base64 = buf.toString("utf8").split(",")[1] ?? "";
+      buf = Buffer.from(base64.replace(/\s+/g, ""), "base64");
+    } else if (/^[A-Za-z0-9+/=\r\n]{24,}$/.test(head)) {
+      try {
+        const dec = Buffer.from(buf.toString("utf8").replace(/\s+/g, ""), "base64");
+        if (dec.length) buf = dec;
+      } catch {}
+    }
 
-    // (Optional) quick signature log
-    console.log("signature:", buffer.subarray(0, 4).toString("hex"));
-
-    // Content type from extension (or sniff if you want)
-    const ext = filename.split(".").pop()?.toLowerCase();
-    const contentType =
-      ext === "png"  ? "image/png"  :
-      ext === "jpg"  ? "image/jpeg" :
-      ext === "jpeg" ? "image/jpeg" :
-      ext === "gif"  ? "image/gif"  :
-      ext === "webp" ? "image/webp" :
-      ext === "svg"  ? "image/svg+xml" :
-      "application/octet-stream";
+    // Set a correct mime (sniff first, then fall back to extension)
+    const sig4 = buf.subarray(0, 4).toString("hex");
+    let contentType = "application/octet-stream";
+    if (sig4.startsWith("ffd8")) contentType = "image/jpeg";
+    else if (sig4 === "89504e47") contentType = "image/png";
+    else if (buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP") contentType = "image/webp";
+    else if (sig4.startsWith("4749")) contentType = "image/gif";
+    else if (filename.toLowerCase().endsWith(".svg")) contentType = "image/svg+xml";
+    else {
+      const ext = filename.split(".").pop()?.toLowerCase();
+      if (ext === "jpg" || ext === "jpeg") contentType = "image/jpeg";
+      else if (ext === "png") contentType = "image/png";
+      else if (ext === "gif") contentType = "image/gif";
+      else if (ext === "webp") contentType = "image/webp";
+    }
 
     res.set({
       "Content-Type": contentType,
-      // Let Express compute length to avoid mismatches:
       "Cache-Control": "public, max-age=31536000, immutable",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Cache-Control",
-      "Content-Disposition": `inline; filename="${filename}"`,
     });
 
-    return res.end(buffer); // <- send raw bytes (not [buffer])
+    // Let Express compute Content-Length; just send bytes
+    return res.end(buf);
   } catch (err) {
-    console.error("💥 FATAL ERROR in image proxy:", err);
-    return res.status(500).json({
-      error: "Error loading image",
-      details: err instanceof Error ? err.message : String(err),
-    });
+    console.error("💥 image proxy error:", err);
+    return res.status(500).json({ error: "Error loading image" });
   }
 });
+
+
 
 // Placeholder image route
 app.get("/api/placeholder/:width/:height", (req, res) => {
