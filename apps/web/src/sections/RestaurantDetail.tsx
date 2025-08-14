@@ -266,15 +266,15 @@ export default function RestaurantDetail() {
           <img
             src={restaurant.heroImageUrl || '/api/placeholder/400/300'}
             alt={restaurant.name}
-            className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover block"
+            className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             style={{ 
               display: 'block', 
               width: '100%', 
+              height: '38vh',
               objectFit: 'cover',
-              backgroundColor: '#f3f4f6',
-              minHeight: '38vh'
+              backgroundColor: '#f3f4f6'
             }}
-            loading="lazy"
+            loading="eager"
             onError={(e) => {
               console.error('=== HERO IMAGE LOAD ERROR ===');
               console.error('Failed to load image URL:', e.currentTarget.src);
@@ -301,6 +301,13 @@ export default function RestaurantDetail() {
                 height: e.currentTarget.height,
                 naturalWidth: e.currentTarget.naturalWidth,
                 naturalHeight: e.currentTarget.naturalHeight
+              });
+              console.log('Image computed styles:', {
+                display: window.getComputedStyle(e.currentTarget).display,
+                visibility: window.getComputedStyle(e.currentTarget).visibility,
+                opacity: window.getComputedStyle(e.currentTarget).opacity,
+                position: window.getComputedStyle(e.currentTarget).position,
+                zIndex: window.getComputedStyle(e.currentTarget).zIndex
               });
               console.log('======================================');
             }}

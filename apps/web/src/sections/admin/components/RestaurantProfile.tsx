@@ -145,16 +145,17 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 <img
                   src={photoPreview || profileData.heroImageUrl}
                   alt="Restaurant hero"
-                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600 block"
+                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                   style={{ 
                     display: 'block', 
-                    maxWidth: '100%', 
+                    width: '100%', 
                     height: '192px',
-                    backgroundColor: '#f3f4f6',
-                    minHeight: '192px',
-                    width: '100%'
+                    objectFit: 'cover',
+                    backgroundColor: '#f3f4f6'
                   }}
+                  loading="eager"
                   onError={(e) => {
+                    console.error('=== ADMIN IMAGE ERROR ===');
                     console.error('Image failed to load:', e.currentTarget.src);
                     console.error('Photo preview:', photoPreview);
                     console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
@@ -165,6 +166,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                       naturalHeight: e.currentTarget.naturalHeight,
                       complete: e.currentTarget.complete
                     });
+                    console.error('=============================');
                     
                     // Show error state
                     e.currentTarget.style.display = 'none';
@@ -182,9 +184,12 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                       naturalWidth: e.currentTarget.naturalWidth,
                       naturalHeight: e.currentTarget.naturalHeight
                     });
-                    console.log('Image element:', e.currentTarget);
-                    console.log('Image visibility:', window.getComputedStyle(e.currentTarget).visibility);
-                    console.log('Image opacity:', window.getComputedStyle(e.currentTarget).opacity);
+                    console.log('Image computed styles:', {
+                      display: window.getComputedStyle(e.currentTarget).display,
+                      visibility: window.getComputedStyle(e.currentTarget).visibility,
+                      opacity: window.getComputedStyle(e.currentTarget).opacity,
+                      objectFit: window.getComputedStyle(e.currentTarget).objectFit
+                    });
                     console.log('==========================');
                     
                     // Hide error state if shown
