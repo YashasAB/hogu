@@ -293,8 +293,6 @@ export default function RestaurantDetail() {
               // Fallback to placeholder if hero image fails
               if (e.currentTarget.src !== "/api/placeholder/400/300") {
                 e.currentTarget.src = "/api/placeholder/400/300";
-              }0") {
-                e.currentTarget.src = "/api/placeholder/400/300";
               }
             }}
             onLoad={(e) => {
