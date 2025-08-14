@@ -109,14 +109,6 @@ app.get("/ready", (req, res) => {
   });
 });
 
-// Mount routes
-app.use("/api/auth", authRoutes);
-app.use("/api/restaurants", restaurantRoutes);
-app.use("/api/reservations", reservationRoutes);
-app.use("/api/discover", discoverRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/images", imagesRouter);
-
 // Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v: unknown): Buffer {
   if (Buffer.isBuffer(v)) return v;
@@ -145,6 +137,7 @@ function detectContentType(buf: Buffer, filename: string): string {
   return "application/octet-stream";
 }
 
+// Image proxy route
 app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
   try {
     const { tenantId, filename } = req.params;
@@ -179,6 +172,16 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
   }
 });
 
+// (Optional) HEAD – nice for CDNs/proxies
+app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
+  // You can reuse logic above to set headers without sending the body,
+  // or simply 200 with cache headers if you don't need exact length.
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.sendStatus(200);
+});
+
+// Image list route
 app.get("/api/images/list", async (req, res) => {
   try {
     const { Client } = await import("@replit/object-storage");
@@ -228,17 +231,6 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-
-// (Optional) HEAD – nice for CDNs/proxies
-app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
-  // You can reuse logic above to set headers without sending the body,
-  // or simply 200 with cache headers if you don't need exact length.
-  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.sendStatus(200);
-});
-
-
     // Upload to storage
     const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
 
@@ -264,8 +256,6 @@ app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
   }
 });
 
-
-
 // Placeholder image route
 app.get("/api/placeholder/:width/:height", (req, res) => {
   const { width, height } = req.params;
@@ -283,6 +273,14 @@ app.get("/api/placeholder/:width/:height", (req, res) => {
   res.send(svg);
 });
 
+// Mount API routes BEFORE static files
+app.use("/api/auth", authRoutes);
+app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/reservations", reservationRoutes);
+app.use("/api/discover", discoverRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/images", imagesRouter);
+
 // In production, serve the React app for all non-API routes
 if (isProduction) {
   const webDistPath = path.join(__dirname, "../../web/dist");
@@ -290,7 +288,7 @@ if (isProduction) {
 
   app.use(express.static(webDistPath, { index: false }));
 
-  // Only catch non-API routes for SPA
+  // Only catch non-API routes for SPA - this regex excludes any path starting with /api/
   app.get(/^\/(?!api\/).*/, (req, res) => {
     res.sendFile(path.join(webDistPath, "index.html"));
   });
