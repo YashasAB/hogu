@@ -266,7 +266,7 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={"https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media"}
+            src={"/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg"}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             style={{
