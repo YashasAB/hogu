@@ -1,174 +1,191 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const ImageDisplay = () => {
-  const [imageSrc, setImageSrc] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Move these to component state so they're accessible in JSX
-  const replId = 'cme996hfm000bj4h1cu57rrca';
-  const filename = 'heroImage.jpg';
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [downloadUrl, setDownloadUrl] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    const fetchImage = async () => {
-      try {
-        const startTime = Date.now();
-        const imageUrl = `/api/images/storage/${replId}/${filename}`;
-        
-        console.log(`=== FRONTEND IMAGE FETCH START ===`);
-        console.log(`🖼️ Attempting to fetch image from: ${imageUrl}`);
-        console.log(`🔍 Full URL: ${window.location.origin}${imageUrl}`);
-        console.log(`⏰ Fetch started at: ${new Date().toISOString()}`);
-        console.log(`🌐 Current location: ${window.location.href}`);
-        console.log(`👤 User agent: ${navigator.userAgent}`);
-        
-        // Use the API proxy endpoint we already have
-        console.log(`📡 Initiating fetch request...`);
-        const response = await fetch(imageUrl);
-        
-        const fetchTime = Date.now() - startTime;
-        console.log(`⏱️ Fetch completed in ${fetchTime}ms`);
-        console.log(`📡 Response received:`);
-        console.log(`   - Status: ${response.status} (${response.statusText})`);
-        console.log(`   - OK: ${response.ok}`);
-        console.log(`   - Type: ${response.type}`);
-        console.log(`   - URL: ${response.url}`);
-        console.log(`   - Redirected: ${response.redirected}`);
-        
-        // Log all response headers
-        console.log(`📋 Response headers:`);
-        response.headers.forEach((value, key) => {
-          console.log(`   - ${key}: ${value}`);
-        });
-        
-        if (!response.ok) {
-          console.error(`❌ Response not OK:`);
-          console.error(`   - Status: ${response.status}`);
-          console.error(`   - Status text: ${response.statusText}`);
-          
-          let errorText;
-          try {
-            errorText = await response.text();
-            console.error(`   - Response body:`, errorText);
-          } catch (textError) {
-            console.error(`   - Could not read response text:`, textError);
-            errorText = 'Could not read error response';
-          }
-          
-          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} - ${errorText}`);
-        }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
 
-        const contentType = response.headers.get('content-type');
-        const contentLength = response.headers.get('content-length');
-        console.log(`📦 Response details:`);
-        console.log(`   - Content-Type: ${contentType}`);
-        console.log(`   - Content-Length: ${contentLength}`);
-        
-        // Convert response to different formats for analysis
-        console.log(`🔄 Converting response to blob...`);
-        const blobStartTime = Date.now();
-        const blob = await response.blob();
-        const blobTime = Date.now() - blobStartTime;
-        
-        console.log(`🎯 Blob conversion completed in ${blobTime}ms:`);
-        console.log(`   - Blob size: ${blob.size} bytes`);
-        console.log(`   - Blob type: ${blob.type}`);
-        console.log(`   - Blob constructor: ${blob.constructor.name}`);
-        
-        // Verify blob content
-        if (blob.size === 0) {
-          console.error(`❌ Blob is empty!`);
-          throw new Error('Received empty blob');
-        }
-        
-        // Try to read first few bytes of blob for verification
-        console.log(`🔍 Reading blob content for verification...`);
-        try {
-          const arrayBuffer = await blob.slice(0, 16).arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-          const firstBytes = Array.from(uint8Array).map(b => b.toString(16).padStart(2, '0')).join(' ');
-          console.log(`   - First 16 bytes (hex): ${firstBytes}`);
-          
-          // Check file signature
-          const signature = Array.from(uint8Array.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('');
-          console.log(`   - File signature: ${signature}`);
-          
-          if (signature.startsWith('ffd8')) {
-            console.log(`   - ✅ Valid JPEG signature detected in blob`);
-          } else if (signature.startsWith('8950')) {
-            console.log(`   - ✅ Valid PNG signature detected in blob`);
-          } else {
-            console.log(`   - ⚠️ Unknown file signature in blob`);
-          }
-        } catch (readError) {
-          console.error(`❌ Could not read blob content:`, readError);
-        }
-        
-        // Create object URL
-        console.log(`🔗 Creating object URL...`);
-        const objectUrlStartTime = Date.now();
-        const objectUrl = URL.createObjectURL(blob);
-        const objectUrlTime = Date.now() - objectUrlStartTime;
-        
-        console.log(`🔗 Object URL created in ${objectUrlTime}ms:`);
-        console.log(`   - Object URL: ${objectUrl}`);
-        console.log(`   - URL length: ${objectUrl.length}`);
-        
-        // Test if URL is valid
-        console.log(`✅ Setting image source and completing fetch`);
-        const totalTime = Date.now() - startTime;
-        console.log(`⏱️ Total fetch process completed in ${totalTime}ms`);
-        
-        setImageSrc(objectUrl);
-        setLoading(false);
-        
-        console.log(`✅ Image fetch successful!`);
-        console.log(`=== FRONTEND IMAGE FETCH END ===\n`);
-        
-      } catch (err) {
-        const totalTime = Date.now() - startTime;
-        console.error(`💥 FRONTEND IMAGE FETCH FAILED after ${totalTime}ms:`);
-        console.error(`   - Error message: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        console.error(`   - Error type: ${typeof err}`);
-        console.error(`   - Error stack:`, err instanceof Error ? err.stack : 'No stack trace');
-        console.error(`   - Error object:`, err);
-        console.error(`=== FRONTEND IMAGE FETCH ERROR END ===\n`);
-        
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setLoading(false);
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage('Please select a file first');
+      return;
+    }
+
+    setUploading(true);
+    setMessage('');
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
-    };
 
-    fetchImage();
-    
-    // Cleanup object URL on unmount
-    return () => {
-      if (imageSrc) {
-        console.log(`🧹 Cleaning up object URL: ${imageSrc}`);
-        URL.revokeObjectURL(imageSrc);
+      const result = await response.json();
+      setImageUrl(result.url || result.imageUrl);
+      setMessage('Upload successful!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      setMessage(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!downloadUrl) {
+      setMessage('Please enter a download URL');
+      return;
+    }
+
+    setDownloading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch(downloadUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
       }
-    };
-  }, [replId, filename]);
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadUrl.split('/').pop() || 'downloaded-image';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setMessage('Download successful!');
+    } catch (error) {
+      console.error('Download error:', error);
+      setMessage(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Image from Replit Object Storage</h2>
-      {loading && <p className="text-gray-600">Loading image...</p>}
-      {error && <p className="text-red-600">Error: {error}</p>}
-      {imageSrc && (
-        <div className="space-y-4">
-          <img
-            src={imageSrc}
-            alt="Restaurant Hero Image"
-            className="max-w-full w-full h-80 object-cover border-2 border-gray-300 rounded-lg shadow-lg"
+    <div className="p-6 space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        Image Upload & Download Test
+      </h2>
+      
+      {/* Upload Section */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Upload Image</h3>
+        <div className="space-y-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
-          <div className="text-sm text-gray-500">
-            <p>Image path: {replId}/{filename}</p>
-            <p>Loaded via API proxy endpoint: /api/images/storage/{replId}/{filename}</p>
+          <button
+            onClick={handleUpload}
+            disabled={!file || uploading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </button>
+        </div>
+        {imageUrl && (
+          <div className="space-y-2">
+            <p className="text-sm text-green-600">Uploaded successfully!</p>
+            <p className="text-sm text-gray-600 break-all">URL: {imageUrl}</p>
+            <img
+              src={imageUrl}
+              alt="Uploaded"
+              className="max-w-full h-48 object-cover border rounded"
+              onError={(e) => {
+                console.error('Image load error:', e);
+                setMessage('Failed to load uploaded image');
+              }}
+            />
           </div>
+        )}
+      </div>
+
+      {/* Download Section */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Download Image</h3>
+        <div className="space-y-2">
+          <input
+            type="url"
+            value={downloadUrl}
+            onChange={(e) => setDownloadUrl(e.target.value)}
+            placeholder="Enter image URL to download"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={handleDownload}
+            disabled={!downloadUrl || downloading}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {downloading ? 'Downloading...' : 'Download'}
+          </button>
+        </div>
+      </div>
+
+      {/* Test URLs Section */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <h3 className="text-lg font-semibold">Quick Test URLs</h3>
+        <div className="space-y-2 text-sm">
+          <button
+            onClick={() => setDownloadUrl('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')}
+            className="block w-full text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Test existing hero image
+          </button>
+          <button
+            onClick={() => setDownloadUrl('https://picsum.photos/400/300')}
+            className="block w-full text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Test external image (picsum)
+          </button>
+        </div>
+      </div>
+
+      {/* Message Display */}
+      {message && (
+        <div className={`p-3 rounded-lg ${
+          message.includes('successful') 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {message}
         </div>
       )}
+
+      {/* Debug Info */}
+      <div className="border rounded-lg p-4 space-y-2 bg-gray-50">
+        <h3 className="text-lg font-semibold">Debug Info</h3>
+        <div className="text-sm space-y-1">
+          <p><strong>Selected file:</strong> {file ? `${file.name} (${file.size} bytes)` : 'None'}</p>
+          <p><strong>Upload URL:</strong> /api/upload</p>
+          <p><strong>Storage endpoint:</strong> /api/images/storage/*</p>
+        </div>
+      </div>
     </div>
   );
 };

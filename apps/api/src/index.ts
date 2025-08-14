@@ -8,6 +8,7 @@ import restaurantRoutes from "./routes/restaurants";
 import reservationRoutes from "./routes/reservations";
 import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
+import multer from "multer"; // Import multer
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -53,6 +54,10 @@ app.use(
   }),
 );
 app.use(express.json());
+
+// Multer configuration for handling file uploads
+const storage = multer.memoryStorage(); // Store file in memory
+const upload = multer({ storage: storage });
 
 // Serve static files from React build in production
 const isProduction = process.env.NODE_ENV === "production";
@@ -200,6 +205,80 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
   } catch (err) {
     console.error("💥 image proxy error:", err);
     return res.status(500).json({ error: "Error loading image" });
+  }
+});
+
+app.get("/api/images/list", async (req, res) => {
+  try {
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // List all objects in the bucket
+    const { ok, value, error } = await storage.list();
+
+    if (!ok) {
+      return res.status(500).json({ error: "Failed to list images", details: error });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const images = value.map((item: any) => ({
+      key: item.key,
+      size: item.size,
+      lastModified: item.lastModified,
+      publicUrl: `${baseUrl}/api/images/storage/${item.key}`
+    }));
+
+    res.json({
+      totalImages: images.length,
+      images: images
+    });
+  } catch (error) {
+    console.error("Error listing images:", error);
+    res.status(500).json({ error: "Failed to list images" });
+  }
+});
+
+// Upload endpoint for testing
+app.post("/api/upload", upload.single("image"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    console.log(`Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
+
+    // Generate a unique filename
+    const timestamp = Date.now();
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const filename = `test-${timestamp}.${ext}`;
+    const objectKey = `test-uploads/${filename}`;
+
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // Upload to storage
+    const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
+
+    if (!uploadResult.ok) {
+      console.error("Storage upload failed:", uploadResult.error);
+      return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
+    }
+
+    // Return the proxy URL
+    const imageUrl = `/api/images/storage/${objectKey}`;
+    console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
+
+    res.json({
+      message: "Upload successful",
+      url: imageUrl,
+      filename: filename,
+      size: file.size,
+      mimetype: file.mimetype
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
 
