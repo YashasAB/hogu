@@ -66,8 +66,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
       const result = await response.json();
       onDataChange({ heroImageUrl: result.imageUrl });
-      // Set preview to show the uploaded image
-      setPhotoPreview(result.imageUrl);
+      setPhotoPreview(null); // Clear preview since we removed the preview section
     } catch (error) {
       console.error('Error uploading photo:', error);
       alert('Failed to upload photo. Please try again.');
@@ -138,87 +137,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
             Hero Image
           </label>
           
-          {/* Current/Preview Image */}
-          {(photoPreview || profileData.heroImageUrl) && (
-            <div className="mb-4">
-              <div className="relative">
-                <img
-                  src={photoPreview || profileData.heroImageUrl}
-                  alt="Restaurant hero"
-                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
-                  style={{ 
-                    display: 'block', 
-                    width: '100%', 
-                    height: '192px',
-                    objectFit: 'cover',
-                    backgroundColor: '#f3f4f6'
-                  }}
-                  loading="eager"
-                  onError={(e) => {
-                    console.error('=== ADMIN IMAGE ERROR ===');
-                    console.error('Image failed to load:', e.currentTarget.src);
-                    console.error('Photo preview:', photoPreview);
-                    console.error('Profile data heroImageUrl:', profileData.heroImageUrl);
-                    console.error('Image element dimensions:', {
-                      width: e.currentTarget.width,
-                      height: e.currentTarget.height,
-                      naturalWidth: e.currentTarget.naturalWidth,
-                      naturalHeight: e.currentTarget.naturalHeight,
-                      complete: e.currentTarget.complete
-                    });
-                    console.error('=============================');
-                    
-                    // Show error state
-                    e.currentTarget.style.display = 'none';
-                    const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (errorDiv && errorDiv.classList.contains('error-placeholder')) {
-                      errorDiv.style.display = 'flex';
-                    }
-                  }}
-                  onLoad={(e) => {
-                    console.log('=== ADMIN IMAGE LOADED ===');
-                    console.log('Image URL:', photoPreview || profileData.heroImageUrl);
-                    console.log('Image dimensions:', {
-                      width: e.currentTarget.width,
-                      height: e.currentTarget.height,
-                      naturalWidth: e.currentTarget.naturalWidth,
-                      naturalHeight: e.currentTarget.naturalHeight
-                    });
-                    console.log('Image computed styles:', {
-                      display: window.getComputedStyle(e.currentTarget).display,
-                      visibility: window.getComputedStyle(e.currentTarget).visibility,
-                      opacity: window.getComputedStyle(e.currentTarget).opacity,
-                      objectFit: window.getComputedStyle(e.currentTarget).objectFit
-                    });
-                    console.log('==========================');
-                    
-                    // Hide error state if shown
-                    const errorDiv = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (errorDiv && errorDiv.classList.contains('error-placeholder')) {
-                      errorDiv.style.display = 'none';
-                    }
-                  }}
-                />
-                <div 
-                  className="error-placeholder w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400"
-                  style={{ display: 'none' }}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📷</div>
-                    <div className="text-sm">Image failed to load</div>
-                  </div>
-                </div>
-              </div>
-              {photoPreview && (
-                <p className="text-sm text-green-400 mt-2">
-                  {photoPreview.startsWith('https://') ? '✓ Image uploaded successfully - click Save to confirm' : 'Preview - click Save to confirm'}
-                </p>
-              )}
-              <div className="mt-2 text-xs text-slate-400 break-all">
-                Current URL: {photoPreview || profileData.heroImageUrl}
-              </div>
-            </div>
-          )}
+          
 
           {/* File Upload */}
           <div className="mb-4">
@@ -237,6 +156,11 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
             />
             {uploadingPhoto && (
               <p className="text-sm text-slate-400 mt-2">Uploading photo...</p>
+            )}
+            {profileData.heroImageUrl && (
+              <p className="text-sm text-green-400 mt-2">
+                ✓ Hero image is set. The image will appear on the restaurant detail page.
+              </p>
             )}
           </div>
 
