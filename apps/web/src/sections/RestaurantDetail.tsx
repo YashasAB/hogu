@@ -264,7 +264,7 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={'/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg'}
+            src={'/api/images/storage/objects/cme996hfm000bj4h1cu57rrca/heroImage.jpg'}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             style={{ 
