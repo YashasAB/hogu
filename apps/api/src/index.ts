@@ -113,144 +113,65 @@ app.use("/api/images", imagesRouter);
 app.get("/api/images/storage/:replId/:filename", async (req, res) => {
   try {
     const { replId, filename } = req.params;
-    const filePath = `${replId}/${filename}`;
+    const key = `${replId}/${filename}`;
 
-    console.log(`=== IMAGE PROXY REQUEST START ===`);
-    console.log(`🔍 Request path: ${req.path}`);
-    console.log(`🔍 Full URL: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
-    console.log(`📁 File path to download: ${filePath}`);
-    console.log(`👤 User Agent: ${req.get('User-Agent')}`);
-    console.log(`🌐 Origin: ${req.get('Origin')}`);
-    console.log(`📨 Request headers:`, JSON.stringify(req.headers, null, 2));
-    console.log(`⏰ Request timestamp: ${new Date().toISOString()}`);
-
-    // Import the Object Storage client
-    console.log(`📦 Importing Object Storage client...`);
     const { Client } = await import("@replit/object-storage");
-    const storageClient = new Client();
-    console.log(`✅ Object Storage client created successfully`);
+    const storage = new Client();
 
-    // Download the image as bytes
-    console.log(`⬇️ Starting download for: ${filePath}`);
-    const startTime = Date.now();
+    const result = await storage.downloadAsBytes(key);
 
-    const {
-      ok,
-      value: bytesValue,
-      error,
-    } = await storageClient.downloadAsBytes(filePath);
-
-    const downloadTime = Date.now() - startTime;
-    console.log(`⏱️ Download completed in ${downloadTime}ms`);
-
-    if (!ok) {
-      console.error(`❌ DOWNLOAD FAILED for: ${filePath}`);
-      console.error(`❌ Error details:`, error);
-      console.error(`❌ Error type:`, typeof error);
-      console.error(`❌ Error stringified:`, JSON.stringify(error, null, 2));
+    if (!result.ok || !result.value) {
+      console.error("❌ DOWNLOAD FAILED:", result.error);
       return res.status(404).json({
         error: "Image not found",
-        path: filePath,
-        details: error,
-        timestamp: new Date().toISOString()
+        path: key,
+        details: result.error,
+        timestamp: new Date().toISOString(),
       });
     }
 
-    console.log(`✅ DOWNLOAD SUCCESSFUL for: ${filePath}`);
-    console.log(`📊 Image data analysis:`);
-    console.log(`   - Raw bytes length: ${bytesValue?.length || 0}`);
-    console.log(`   - Bytes type: ${typeof bytesValue}`);
-    console.log(`   - Is Array: ${Array.isArray(bytesValue)}`);
-    console.log(`   - Constructor: ${bytesValue?.constructor?.name}`);
+    // Ensure we have a Buffer (use ArrayBuffer+offsets to avoid TS overload issues)
+    const bytes: Uint8Array = result.value as Uint8Array;
+    const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
-    // Log first few bytes for verification
-    if (bytesValue && bytesValue.length > 0) {
-      const firstBytes = Array.from(bytesValue.slice(0, 16) as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join(' ');
-      console.log(`   - First 16 bytes (hex): ${firstBytes}`);
+    // Optional: log first 16 bytes safely using Buffer's hex toString
+    const first16Hex = buffer.subarray(0, 16).toString("hex");
+    const spaced = first16Hex.match(/.{2}/g)?.join(" ") ?? "";
+    const sig = first16Hex.slice(0, 8);
+    console.log(`   - First 16 bytes: ${spaced}`);
+    console.log(`   - File signature: ${sig}`);
+    if (sig.startsWith("ffd8")) console.log("   - ✅ JPEG");
+    else if (sig.startsWith("8950")) console.log("   - ✅ PNG");
+    else console.log("   - ⚠️ Unknown signature");
 
-      // Check for common image file signatures
-      const signature = Array.from(bytesValue.slice(0, 4) as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join('');
-      console.log(`   - File signature: ${signature}`);
-
-      if (signature.startsWith('ffd8')) {
-        console.log(`   - ✅ Valid JPEG signature detected`);
-      } else if (signature.startsWith('8950')) {
-        console.log(`   - ✅ Valid PNG signature detected`);
-      } else {
-        console.log(`   - ⚠️ Unknown or unexpected file signature`);
-      }
-    }
-
-    // Convert to different formats for logging
-    const buffer = Buffer.from(bytesValue);
-    console.log(`🔄 Buffer conversion:`);
-    console.log(`   - Buffer length: ${buffer.length}`);
-    console.log(`   - Buffer type: ${typeof buffer}`);
-    console.log(`   - Is Buffer: ${Buffer.isBuffer(buffer)}`);
-
-    // Determine content type based on file extension
+    // Content type from extension
     const ext = filename.split(".").pop()?.toLowerCase();
-    let contentType = "image/jpeg"; // default
+    const contentType =
+      ext === "png"  ? "image/png"  :
+      ext === "jpg"  ? "image/jpeg" :
+      ext === "jpeg" ? "image/jpeg" :
+      ext === "gif"  ? "image/gif"  :
+      ext === "webp" ? "image/webp" :
+      ext === "svg"  ? "image/svg+xml" :
+      "application/octet-stream";
 
-    console.log(`🎯 File extension: ${ext}`);
-
-    switch (ext) {
-      case "png":
-        contentType = "image/png";
-        break;
-      case "jpg":
-      case "jpeg":
-        contentType = "image/jpeg";
-        break;
-      case "gif":
-        contentType = "image/gif";
-        break;
-      case "webp":
-        contentType = "image/webp";
-        break;
-      case "svg":
-        contentType = "image/svg+xml";
-        break;
-    }
-
-    console.log(`📋 Content-Type determined: ${contentType}`);
-
-    // Set appropriate headers with more permissive CORS
-    const responseHeaders = {
+    res.set({
       "Content-Type": contentType,
       "Content-Length": buffer.length.toString(),
-      "Cache-Control": "public, max-age=31536000", // Cache for 1 year
+      "Cache-Control": "public, max-age=31536000, immutable",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Cache-Control",
-    };
+      "Content-Disposition": `inline; filename="${filename}"`,
+    });
 
-    console.log(`📤 Response headers:`, JSON.stringify(responseHeaders, null, 2));
-
-    res.set(responseHeaders);
-
-    console.log(`🚀 Sending response...`);
-    console.log(`   - Sending buffer of ${buffer.length} bytes`);
-    console.log(`   - Response status: 200`);
-
-    // Send the image bytes as a Buffer
-    res.send(buffer);
-
-    console.log(`✅ Response sent successfully`);
-    console.log(`=== IMAGE PROXY REQUEST END ===\n`);
-
-  } catch (error: unknown) {
-    console.error(`💥 FATAL ERROR in image proxy:`);
-    console.error(`   - Error message: ${error instanceof Error ? error.message : String(error)}`);
-    console.error(`   - Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
-    console.error(`   - Error type: ${typeof error}`);
-    console.error(`   - Error stringified:`, JSON.stringify(error, null, 2));
-    console.error(`=== IMAGE PROXY ERROR END ===\n`);
-
-    res.status(500).json({
+    return res.send(buffer);
+  } catch (err) {
+    console.error("💥 FATAL ERROR in image proxy:", err);
+    return res.status(500).json({
       error: "Error loading image",
-      details: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString()
+      details: err instanceof Error ? err.message : String(err),
+      timestamp: new Date().toISOString(),
     });
   }
 });
