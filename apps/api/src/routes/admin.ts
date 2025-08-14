@@ -138,10 +138,8 @@ router.post(
 
       console.log(`Uploading hero image for restaurant ID: ${restaurantId}, size: ${file.size}, type: ${file.mimetype}`);
 
-      // Generate a unique filename
-      const timestamp = Date.now();
-      const ext = file.originalname.split('.').pop() || 'jpg';
-      const filename = `heroImage-${timestamp}.${ext}`;
+      // Use simple filename
+      const filename = `heroImage.jpg`;
       const objectKey = `${restaurantId}/${filename}`;
 
       // Delete any existing image first
