@@ -109,7 +109,6 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// Image proxy route for Replit storage - downloads and serves image bytes
 app.get("/api/images/storage/:replId/:filename", async (req, res) => {
   try {
     const { replId, filename } = req.params;
@@ -118,26 +117,26 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    const result = await storage.downloadAsBytes(key);
+    // 🔒 Narrow the union to a clean shape TS understands
+    type BytesOk = { ok: true; value: Uint8Array };
+    type BytesErr = { ok: false; error: unknown };
+    const out = (await storage.downloadAsBytes(key)) as BytesOk | BytesErr;
 
-    if (!result.ok) {
-      console.error("❌ DOWNLOAD FAILED:", result.error);
-      return res.status(404).json({
-        error: "Image not found",
-        path: key,
-        details: result.error,
-        timestamp: new Date().toISOString(),
-      });
+    if (!out.ok) {
+      console.error("❌ DOWNLOAD FAILED:", out.error);
+      return res.status(404).json({ error: "Image not found", path: key, details: out.error });
     }
 
-    // Convert Uint8Array to Buffer for response
-    const buffer = Buffer.from(result.value);
+    // ✅ out.value is now a Uint8Array
+    const u8 = out.value;
 
-    // Optional: quick hex sig log, *no* number.toString(16) confusion
-    const sigHex = buffer.subarray(0, 4).toString("hex");
-    console.log("signature:", sigHex);
+    // ✅ Use ArrayBuffer+offsets overload (no ambiguity)
+    const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
 
-    // Content type from extension
+    // (Optional) quick signature log
+    console.log("signature:", buffer.subarray(0, 4).toString("hex"));
+
+    // Content type from extension (or sniff if you want)
     const ext = filename.split(".").pop()?.toLowerCase();
     const contentType =
       ext === "png"  ? "image/png"  :
@@ -150,7 +149,7 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
 
     res.set({
       "Content-Type": contentType,
-      "Content-Length": String(buffer.length),
+      // Let Express compute length to avoid mismatches:
       "Cache-Control": "public, max-age=31536000, immutable",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -158,14 +157,12 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       "Content-Disposition": `inline; filename="${filename}"`,
     });
 
-    // ✅ Send the raw Buffer (no brackets!)
-    return res.send(buffer);
+    return res.end(buffer); // <- send raw bytes (not [buffer])
   } catch (err) {
     console.error("💥 FATAL ERROR in image proxy:", err);
     return res.status(500).json({
       error: "Error loading image",
       details: err instanceof Error ? err.message : String(err),
-      timestamp: new Date().toISOString(),
     });
   }
 });
