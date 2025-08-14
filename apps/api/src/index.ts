@@ -111,11 +111,11 @@ app.use('/api/images', imagesRouter);
 app.get('/api/images/storage/:replId/:filename', async (req, res) => {
   try {
     const { replId, filename } = req.params;
-    
+
     console.log(`=== IMAGE PROXY REQUEST ===`);
     console.log(`Request path: ${req.path}`);
     console.log(`replId: ${replId}, filename: ${filename}`);
-    
+
     // Try multiple storage URL formats
     const storageUrls = [
       // Direct Object Storage format (current preferred format)
@@ -334,17 +334,9 @@ app.get('/test-db-images', async (req, res) => {
     });
 
     html += `
-    </body>
-    </html>`;
-
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-
-  } catch (error) {
-    console.error('Database test error:', error);
-    res.status(500).json({ error: 'Database test failed' });
-  }
-});
+        <script>
+            setTimeout(() => {
+                console.log('🔍 Testing fetch API for proxy endpoint...');
                 fetch('/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg')
                     .then(response => {
                         console.log('Fetch response status:', response.status);
@@ -360,8 +352,15 @@ app.get('/test-db-images', async (req, res) => {
             }, 2000);
         </script>
     </body>
-    </html>
-  `);
+    </html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
+  } catch (error) {
+    console.error('Database test error:', error);
+    res.status(500).json({ error: 'Database test failed' });
+  }
 });
 
 
@@ -388,7 +387,7 @@ app.get('/api/images/*', async (req, res) => {
     console.log('Cleaned image path:', imagePath);
 
     // Try multiple storage URL formats
-    
+
     const storageUrls = [
       `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(imagePath)}?alt=media`,
       // Direct Object Storage format with REPL_ID bucket
