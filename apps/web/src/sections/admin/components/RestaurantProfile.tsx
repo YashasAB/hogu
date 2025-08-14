@@ -39,43 +39,26 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      console.log(
-        "📸 FileReader loaded, setting preview:",
-        dataUrl ? "Data URL created" : "No data URL",
-      );
-      setPhotoPreview(dataUrl);
-    };
-    reader.readAsDataURL(file);
-
     setUploadingPhoto(true);
 
     try {
       const formData = new FormData();
-      formData.append("heroImage", file);
+      formData.append('image', file);
 
-      const token = localStorage.getItem("hogu_restaurant_token");
-      const response = await fetch("/api/admin/restaurant/hero-image", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error("Failed to upload photo");
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
 
       const result = await response.json();
-      onDataChange({ heroImageUrl: result.imageUrl });
+      onDataChange({ heroImageUrl: result.url || result.imageUrl });
     } catch (error) {
-      console.error("Error uploading photo:", error);
-      alert("Failed to upload photo. Please try again.");
-      setPhotoPreview(null);
+      console.error('Error uploading photo:', error);
+      alert(`Failed to upload photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingPhoto(false);
     }
@@ -147,17 +130,14 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           {/* Current/Preview Image */}
           <div className="mb-4">
             <div className="relative bg-slate-800 rounded-lg border border-slate-600 p-2">
-              {photoPreview || profileData.heroImageUrl ? (
+              {profileData.heroImageUrl ? (
                 <>
                   <div className="text-xs text-yellow-400 mb-2">
-                    Image URL:{" "}
-                    {photoPreview
-                      ? "Preview (not saved yet)"
-                      : profileData.heroImageUrl}
+                    Image URL: {profileData.heroImageUrl}
                   </div>
                   <img
-                    src={photoPreview || profileData.heroImageUrl}
-                    alt={photoPreview ? "Preview" : "Current hero image"}
+                    src={profileData.heroImageUrl}
+                    alt="Current hero image"
                     className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                     onLoad={(e) => {
                       console.log(
@@ -228,17 +208,9 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 </div>
               )}
             </div>
-            {photoPreview ? (
-              <p className="text-sm text-blue-400 mt-2">
-                📸 Preview - click Save to confirm upload
-              </p>
-            ) : profileData.heroImageUrl ? (
+            {profileData.heroImageUrl && (
               <p className="text-sm text-green-400 mt-2">
                 ✅ Current hero image
-              </p>
-            ) : (
-              <p className="text-sm text-slate-500 mt-2">
-                Upload an image to see a preview
               </p>
             )}
           </div>
