@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 type Restaurant = {
@@ -136,7 +135,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           <label className="block text-sm font-medium text-slate-300 mb-2">
             Hero Image
           </label>
-          
+
           {/* Current/Preview Image */}
           {(photoPreview || profileData.heroImageUrl) && (
             <div className="mb-4">
@@ -144,36 +143,39 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 <div className="text-xs text-yellow-400 mb-2">
                   Image URL: {photoPreview || profileData.heroImageUrl}
                 </div>
-                <img
-                  src={photoPreview || profileData.heroImageUrl}
-                  alt={photoPreview ? "Preview" : "Current hero image"}
-                  className="w-full max-w-md h-48 object-cover rounded-lg block border-2 border-slate-500"
-                  style={{ 
-                    minHeight: '192px', 
-                    minWidth: '256px',
-                    backgroundColor: '#475569',
-                    display: 'block'
-                  }}
-                  onLoad={(e) => {
-                    console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
-                    console.log('Image dimensions:', {
-                      width: e.currentTarget.width,
-                      height: e.currentTarget.height,
-                      naturalWidth: e.currentTarget.naturalWidth,
-                      naturalHeight: e.currentTarget.naturalHeight
-                    });
-                  }}
-                  onError={(e) => {
-                    console.error('❌ Profile image failed to load:', e.currentTarget.src);
-                    console.error('Error details:', e);
-                    // Try to display a fallback
-                    e.currentTarget.style.backgroundColor = '#ef4444';
-                    e.currentTarget.style.border = '2px solid #dc2626';
-                  }}
-                />
-                {/* Fallback text if image fails */}
-                <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-sm opacity-30 pointer-events-none">
-                  Image Loading...
+                {(photoPreview || profileData.heroImageUrl) ? (
+                  <img
+                    src={photoPreview || profileData.heroImageUrl}
+                    alt={photoPreview ? "Preview" : "Current hero image"}
+                    className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                    onLoad={(e) => {
+                      console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
+                      console.log('Image dimensions:', {
+                        width: e.currentTarget.width,
+                        height: e.currentTarget.height,
+                        naturalWidth: e.currentTarget.naturalWidth,
+                        naturalHeight: e.currentTarget.naturalHeight
+                      });
+                    }}
+                    onError={(e) => {
+                      console.error('❌ Profile image failed to load:', e.currentTarget.src);
+                      // Hide the broken image and show placeholder
+                      e.currentTarget.style.display = 'none';
+                      const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (placeholder) placeholder.style.display = 'block';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400"
+                  style={{ display: (photoPreview || profileData.heroImageUrl) ? 'none' : 'flex' }}
+                >
+                  <div className="text-center">
+                    <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm">No image uploaded</p>
+                  </div>
                 </div>
               </div>
               {photoPreview ? (
