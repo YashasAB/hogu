@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 type Restaurant = {
   id: string;
@@ -19,7 +19,7 @@ interface RestaurantProfileProps {
     heroImageUrl: string;
   };
   loading: boolean;
-  onDataChange: (data: Partial<RestaurantProfileProps['profileData']>) => void;
+  onDataChange: (data: Partial<RestaurantProfileProps["profileData"]>) => void;
   onSave: () => void;
 }
 
@@ -28,12 +28,14 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
   profileData,
   loading,
   onDataChange,
-  onSave
+  onSave,
 }) => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -41,7 +43,10 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
-      console.log('📸 FileReader loaded, setting preview:', dataUrl ? 'Data URL created' : 'No data URL');
+      console.log(
+        "📸 FileReader loaded, setting preview:",
+        dataUrl ? "Data URL created" : "No data URL",
+      );
       setPhotoPreview(dataUrl);
     };
     reader.readAsDataURL(file);
@@ -50,11 +55,11 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append('heroImage', file);
+      formData.append("heroImage", file);
 
-      const token = localStorage.getItem('hogu_restaurant_token');
-      const response = await fetch('/api/admin/restaurant/hero-image', {
-        method: 'POST',
+      const token = localStorage.getItem("hogu_restaurant_token");
+      const response = await fetch("/api/admin/restaurant/hero-image", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -62,15 +67,14 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload photo');
+        throw new Error("Failed to upload photo");
       }
 
       const result = await response.json();
       onDataChange({ heroImageUrl: result.imageUrl });
-      setPhotoPreview(dataUrl); // Clear preview so current image shows
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Failed to upload photo. Please try again.');
+      console.error("Error uploading photo:", error);
+      alert("Failed to upload photo. Please try again.");
       setPhotoPreview(null);
     } finally {
       setUploadingPhoto(false);
@@ -78,7 +82,9 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
   };
   return (
     <section className="rounded-2xl p-6 ring-1 ring-white/10 bg-slate-900/70">
-      <h2 className="text-lg sm:text-xl font-semibold mb-6">Restaurant Profile</h2>
+      <h2 className="text-lg sm:text-xl font-semibold mb-6">
+        Restaurant Profile
+      </h2>
 
       <div className="space-y-4">
         <div>
@@ -141,39 +147,61 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           {/* Current/Preview Image */}
           <div className="mb-4">
             <div className="relative bg-slate-800 rounded-lg border border-slate-600 p-2">
-              {(photoPreview || profileData.heroImageUrl) ? (
+              {photoPreview || profileData.heroImageUrl ? (
                 <>
                   <div className="text-xs text-yellow-400 mb-2">
-                    Image URL: {photoPreview ? 'Preview (not saved yet)' : profileData.heroImageUrl}
+                    Image URL:{" "}
+                    {photoPreview
+                      ? "Preview (not saved yet)"
+                      : profileData.heroImageUrl}
                   </div>
                   <img
                     src={photoPreview || profileData.heroImageUrl}
                     alt={photoPreview ? "Preview" : "Current hero image"}
                     className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                     onLoad={(e) => {
-                      console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
-                      console.log('Image dimensions:', {
+                      console.log(
+                        "✅ Profile image loaded successfully:",
+                        e.currentTarget.src,
+                      );
+                      console.log("Image dimensions:", {
                         width: e.currentTarget.width,
                         height: e.currentTarget.height,
                         naturalWidth: e.currentTarget.naturalWidth,
-                        naturalHeight: e.currentTarget.naturalHeight
+                        naturalHeight: e.currentTarget.naturalHeight,
                       });
                     }}
                     onError={(e) => {
-                      console.error('❌ Profile image failed to load:', e.currentTarget.src);
+                      console.error(
+                        "❌ Profile image failed to load:",
+                        e.currentTarget.src,
+                      );
                       // Hide the broken image and show placeholder
-                      e.currentTarget.style.display = 'none';
-                      const placeholder = e.currentTarget.parentElement?.querySelector('.placeholder-div') as HTMLElement;
-                      if (placeholder) placeholder.style.display = 'flex';
+                      e.currentTarget.style.display = "none";
+                      const placeholder =
+                        e.currentTarget.parentElement?.querySelector(
+                          ".placeholder-div",
+                        ) as HTMLElement;
+                      if (placeholder) placeholder.style.display = "flex";
                     }}
                   />
-                  <div 
+                  <div
                     className="placeholder-div w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   >
                     <div className="text-center">
-                      <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z" />
+                      <svg
+                        className="w-12 h-12 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                       <p className="text-sm">Image failed to load</p>
                     </div>
@@ -182,8 +210,18 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
               ) : (
                 <div className="w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400">
                   <div className="text-center">
-                    <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-12 h-12 mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     <p className="text-sm">No image uploaded</p>
                   </div>
@@ -225,7 +263,8 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
             )}
             {profileData.heroImageUrl && (
               <p className="text-sm text-green-400 mt-2">
-                ✓ Hero image is set. The image will appear on the restaurant detail page.
+                ✓ Hero image is set. The image will appear on the restaurant
+                detail page.
               </p>
             )}
           </div>
@@ -250,7 +289,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           disabled={loading}
           className="w-full px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Saving...' : 'Save Changes'}
+          {loading ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </section>
