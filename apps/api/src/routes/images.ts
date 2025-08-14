@@ -1,174 +1,30 @@
-import { Router } from 'express';
-import { Client } from '@replit/object-storage';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
-const storageClient = new Client();
 
-// Serve images from Object Storage
-router.get('/*', async (req, res) => {
-  console.log('=== IMAGE REQUEST RECEIVED ===');
-  console.log('Request method:', req.method);
-  console.log('Request URL:', req.url);
-  console.log('Request path:', req.path);
-  console.log('Request params:', req.params);
-  console.log('================================');
-
+// Direct redirect to Replit Object Storage URL
+router.get('/storage/*', async (req: Request, res: Response) => {
   try {
-    // Extract the path after /api/images/ by removing the route prefix
-    let imagePath = req.path.slice(1); // Remove leading slash
+    const filePath = req.params[0]; // Get everything after /storage/
 
-    console.log(`Raw image path: ${imagePath}`);
-
-    // If the path starts with https://, it's already a full URL - redirect to it
-    if (imagePath.startsWith('https://')) {
-      console.log('Redirecting to external URL:', imagePath);
-      return res.redirect(imagePath);
+    if (!filePath) {
+      console.log('❌ No file path provided');
+      return res.status(400).json({ error: 'File path is required' });
     }
 
-    // Clean up the path - remove any leading slashes
-    imagePath = imagePath.replace(/^\/+/, '');
+    console.log(`📁 Redirecting to direct storage URL for: ${filePath}`);
 
-    // Remove 'storage/' prefix if it exists since files were uploaded without it
-    imagePath = imagePath.replace(/^storage\//, '');
+    // Construct the direct Replit Object Storage URL
+    const encodedPath = encodeURIComponent(filePath);
+    const directUrl = `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodedPath}?alt=media`;
 
-    if (!imagePath) {
-      console.log('ERROR: No image path provided');
-      return res.status(400).json({ error: 'No image path provided' });
-    }
+    console.log(`✅ Redirecting to: ${directUrl}`);
 
-    console.log(`Final cleaned image path: ${imagePath}`);
-
-    // Try to serve from Object Storage
-    let result = await storageClient.downloadAsBytes(imagePath);
-
-    if (!result.ok) {
-      console.log('Primary storage failed, trying direct Replit storage URL...');
-
-      // Try to fetch from direct Replit storage URL as fallback
-      const knownStorageUrl = `https://storage.replit.com/a5596f5b-0e64-44d2-9f7e-86e86ceed4ae/${imagePath}`;
-      try {
-        const response = await fetch(knownStorageUrl);
-        if (response.ok) {
-          console.log('✅ Successfully fetched from direct Replit storage URL');
-          const buffer = Buffer.from(await response.arrayBuffer());
-
-          // Set appropriate content type
-          const extension = imagePath.split('.').pop()?.toLowerCase();
-          let contentType = 'image/jpeg';
-
-          switch (extension) {
-            case 'png': contentType = 'image/png'; break;
-            case 'jpg':
-            case 'jpeg': contentType = 'image/jpeg'; break;
-            case 'gif': contentType = 'image/gif'; break;
-            case 'webp': contentType = 'image/webp'; break;
-          }
-
-          res.set('Content-Type', contentType);
-          res.set('Cache-Control', 'public, max-age=86400');
-          res.set('Content-Length', buffer.length.toString());
-          res.set('Access-Control-Allow-Origin', '*');
-          return res.send(buffer);
-        }
-      } catch (fetchError) {
-        console.log('Direct fetch also failed:', fetchError);
-      }
-
-      console.error('All storage methods failed for path:', imagePath);
-      console.error('Primary storage error:', result.error);
-      return res.status(404).json({ error: 'Image not found' });
-    }
-
-    // Set appropriate content type based on file extension
-    const extension = imagePath.split('.').pop()?.toLowerCase();
-    let contentType = 'image/jpeg'; // default
-
-    switch (extension) {
-      case 'png':
-        contentType = 'image/png';
-        break;
-      case 'jpg':
-      case 'jpeg':
-        contentType = 'image/jpeg';
-        break;
-      case 'gif':
-        contentType = 'image/gif';
-        break;
-      case 'webp':
-        contentType = 'image/webp';
-        break;
-    }
-
-    console.log(`Setting content type: ${contentType} for extension: ${extension}`);
-    console.log(`Image data size: ${result.value.length} bytes`);
-
-    res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-    res.set('Content-Length', result.value.length.toString());
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.send(result.value);
-
+    // Redirect to the direct storage URL
+    res.redirect(302, directUrl);
   } catch (error) {
-    console.error('Error serving image:', error);
-    res.status(500).json({ error: 'Failed to serve image' });
-  }
-});
-
-// Proxy route for Replit Object Storage images
-router.get('/storage/*', async (req, res) => {
-  try {
-    // Extract the path after /storage/
-    let imagePath = (req.params as any)[0];
-
-    if (!imagePath) {
-      return res.status(400).json({ error: 'No image path provided' });
-    }
-
-    // Remove 'storage/' prefix if it exists since the file was uploaded without it
-    imagePath = imagePath.replace(/^storage\//, '');
-
-    console.log(`Proxying storage image: ${imagePath}`);
-
-    // Try to serve from Object Storage
-    const result = await storageClient.downloadAsBytes(imagePath);
-
-    if (!result.ok) {
-      console.error('Failed to download image from storage:', result.error);
-      return res.status(404).json({ error: 'Image not found' });
-    }
-
-    // Determine content type based on file extension
-    const ext = imagePath.split('.').pop()?.toLowerCase();
-    let contentType = 'application/octet-stream';
-
-    switch (ext) {
-      case 'jpg':
-      case 'jpeg':
-        contentType = 'image/jpeg';
-        break;
-      case 'png':
-        contentType = 'image/png';
-        break;
-      case 'gif':
-        contentType = 'image/gif';
-        break;
-      case 'webp':
-        contentType = 'image/webp';
-        break;
-      case 'svg':
-        contentType = 'image/svg+xml';
-        break;
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    res.send(result.value);
-
-  } catch (error) {
-    console.error('Error proxying storage image:', error);
-    res.status(500).json({ error: 'Failed to load image' });
+    console.error('❌ Error redirecting to storage URL:', error);
+    res.status(500).json({ error: 'Failed to redirect to image' });
   }
 });
 
