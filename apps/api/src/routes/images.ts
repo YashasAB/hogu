@@ -8,6 +8,14 @@ const storageClient = new Client();
 
 // Serve images from Object Storage
 router.get('/*', async (req, res) => {
+  console.log('=== IMAGE REQUEST RECEIVED ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  console.log('Request path:', req.path);
+  console.log('Request params:', req.params);
+  console.log('Request headers:', req.headers);
+  console.log('================================');
+  
   try {
     // Extract the path after /api/images/ by removing the route prefix
     let imagePath = req.path.slice(1); // Remove leading slash
