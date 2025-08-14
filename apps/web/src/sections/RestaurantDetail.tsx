@@ -90,8 +90,13 @@ export default function RestaurantDetail() {
       setLoading(true);
       try {
         const response = await fetch(`/api/restaurants/${slug}`);
+        console.log('Restaurant API response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('Restaurant data received from API:', data);
+          console.log('Image URLs in restaurant data:');
+          console.log('- image:', data.image);
+          console.log('- heroImageUrl:', data.heroImageUrl);
           setRestaurant(data);
         } else {
           console.error('Restaurant not found in API');
@@ -267,12 +272,17 @@ export default function RestaurantDetail() {
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             loading="lazy"
             onError={(e) => {
-              console.error('Hero image failed to load:', e.currentTarget.src);
-              console.error('Restaurant data:', restaurant);
-              // You could set a fallback image here if needed
+              console.error('=== HERO IMAGE LOAD ERROR ===');
+              console.error('Failed to load image URL:', e.currentTarget.src);
+              console.error('heroImageUrl from data:', restaurant.heroImageUrl);
+              console.error('image from data:', restaurant.image);
+              console.error('Full restaurant data:', restaurant);
+              console.error('==============================');
             }}
             onLoad={() => {
-              console.log('Hero image loaded successfully:', restaurant.heroImageUrl || restaurant.image);
+              console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
+              console.log('Loaded image URL:', restaurant.heroImageUrl || restaurant.image);
+              console.log('======================================');
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
