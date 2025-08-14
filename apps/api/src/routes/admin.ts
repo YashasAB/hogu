@@ -136,7 +136,8 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
     }
 
     // Upload the file to Replit Object Storage
-    const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
+    const fileExtension = file.originalname.split('.').pop() || 'jpg';
+    const fileName = `${restaurantId}/heroImage.${fileExtension}`;
     console.log(`Attempting to upload to filename: ${fileName}`);
 
     // Debug environment variables
@@ -224,7 +225,7 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       }
 
       // Construct the proxy URL for the uploaded file  
-      const heroImageUrl = `/api/images/storage/${restaurantId}/${fileName.split('/').pop()}`;
+      const heroImageUrl = `/api/images/storage/${fileName}`;
       console.log(`File uploaded successfully, available at: ${heroImageUrl}`);
 
       // Update the restaurant's heroImageUrl in the database

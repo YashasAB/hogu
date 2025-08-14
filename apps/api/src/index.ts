@@ -174,11 +174,15 @@ app.get('/api/images/*', async (req, res) => {
 
     if (!response.ok) {
       console.error(`Failed to fetch image from storage: ${response.status} ${response.statusText}`);
+      console.error('Storage URL attempted:', storageUrl);
       return res.status(404).send('Image not found');
     }
 
     // Get the content type from the response
     const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    console.log('✅ Successfully fetched image from storage');
+    console.log('Content-Type:', contentType);
 
     // Set appropriate headers
     res.set({
