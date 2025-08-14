@@ -136,25 +136,15 @@ router.post(
           .json({ error: "Only image uploads are allowed" });
       }
 
-      console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
-      console.log(
-        `File details - name: ${file.originalname}, size: ${file.size}, mimetype: ${file.mimetype}`,
-      );
+      console.log(`Uploading hero image for restaurant ID: ${restaurantId}, size: ${file.size}, type: ${file.mimetype}`);
 
-      // Normalize extension from the MIME type first; fall back to original name
-      const extFromName = (
-        file.originalname.split(".").pop() || ""
-      ).toLowerCase();
-      const ext = extFromName || "jpg";
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const ext = file.originalname.split('.').pop() || 'jpg';
+      const filename = `heroImage-${timestamp}.${ext}`;
+      const objectKey = `${restaurantId}/${filename}`;
 
-      // Final key in object storage
-      const objectKey = `${restaurantId}/heroImage.${ext}`;
-
-      // Ensure we have a client each request (avoids "client not initialized")
-      const { Client } = await import("@replit/object-storage");
-      const storageClient = new Client();
-
-      // Delete any existing image first (regardless of URL format previously stored)
+      // Delete any existing image first
       const existing = await prisma.restaurant.findUnique({
         where: { id: restaurantId },
         select: { heroImageUrl: true },
@@ -164,6 +154,8 @@ router.post(
         const oldKey = extractObjectKeyFromUrl(existing.heroImageUrl);
         if (oldKey) {
           try {
+            const { Client } = await import("@replit/object-storage");
+            const storageClient = new Client();
             const del = await storageClient.delete(oldKey);
             if (!del.ok) {
               console.warn("⚠️ Failed to delete old hero image:", del.error);
@@ -176,39 +168,37 @@ router.post(
         }
       }
 
-      // Multer gives Buffer already → use it
-      const buf: Buffer = Buffer.isBuffer(file.buffer)
-        ? file.buffer
-        : Buffer.from(file.buffer as ArrayBufferLike);
+      const { Client } = await import("@replit/object-storage");
+      const storage = new Client();
 
-      // Optional options if supported by your SDK version
-      const upload = await storageClient.uploadFromBytes(objectKey, buf, {});
+      // Upload to storage
+      const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
 
-      if (!upload.ok) {
-        const msg =
-          (upload as any).error?.message || JSON.stringify(upload.error);
-        return res.status(500).json({ error: `Storage upload failed: ${msg}` });
+      if (!uploadResult.ok) {
+        console.error("Storage upload failed:", uploadResult.error);
+        return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
       }
 
-      // Store the canonical PROXY URL (your API will serve correct image bytes & headers)
-      const proxyUrl = `/api/images/storage/${restaurantId}/heroImage.${ext}`;
+      // Return the proxy URL
+      const imageUrl = `/api/images/storage/${objectKey}`;
+      console.log(`✅ Hero image uploaded successfully: ${imageUrl}`);
 
+      // Update database
       await prisma.restaurant.update({
         where: { id: restaurantId },
-        data: { heroImageUrl: proxyUrl },
+        data: { heroImageUrl: imageUrl },
       });
 
-      console.log(
-        `✅ Hero image uploaded successfully for ${restaurantId}: ${proxyUrl}`,
-      );
-
-      return res.json({
+      res.json({
         message: "Hero image uploaded successfully",
-        imageUrl: proxyUrl,
+        url: imageUrl,
+        filename: filename,
+        size: file.size,
+        mimetype: file.mimetype
       });
-    } catch (err) {
-      console.error("Error uploading hero image:", err);
-      return res.status(500).json({ error: "Failed to upload hero image" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
     }
   },
 );
@@ -697,7 +687,7 @@ router.post(
 
 router.post(
   "/api/images/storage/:restaurantId/hero-image",
-  upload.single("image") as any,  // multer memory storage
+  upload.single("image") as any,  //multer memory storage
   async (req: AuthenticatedRestaurantRequest, res: Response) => {
     try {
       const { restaurantId } = req.params;
@@ -728,7 +718,7 @@ router.post(
         return res.status(500).json({ error: `Storage upload failed: ${msg}` });
       }
 
-      const imageUrl = `/api/images/storage/${restaurantId}/heroImage.${ext}`;
+      const imageUrl = `/api/images/storage/${objectKey}`;
       return res.json({ message: "Hero image uploaded successfully", imageUrl });
     } catch (err) {
       console.error("Error uploading hero image:", err);
