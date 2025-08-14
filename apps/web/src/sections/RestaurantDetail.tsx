@@ -89,18 +89,18 @@ export default function RestaurantDetail() {
       setLoading(true);
       try {
         const response = await fetch(`/api/restaurants/${slug}`);
-        console.log('Restaurant API response status:', response.status);
+        console.log("Restaurant API response status:", response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('Restaurant data received from API:', data);
-          console.log('Hero image URL in restaurant data:', data.heroImageUrl);
+          console.log("Restaurant data received from API:", data);
+          console.log("Hero image URL in restaurant data:", data.heroImageUrl);
           setRestaurant(data);
         } else {
-          console.error('Restaurant not found in API');
+          console.error("Restaurant not found in API");
           setRestaurant(null);
         }
       } catch (error) {
-        console.error('Error fetching restaurant:', error);
+        console.error("Error fetching restaurant:", error);
         setRestaurant(null);
       } finally {
         setLoading(false);
@@ -127,7 +127,9 @@ export default function RestaurantDetail() {
       if (!restaurant || !date || !partySize) return;
 
       try {
-        const response = await fetch(`/api/restaurants/${restaurant.slug}/availability?date=${date}&partySize=${partySize}`);
+        const response = await fetch(
+          `/api/restaurants/${restaurant.slug}/availability?date=${date}&partySize=${partySize}`,
+        );
         if (response.ok) {
           const data = await response.json();
           setTimeSlots(data);
@@ -136,7 +138,7 @@ export default function RestaurantDetail() {
           setTimeSlots(generateTimeSlots());
         }
       } catch (error) {
-        console.error('Failed to fetch availability:', error);
+        console.error("Failed to fetch availability:", error);
         // Fallback to generated time slots
         setTimeSlots(generateTimeSlots());
       }
@@ -152,9 +154,9 @@ export default function RestaurantDetail() {
       return;
     }
 
-    const token = localStorage.getItem('hogu_token');
+    const token = localStorage.getItem("hogu_token");
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -162,44 +164,44 @@ export default function RestaurantDetail() {
     if (!slot) return;
 
     try {
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
+      const response = await fetch("/api/reservations", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           restaurantSlug: restaurant?.slug,
           date: date,
           time: slot.time,
-          partySize: partySize
-        })
+          partySize: partySize,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || 'Failed to create reservation');
+        alert(data.error || "Failed to create reservation");
         return;
       }
 
       alert(
-        `Reservation created! Status: ${data.status}\n${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`
+        `Reservation created! Status: ${data.status}\n${restaurant?.name} on ${date} at ${slot?.time} for ${partySize} ${partySize === 1 ? "person" : "people"}`,
       );
 
       // Reset selection and navigate to home
       setSelectedSlot(null);
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Reservation error:', error);
-      alert('Failed to create reservation. Please try again.');
+      console.error("Reservation error:", error);
+      alert("Failed to create reservation. Please try again.");
     }
   };
 
   const handleMobileCTA = () => {
-    const token = localStorage.getItem('hogu_token');
+    const token = localStorage.getItem("hogu_token");
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -264,52 +266,52 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={'/api/images/storage/objects/cme996hfm000bj4h1cu57rrca/heroImage.jpg'}
+            src={"/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg"}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
-            style={{ 
-              display: 'block', 
-              width: '100%', 
-              height: '38vh',
-              objectFit: 'cover',
-              backgroundColor: '#f3f4f6'
+            style={{
+              display: "block",
+              width: "100%",
+              height: "38vh",
+              objectFit: "cover",
+              backgroundColor: "#f3f4f6",
             }}
             loading="eager"
             onError={(e) => {
-              console.error('=== HERO IMAGE LOAD ERROR ===');
-              console.error('Failed to load image URL:', e.currentTarget.src);
-              console.error('heroImageUrl from data:', restaurant.heroImageUrl);
-              console.error('Image element state:', {
+              console.error("=== HERO IMAGE LOAD ERROR ===");
+              console.error("Failed to load image URL:", e.currentTarget.src);
+              console.error("heroImageUrl from data:", restaurant.heroImageUrl);
+              console.error("Image element state:", {
                 width: e.currentTarget.width,
                 height: e.currentTarget.height,
                 naturalWidth: e.currentTarget.naturalWidth,
                 naturalHeight: e.currentTarget.naturalHeight,
                 complete: e.currentTarget.complete,
-                currentSrc: e.currentTarget.currentSrc
+                currentSrc: e.currentTarget.currentSrc,
               });
-              console.error('==============================');
+              console.error("==============================");
               // Fallback to placeholder if hero image fails
-              if (e.currentTarget.src !== '/api/placeholder/400/300') {
-                e.currentTarget.src = '/api/placeholder/400/300';
+              if (e.currentTarget.src !== "/api/placeholder/400/300") {
+                e.currentTarget.src = "/api/placeholder/400/300";
               }
             }}
             onLoad={(e) => {
-              console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
-              console.log('Loaded image URL:', restaurant.heroImageUrl);
-              console.log('Image dimensions:', {
+              console.log("=== HERO IMAGE LOADED SUCCESSFULLY ===");
+              console.log("Loaded image URL:", restaurant.heroImageUrl);
+              console.log("Image dimensions:", {
                 width: e.currentTarget.width,
                 height: e.currentTarget.height,
                 naturalWidth: e.currentTarget.naturalWidth,
-                naturalHeight: e.currentTarget.naturalHeight
+                naturalHeight: e.currentTarget.naturalHeight,
               });
-              console.log('Image computed styles:', {
+              console.log("Image computed styles:", {
                 display: window.getComputedStyle(e.currentTarget).display,
                 visibility: window.getComputedStyle(e.currentTarget).visibility,
                 opacity: window.getComputedStyle(e.currentTarget).opacity,
                 position: window.getComputedStyle(e.currentTarget).position,
-                zIndex: window.getComputedStyle(e.currentTarget).zIndex
+                zIndex: window.getComputedStyle(e.currentTarget).zIndex,
               });
-              console.log('======================================');
+              console.log("======================================");
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/30 to-transparent" />
