@@ -239,17 +239,17 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     console.log(`✅ Response sent successfully`);
     console.log(`=== IMAGE PROXY REQUEST END ===\n`);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`💥 FATAL ERROR in image proxy:`);
-    console.error(`   - Error message: ${error.message}`);
-    console.error(`   - Error stack:`, error.stack);
+    console.error(`   - Error message: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`   - Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
     console.error(`   - Error type: ${typeof error}`);
     console.error(`   - Error stringified:`, JSON.stringify(error, null, 2));
     console.error(`=== IMAGE PROXY ERROR END ===\n`);
     
     res.status(500).json({ 
       error: "Error loading image", 
-      details: error.message,
+      details: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     });
   }
