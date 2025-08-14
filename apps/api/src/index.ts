@@ -118,11 +118,7 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    // Type-safe approach - no casting needed
-    type DownloadBytesOk = { ok: true; value: Uint8Array };
-    type DownloadBytesErr = { ok: false; error: unknown };
-    
-    const result = await storage.downloadAsBytes(key) as DownloadBytesOk | DownloadBytesErr;
+    const result = await storage.downloadAsBytes(key);
 
     if (!result.ok) {
       console.error("❌ DOWNLOAD FAILED:", result.error);
@@ -134,11 +130,8 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       });
     }
 
-    // Already a Uint8Array, no casting needed
-    const u8 = result.value;
-
-    // Safest Buffer construction (no TS overload ambiguity)
-    const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+    // Convert Uint8Array to Buffer for response
+    const buffer = Buffer.from(result.value);
 
     // Optional: quick hex sig log, *no* number.toString(16) confusion
     const sigHex = buffer.subarray(0, 4).toString("hex");

@@ -198,28 +198,6 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
 
       if (!uploadResult.ok) {
         console.error('Upload failed with result:', JSON.stringify(uploadResult, null, 2));
-
-        // Try alternative: save as base64 string temporarily
-        const base64Data = file.buffer.toString('base64');
-        const altFileName = `${restaurantId}/heroImage.base64`;
-        console.log('Trying alternative base64 upload...');
-
-        const altUploadResult = await storageClient.uploadFromText(altFileName, base64Data);
-        if (altUploadResult.ok) {
-          console.log('Base64 upload succeeded, but this is not ideal for images');
-          const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${altFileName}`;
-
-          const updatedRestaurant = await prisma.restaurant.update({
-            where: { id: restaurantId },
-            data: { heroImageUrl },
-          });
-
-          return res.json({ 
-            message: 'Hero image uploaded as base64 (temporary solution)', 
-            imageUrl: updatedRestaurant.heroImageUrl 
-          });
-        }
-
         const errorMessage = uploadResult.error?.message || JSON.stringify(uploadResult.error) || 'Unknown storage error';
         throw new Error(`Storage upload failed: ${errorMessage}`);
       }
