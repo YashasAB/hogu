@@ -141,24 +141,40 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
           {(photoPreview || profileData.heroImageUrl) && (
             <div className="mb-4">
               <div className="relative bg-slate-800 rounded-lg border border-slate-600 p-2">
+                <div className="text-xs text-yellow-400 mb-2">
+                  Image URL: {photoPreview || profileData.heroImageUrl}
+                </div>
                 <img
                   src={photoPreview || profileData.heroImageUrl}
                   alt={photoPreview ? "Preview" : "Current hero image"}
-                  className="w-full max-w-md h-48 object-cover rounded-lg block"
+                  className="w-full max-w-md h-48 object-cover rounded-lg block border-2 border-slate-500"
                   style={{ 
                     minHeight: '192px', 
                     minWidth: '256px',
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#475569',
                     display: 'block'
                   }}
                   onLoad={(e) => {
                     console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
+                    console.log('Image dimensions:', {
+                      width: e.currentTarget.width,
+                      height: e.currentTarget.height,
+                      naturalWidth: e.currentTarget.naturalWidth,
+                      naturalHeight: e.currentTarget.naturalHeight
+                    });
                   }}
                   onError={(e) => {
                     console.error('❌ Profile image failed to load:', e.currentTarget.src);
                     console.error('Error details:', e);
+                    // Try to display a fallback
+                    e.currentTarget.style.backgroundColor = '#ef4444';
+                    e.currentTarget.style.border = '2px solid #dc2626';
                   }}
                 />
+                {/* Fallback text if image fails */}
+                <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-sm opacity-30 pointer-events-none">
+                  Image Loading...
+                </div>
               </div>
               {photoPreview ? (
                 <p className="text-sm text-blue-400 mt-2">

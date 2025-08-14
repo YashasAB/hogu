@@ -143,6 +143,60 @@ app.get('/api/images/storage/:replId/:filename', async (req, res) => {
   }
 });
 
+// Catch-all route for images that handles various URL patterns
+app.get('/api/images/*', async (req, res) => {
+  try {
+    console.log('=== CATCH-ALL IMAGE REQUEST ===');
+    console.log('Full path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+    
+    let imagePath = req.path.replace('/api/images/', '');
+    
+    // If it starts with storage/, remove that prefix
+    if (imagePath.startsWith('storage/')) {
+      imagePath = imagePath.replace('storage/', '');
+    }
+    
+    // If it's already a full https URL, redirect to it
+    if (imagePath.startsWith('https://')) {
+      console.log('Redirecting to external URL:', imagePath);
+      return res.redirect(imagePath);
+    }
+    
+    console.log('Cleaned image path:', imagePath);
+    
+    // Build the Replit storage URL
+    const storageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${imagePath}`;
+    console.log('Final storage URL:', storageUrl);
+
+    // Fetch the image from Replit storage
+    const response = await fetch(storageUrl);
+
+    if (!response.ok) {
+      console.error(`Failed to fetch image from storage: ${response.status} ${response.statusText}`);
+      return res.status(404).send('Image not found');
+    }
+
+    // Get the content type from the response
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // Set appropriate headers
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*',
+    });
+
+    // Pipe the image data to the response
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
+
+  } catch (error) {
+    console.error('Error in catch-all image route:', error);
+    res.status(500).send('Error loading image');
+  }
+});
+
 
 // Placeholder image route
 app.get('/api/placeholder/:width/:height', (req, res) => {
