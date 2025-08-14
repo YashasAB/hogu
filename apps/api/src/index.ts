@@ -44,6 +44,8 @@ if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = "file:./dev.db";
 }
 
+app.set("trust proxy", true);
+
 app.use(
   cors({
     origin: true,
@@ -55,14 +57,6 @@ app.use(express.json());
 // Multer configuration for in-memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-// Serve static files from React build in production
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
-  const webDistPath = path.join(__dirname, "../../web/dist");
-  app.use(express.static(webDistPath));
-  console.log("Serving static files from:", webDistPath);
-}
 
 // Health check endpoint for deployment
 app.get("/", (req, res) => {
@@ -106,7 +100,7 @@ app.get("/ready", (req, res) => {
   });
 });
 
-// Mount routes
+// Mount API routes first
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/reservations", reservationRoutes);
@@ -193,10 +187,15 @@ app.get("/api/placeholder/:width/:height", (req, res) => {
   res.send(svg);
 });
 
-// In production, serve the React app for all non-API routes
+// Serve static files and SPA in production (after all API routes)
+const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
-  app.get("*", (req, res) => {
-    const webDistPath = path.join(__dirname, "../../web/dist");
+  const webDistPath = path.join(__dirname, "../../web/dist");
+  app.use(express.static(webDistPath, { index: false }));
+  console.log("Serving static files from:", webDistPath);
+  
+  // SPA fallback - only for non-API routes
+  app.get(/^\/(?!api\/).*/, (req, res) => {
     res.sendFile(path.join(webDistPath, "index.html"));
   });
 }
