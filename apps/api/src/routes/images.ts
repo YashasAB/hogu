@@ -7,14 +7,19 @@ const router = Router();
 const storageClient = new Client();
 
 // Serve images from Object Storage
-router.get('/:restaurantId/:filename', async (req, res) => {
+router.get('/*', async (req, res) => {
   try {
-    const { restaurantId, filename } = req.params;
-    const filePath = `${restaurantId}/${filename}`;
+    const path = req.params[0]; // Get the full path after /api/images/
     
-    console.log(`Attempting to serve image: ${filePath}`);
+    console.log(`Attempting to serve image: ${path}`);
     
-    const result = await storageClient.downloadAsBytes(filePath);
+    // If the path starts with https://, it's already a full URL - redirect to it
+    if (path.startsWith('https://')) {
+      return res.redirect(path);
+    }
+    
+    // Otherwise, try to serve from Object Storage
+    const result = await storageClient.downloadAsBytes(path);
     
     if (!result.ok) {
       console.error('Failed to download image:', result.error);
@@ -22,7 +27,7 @@ router.get('/:restaurantId/:filename', async (req, res) => {
     }
     
     // Set appropriate content type based on file extension
-    const extension = filename.split('.').pop()?.toLowerCase();
+    const extension = path.split('.').pop()?.toLowerCase();
     let contentType = 'image/jpeg'; // default
     
     switch (extension) {

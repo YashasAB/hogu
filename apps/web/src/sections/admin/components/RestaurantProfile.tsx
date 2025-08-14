@@ -66,7 +66,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
       const result = await response.json();
       onDataChange({ heroImageUrl: result.imageUrl });
-      // Keep the preview showing the uploaded image URL instead of clearing it
+      // Set preview to show the uploaded image
       setPhotoPreview(result.imageUrl);
     } catch (error) {
       console.error('Error uploading photo:', error);
@@ -147,6 +147,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                 onError={(e) => {
                   console.error('Image failed to load:', e.currentTarget.src);
+                  // Don't clear the preview, just log the error
                 }}
               />
               {photoPreview && (
