@@ -193,7 +193,7 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
       }
 
       // Construct the proxy URL for the uploaded file  
-      const heroImageUrl = `/api/images/storage/${fileName}`;
+      const heroImageUrl = `/api/images/storage/${restaurantId}/${fileName.split('/').pop()}`;
       console.log(`File uploaded successfully, available at: ${heroImageUrl}`);
 
       // Update the restaurant's heroImageUrl in the database

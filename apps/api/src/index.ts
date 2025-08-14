@@ -107,6 +107,43 @@ app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/images', imagesRouter);
 
+// Image proxy route for Replit storage
+app.get('/api/images/storage/:replId/:filename', async (req, res) => {
+  try {
+    const { replId, filename } = req.params;
+    const storageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${replId}/${filename}`;
+
+    console.log(`Proxying image request: ${req.path} -> ${storageUrl}`);
+
+    // Fetch the image from Replit storage
+    const response = await fetch(storageUrl);
+
+    if (!response.ok) {
+      console.error(`Failed to fetch image from storage: ${response.status} ${response.statusText}`);
+      return res.status(404).send('Image not found');
+    }
+
+    // Get the content type from the response
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // Set appropriate headers
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*',
+    });
+
+    // Pipe the image data to the response
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
+
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    res.status(500).send('Error loading image');
+  }
+});
+
+
 // Placeholder image route
 app.get('/api/placeholder/:width/:height', (req, res) => {
   const { width, height } = req.params;
