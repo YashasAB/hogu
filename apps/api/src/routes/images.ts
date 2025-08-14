@@ -12,19 +12,17 @@ router.get('/*', async (req, res) => {
   console.log('Request URL:', req.url);
   console.log('Request path:', req.path);
   console.log('Request params:', req.params);
-  console.log('Request headers:', req.headers);
   console.log('================================');
   
   try {
     // Extract the path after /api/images/ by removing the route prefix
     let imagePath = req.path.slice(1); // Remove leading slash
     
-    console.log(`Attempting to serve image: ${imagePath}`);
-    console.log(`Full request URL: ${req.url}`);
-    console.log(`Request params:`, req.params);
+    console.log(`Raw image path: ${imagePath}`);
     
     // If the path starts with https://, it's already a full URL - redirect to it
     if (imagePath.startsWith('https://')) {
+      console.log('Redirecting to external URL:', imagePath);
       return res.redirect(imagePath);
     }
     
@@ -35,10 +33,11 @@ router.get('/*', async (req, res) => {
     imagePath = imagePath.replace(/^storage\//, '');
     
     if (!imagePath) {
+      console.log('ERROR: No image path provided');
       return res.status(400).json({ error: 'No image path provided' });
     }
     
-    console.log(`Cleaned image path: ${imagePath}`);
+    console.log(`Final cleaned image path: ${imagePath}`);
     
     // Try to serve from Object Storage
     const result = await storageClient.downloadAsBytes(imagePath);
