@@ -137,40 +137,20 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
             Hero Image
           </label>
           
-          {/* DEBUG SECTION - Remove this after testing */}
-          <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded">
-            <h4 className="text-red-400 font-bold mb-2">DEBUG INFO:</h4>
-            <p className="text-sm text-white mb-1">
-              <strong>photoPreview:</strong> {photoPreview || 'null'}
-            </p>
-            <p className="text-sm text-white mb-1">
-              <strong>profileData.heroImageUrl:</strong> {profileData.heroImageUrl || 'null'}
-            </p>
-            <p className="text-sm text-white mb-1">
-              <strong>Final src value:</strong> {photoPreview || profileData.heroImageUrl || 'null'}
-            </p>
-            
-            {/* Test with hardcoded working image URL */}
-            <div className="mt-2">
-              <p className="text-sm text-yellow-400 mb-1">Test with hardcoded URL:</p>
-              <img
-                src="https://storage.replit.com/a5596f5b-0e64-44d2-9f7e-86e86ceed4ae/cme996hfm000bj4h1cu57rrca/heroImage.jpg"
-                alt="Hardcoded test"
-                className="w-32 h-24 object-cover rounded border border-yellow-500"
-                onLoad={() => console.log('✅ Hardcoded image loaded successfully')}
-                onError={(e) => console.log('❌ Hardcoded image failed to load:', e)}
-              />
-            </div>
-          </div>
-
           {/* Current/Preview Image */}
           {(photoPreview || profileData.heroImageUrl) && (
             <div className="mb-4">
-              <div className="relative">
+              <div className="relative bg-slate-800 rounded-lg border border-slate-600 p-2">
                 <img
                   src={photoPreview || profileData.heroImageUrl}
                   alt={photoPreview ? "Preview" : "Current hero image"}
-                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                  className="w-full max-w-md h-48 object-cover rounded-lg block"
+                  style={{ 
+                    minHeight: '192px', 
+                    minWidth: '256px',
+                    backgroundColor: '#1e293b',
+                    display: 'block'
+                  }}
                   onLoad={(e) => {
                     console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
                   }}
