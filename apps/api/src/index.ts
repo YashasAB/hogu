@@ -59,34 +59,37 @@ if (isProduction) {
 
 // Health check endpoint for deployment
 app.get('/', (req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({
+    message: 'Hogu API is running',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    env: process.env.NODE_ENV || 'development'
+  });
 });
 
-// Detailed health check
+// Additional health check endpoint
 app.get('/health', async (req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
     res.status(200).json({
-      message: 'Hogu API is running',
-      status: 'healthy',
+      status: 'ok',
+      database: 'connected',
+      uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-      port: PORT,
-      env: process.env.NODE_ENV || 'development',
-      database: 'connected'
+      port: PORT
     });
   } catch (error) {
-    console.error('Health check failed:', error);
+    console.error('Database health check failed:', error);
     res.status(503).json({
-      status: 'unhealthy',
+      status: 'error',
       database: 'disconnected',
       error: 'Database connection failed',
       timestamp: new Date().toISOString()
     });
   }
 });
-
-
 
 // Readiness check endpoint
 app.get('/ready', (req, res) => {
