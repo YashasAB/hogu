@@ -108,67 +108,7 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// Image proxy route for Replit storage - downloads and serves image bytes
-app.get("/api/images/storage/:replId/:filename", async (req, res) => {
-  try {
-    const { replId, filename } = req.params;
-    const filePath = `${replId}/${filename}`;
 
-    console.log(`=== IMAGE PROXY REQUEST ===`);
-    console.log(`Request path: ${req.path}`);
-    console.log(`Downloading file: ${filePath}`);
-
-    // Import the Object Storage client
-    const { Client } = await import("@replit/object-storage");
-    const storageClient = new Client();
-
-    // Download the image as bytes
-    const { ok, value: bytesValue, error } = await storageClient.downloadAsBytes(filePath);
-
-    if (!ok) {
-      console.error(`❌ Failed to download image: ${filePath}`, error);
-      return res.status(404).send("Image not found");
-    }
-
-    console.log(`✅ Successfully downloaded image: ${filePath}`);
-
-    // Determine content type based on file extension
-    const ext = filename.split('.').pop()?.toLowerCase();
-    let contentType = "image/jpeg"; // default
-
-    switch (ext) {
-      case 'png':
-        contentType = "image/png";
-        break;
-      case 'jpg':
-      case 'jpeg':
-        contentType = "image/jpeg";
-        break;
-      case 'gif':
-        contentType = "image/gif";
-        break;
-      case 'webp':
-        contentType = "image/webp";
-        break;
-      case 'svg':
-        contentType = "image/svg+xml";
-        break;
-    }
-
-    // Set appropriate headers
-    res.set({
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000", // Cache for 1 year
-      "Access-Control-Allow-Origin": "*",
-    });
-
-    // Send the image bytes
-    res.send(bytesValue);
-  } catch (error) {
-    console.error("Error downloading image:", error);
-    res.status(500).send("Error loading image");
-  }
-});
 
 // Placeholder image route
 app.get("/api/placeholder/:width/:height", (req, res) => {
