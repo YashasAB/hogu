@@ -43,11 +43,11 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
+      formData.append("image", file);
+      formData.append("restaurantId", restaurantId);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
@@ -57,8 +57,10 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
       const result = await response.json();
       onDataChange({ heroImageUrl: result.url || result.imageUrl });
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert(`Failed to upload photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error uploading photo:", error);
+      alert(
+        `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setUploadingPhoto(false);
     }
