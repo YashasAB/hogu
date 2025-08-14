@@ -112,14 +112,14 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
 
     if (existingRestaurant?.heroImageUrl) {
       console.log(`Found existing hero image: ${existingRestaurant.heroImageUrl}`);
-      
+
       // Extract the file path from the existing URL
       // URLs are in format: /api/images/storage/{restaurantId}/heroImage.{ext}
       const urlMatch = existingRestaurant.heroImageUrl.match(/\/api\/images\/storage\/(.+)/);
       if (urlMatch) {
         const existingFilePath = urlMatch[1];
         console.log(`Attempting to delete existing file: ${existingFilePath}`);
-        
+
         try {
           const deleteResult = await storageClient.delete(existingFilePath);
           if (deleteResult.ok) {
@@ -722,6 +722,55 @@ router.post('/:restaurantId/photos/presign', async (req: AuthenticatedRestaurant
   } catch (error) {
     console.error('Error generating presigned URL:', error);
     res.status(500).json({ error: 'Failed to generate upload URL' });
+  }
+});
+
+// Upload general images endpoint
+router.post('/upload', authenticateRestaurant, upload.single('image'), async (req: AuthenticatedRestaurantRequest, res: Response) => {
+  try {
+    const restaurantId = req.restaurantId!;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Accept only images
+    if (!file.mimetype.startsWith("image/")) {
+      return res.status(400).json({ error: "Only image uploads are allowed" });
+    }
+
+    console.log(`Uploading image for restaurant ID: ${restaurantId}`);
+    console.log(`File details - name: ${file.originalname}, size: ${file.size}, mimetype: ${file.mimetype}`);
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const filename = `${file.originalname.split('.')[0]}-${timestamp}.${ext}`;
+    const objectKey = `${restaurantId}/${filename}`;
+
+    // Upload to storage
+    const storageClient = new Client();
+    const uploadResult = await storageClient.uploadFromBytes(objectKey, file.buffer, {});
+
+    if (!uploadResult.ok) {
+      console.error("Storage upload failed:", uploadResult.error);
+      return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
+    }
+
+    // Use our proxy URL pattern
+    const imageUrl = `/api/images/storage/${objectKey}`;
+
+    console.log(`✅ Image uploaded successfully for ${restaurantId}: ${imageUrl}`);
+
+    return res.json({
+      message: "Image uploaded successfully",
+      url: imageUrl,
+      imageUrl: imageUrl,
+    });
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return res.status(500).json({ error: "Failed to upload image" });
   }
 });
 

@@ -8,6 +8,7 @@ import restaurantRoutes from "./routes/restaurants";
 import reservationRoutes from "./routes/reservations";
 import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
+import multer from "multer"; // Import multer
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -50,6 +51,10 @@ app.use(
   }),
 );
 app.use(express.json());
+
+// Multer configuration for in-memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Serve static files from React build in production
 const isProduction = process.env.NODE_ENV === "production";
@@ -419,6 +424,55 @@ app.get("/test-db-images", async (req, res) => {
   } catch (error) {
     console.error('Database test error:', error);
     res.status(500).json({ error: 'Database test failed' });
+  }
+});
+
+// General upload endpoint (public)
+app.post("/api/upload", upload.single("image"), async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Accept only images
+    if (!file.mimetype.startsWith("image/")) {
+      return res.status(400).json({ error: "Only image uploads are allowed" });
+    }
+
+    console.log(`Uploading public image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
+
+    // Generate unique filename for public uploads
+    const timestamp = Date.now();
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const filename = `test-${timestamp}.${ext}`;
+    const objectKey = `test-uploads/${filename}`;
+
+    // Upload to storage
+    const { Client } = await import("@replit/object-storage");
+    const storageClient = new Client();
+    const uploadResult = await storageClient.uploadFromBytes(objectKey, file.buffer, {});
+
+    if (!uploadResult.ok) {
+      console.error("Storage upload failed:", uploadResult.error);
+      return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
+    }
+
+    // Use our proxy URL pattern
+    const imageUrl = `/api/images/storage/${objectKey}`;
+    console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
+
+    return res.json({
+      message: "Upload successful",
+      url: imageUrl,
+      filename: filename,
+      size: file.size,
+      mimetype: file.mimetype
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
 
