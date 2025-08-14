@@ -40,7 +40,9 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
     // Show preview
     const reader = new FileReader();
     reader.onload = (e) => {
-      setPhotoPreview(e.target?.result as string);
+      const dataUrl = e.target?.result as string;
+      console.log('📸 FileReader loaded, setting preview:', dataUrl ? 'Data URL created' : 'No data URL');
+      setPhotoPreview(dataUrl);
     };
     reader.readAsDataURL(file);
 
@@ -143,29 +145,27 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
                 <div className="text-xs text-yellow-400 mb-2">
                   Image URL: {photoPreview || profileData.heroImageUrl}
                 </div>
-                {(photoPreview || profileData.heroImageUrl) ? (
-                  <img
-                    src={photoPreview || profileData.heroImageUrl}
-                    alt={photoPreview ? "Preview" : "Current hero image"}
-                    className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
-                    onLoad={(e) => {
-                      console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
-                      console.log('Image dimensions:', {
-                        width: e.currentTarget.width,
-                        height: e.currentTarget.height,
-                        naturalWidth: e.currentTarget.naturalWidth,
-                        naturalHeight: e.currentTarget.naturalHeight
-                      });
-                    }}
-                    onError={(e) => {
-                      console.error('❌ Profile image failed to load:', e.currentTarget.src);
-                      // Hide the broken image and show placeholder
-                      e.currentTarget.style.display = 'none';
-                      const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
-                      if (placeholder) placeholder.style.display = 'block';
-                    }}
-                  />
-                ) : null}
+                <img
+                  src={photoPreview || profileData.heroImageUrl}
+                  alt={photoPreview ? "Preview" : "Current hero image"}
+                  className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                  onLoad={(e) => {
+                    console.log('✅ Profile image loaded successfully:', e.currentTarget.src);
+                    console.log('Image dimensions:', {
+                      width: e.currentTarget.width,
+                      height: e.currentTarget.height,
+                      naturalWidth: e.currentTarget.naturalWidth,
+                      naturalHeight: e.currentTarget.naturalHeight
+                    });
+                  }}
+                  onError={(e) => {
+                    console.error('❌ Profile image failed to load:', e.currentTarget.src);
+                    // Hide the broken image and show placeholder
+                    e.currentTarget.style.display = 'none';
+                    const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (placeholder) placeholder.style.display = 'block';
+                  }}
+                />
                 <div 
                   className="w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center text-slate-400"
                   style={{ display: (photoPreview || profileData.heroImageUrl) ? 'none' : 'flex' }}
