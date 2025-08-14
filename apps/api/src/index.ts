@@ -143,6 +143,51 @@ app.get('/api/images/storage/:replId/:filename', async (req, res) => {
   }
 });
 
+// Temporary endpoint to serve image test HTML
+app.get('/testimg', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Image Test</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            img { max-width: 100%; border: 1px solid #ccc; margin: 10px 0; }
+            .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        </style>
+    </head>
+    <body>
+        <h1>Image Test</h1>
+
+        <div class="test">
+            <h2>Test 1: Direct Object Storage URL</h2>
+            <p>URL: https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media</p>
+            <img src="https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/cme996hfm000bj4h1cu57rrca%2FheroImage.jpg?alt=media" 
+                 onload="console.log('Direct URL loaded')" 
+                 onerror="console.log('Direct URL failed')" />
+        </div>
+
+        <div class="test">
+            <h2>Test 2: Via API Proxy</h2>
+            <p>URL: /api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg</p>
+            <img src="/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg" 
+                 onload="console.log('Proxy URL loaded')" 
+                 onerror="console.log('Proxy URL failed')" />
+        </div>
+
+        <div class="test">
+            <h2>Server Info</h2>
+            <p>Port: ${PORT}</p>
+            <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
+            <p>REPL_ID: ${process.env.REPL_ID || 'not set'}</p>
+        </div>
+    </body>
+    </html>
+  `);
+});
+
+
 // Catch-all route for images that handles various URL patterns
 app.get('/api/images/*', async (req, res) => {
   try {
