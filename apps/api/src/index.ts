@@ -149,39 +149,52 @@ app.get('/api/images/*', async (req, res) => {
     console.log('=== CATCH-ALL IMAGE REQUEST ===');
     console.log('Full path:', req.path);
     console.log('Original URL:', req.originalUrl);
-    
+
     let imagePath = req.path.replace('/api/images/', '');
-    
+
     // If it starts with storage/, remove that prefix
     if (imagePath.startsWith('storage/')) {
       imagePath = imagePath.replace('storage/', '');
     }
-    
+
     // If it's already a full https URL, redirect to it
     if (imagePath.startsWith('https://')) {
       console.log('Redirecting to external URL:', imagePath);
       return res.redirect(imagePath);
     }
-    
+
     console.log('Cleaned image path:', imagePath);
-    
-    // Build the Replit storage URL
-    const storageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${imagePath}`;
-    console.log('Final storage URL:', storageUrl);
 
-    // Fetch the image from Replit storage
-    const response = await fetch(storageUrl);
+    // Try multiple bucket IDs for compatibility (current bucket first)
+    const bucketIds = [
+      process.env.REPL_ID || '0a421abc-4a91-43c3-a052-c47f2fa08f7a', // Current bucket (priority)
+      'a5596f5b-0e64-44d2-9f7e-86e86ceed4ae'  // Original bucket (fallback)
+    ];
 
-    if (!response.ok) {
-      console.error(`Failed to fetch image from storage: ${response.status} ${response.statusText}`);
-      console.error('Storage URL attempted:', storageUrl);
+    let response = null;
+    let storageUrl = '';
+
+    for (const bucketId of bucketIds) {
+      storageUrl = `https://storage.replit.com/${bucketId}/${imagePath}`;
+      console.log('Attempting to fetch from:', storageUrl);
+      response = await fetch(storageUrl);
+      if (response.ok) {
+        console.log('✅ Successfully fetched image from storage');
+        break;
+      } else {
+        console.error(`Failed to fetch image from ${storageUrl}: ${response.status} ${response.statusText}`);
+        response = null; // Reset response if not ok
+      }
+    }
+
+    if (!response || !response.ok) {
+      console.error('Image not found in any bucket. Last attempted URL:', storageUrl);
       return res.status(404).send('Image not found');
     }
 
     // Get the content type from the response
     const contentType = response.headers.get('content-type') || 'image/jpeg';
 
-    console.log('✅ Successfully fetched image from storage');
     console.log('Content-Type:', contentType);
 
     // Set appropriate headers
