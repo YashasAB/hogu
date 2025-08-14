@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
+import { Client } from '@replit/object-storage';
 
 const router = Router();
 
-// Direct redirect to Replit Object Storage URL
+// Download and serve images from Replit Object Storage
 router.get('/storage/*', async (req: Request, res: Response) => {
   try {
     const filePath = req.params[0]; // Get everything after /storage/
@@ -12,19 +13,56 @@ router.get('/storage/*', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'File path is required' });
     }
 
-    console.log(`📁 Redirecting to direct storage URL for: ${filePath}`);
+    console.log(`📁 Downloading image from storage: ${filePath}`);
 
-    // Construct the direct Replit Object Storage URL
-    const encodedPath = encodeURIComponent(filePath);
-    const directUrl = `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodedPath}?alt=media`;
+    const storageClient = new Client();
 
-    console.log(`✅ Redirecting to: ${directUrl}`);
+    // Download the image as bytes
+    const { ok, value: bytesValue, error } = await storageClient.downloadAsBytes(filePath);
 
-    // Redirect to the direct storage URL
-    res.redirect(302, directUrl);
+    if (!ok) {
+      console.error(`❌ Failed to download image: ${filePath}`, error);
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    console.log(`✅ Successfully downloaded image: ${filePath}`);
+
+    // Determine content type based on file extension
+    const filename = filePath.split('/').pop() || '';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    let contentType = "image/jpeg"; // default
+
+    switch (ext) {
+      case 'png':
+        contentType = "image/png";
+        break;
+      case 'jpg':
+      case 'jpeg':
+        contentType = "image/jpeg";
+        break;
+      case 'gif':
+        contentType = "image/gif";
+        break;
+      case 'webp':
+        contentType = "image/webp";
+        break;
+      case 'svg':
+        contentType = "image/svg+xml";
+        break;
+    }
+
+    // Set appropriate headers
+    res.set({
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=31536000", // Cache for 1 year
+      "Access-Control-Allow-Origin": "*",
+    });
+
+    // Send the image bytes
+    res.send(bytesValue);
   } catch (error) {
-    console.error('❌ Error redirecting to storage URL:', error);
-    res.status(500).json({ error: 'Failed to redirect to image' });
+    console.error('❌ Error downloading image from storage:', error);
+    res.status(500).json({ error: 'Failed to download image' });
   }
 });
 

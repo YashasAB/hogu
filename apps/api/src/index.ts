@@ -109,51 +109,52 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// Image proxy route for Replit storage - handles both old and new URL formats
+// Image proxy route for Replit storage - downloads and serves image bytes
 app.get("/api/images/storage/:replId/:filename", async (req, res) => {
   try {
     const { replId, filename } = req.params;
+    const filePath = `${replId}/${filename}`;
 
     console.log(`=== IMAGE PROXY REQUEST ===`);
     console.log(`Request path: ${req.path}`);
-    console.log(`replId: ${replId}, filename: ${filename}`);
+    console.log(`Downloading file: ${filePath}`);
 
-    // Try multiple storage URL formats
-    const storageUrls = [
-      // Direct Object Storage format (current preferred format)
-      `https://replit.com/object-storage/storage/v1/b/replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a/o/${encodeURIComponent(replId + "/" + filename)}?alt=media`,
-      // Legacy storage format
-      `https://storage.replit.com/${process.env.REPL_ID}/${replId}/${filename}`,
-      // Alternative bucket format
-      `https://storage.replit.com/${replId}/${filename}`,
-    ];
+    // Import the Object Storage client
+    const { Client } = await import("@replit/object-storage");
+    const storageClient = new Client();
 
-    let response = null;
-    let usedUrl = "";
+    // Download the image as bytes
+    const { ok, value: bytesValue, error } = await storageClient.downloadAsBytes(filePath);
 
-    for (const storageUrl of storageUrls) {
-      console.log(`Trying: ${storageUrl}`);
-      try {
-        response = await fetch(storageUrl);
-        if (response.ok) {
-          usedUrl = storageUrl;
-          console.log(`✅ Success with: ${storageUrl}`);
-          break;
-        } else {
-          console.log(`❌ Failed with ${response.status}: ${storageUrl}`);
-        }
-      } catch (err) {
-        console.log(`❌ Error with: ${storageUrl}`, (err as Error).message);
-      }
-    }
-
-    if (!response || !response.ok) {
-      console.error(`All storage URLs failed for ${replId}/${filename}`);
+    if (!ok) {
+      console.error(`❌ Failed to download image: ${filePath}`, error);
       return res.status(404).send("Image not found");
     }
 
-    // Get the content type from the response
-    const contentType = response.headers.get("content-type") || "image/jpeg";
+    console.log(`✅ Successfully downloaded image: ${filePath}`);
+
+    // Determine content type based on file extension
+    const ext = filename.split('.').pop()?.toLowerCase();
+    let contentType = "image/jpeg"; // default
+
+    switch (ext) {
+      case 'png':
+        contentType = "image/png";
+        break;
+      case 'jpg':
+      case 'jpeg':
+        contentType = "image/jpeg";
+        break;
+      case 'gif':
+        contentType = "image/gif";
+        break;
+      case 'webp':
+        contentType = "image/webp";
+        break;
+      case 'svg':
+        contentType = "image/svg+xml";
+        break;
+    }
 
     // Set appropriate headers
     res.set({
@@ -162,11 +163,10 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       "Access-Control-Allow-Origin": "*",
     });
 
-    // Pipe the image data to the response
-    const buffer = await response.arrayBuffer();
-    res.send(Buffer.from(buffer));
+    // Send the image bytes
+    res.send(bytesValue);
   } catch (error) {
-    console.error("Error proxying image:", error);
+    console.error("Error downloading image:", error);
     res.status(500).send("Error loading image");
   }
 });
