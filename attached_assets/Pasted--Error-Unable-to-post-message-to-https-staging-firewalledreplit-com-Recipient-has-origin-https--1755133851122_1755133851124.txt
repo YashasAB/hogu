@@ -1,0 +1,51 @@
+[Error] Unable to post message to https://staging.firewalledreplit.com. Recipient has origin https://replit.com.
+
+	postMessage
+	postMessageToWorkspace (workspace_iframe.html:45)
+	(anonymous function) (workspace_iframe.html:62)
+[Error] Unable to post message to http://localhost:3000. Recipient has origin https://replit.com.
+
+	postMessage
+	postMessageToWorkspace (workspace_iframe.html:46)
+	(anonymous function) (workspace_iframe.html:62)
+[Error] === HERO IMAGE LOAD ERROR ===
+	(anonymous function) (eruda.js:2:135522)
+	onError (RestaurantDetail.tsx:304)
+	executeDispatch (react-dom_client.js:11736)
+	runWithFiberInDEV (react-dom_client.js:1487)
+	processDispatchQueue (react-dom_client.js:11772)
+	(anonymous function) (react-dom_client.js:12182)
+	batchedUpdates$1 (react-dom_client.js:2628)
+	dispatchEventForPluginEventSystem (react-dom_client.js:11877)
+	dispatchEvent (react-dom_client.js:14792)
+[Error] Failed to load image URL: – "https://a5596f5b-0e64-44d2-9f7e-86e86ceed4ae-00-24ck73by474ey.janeway.replit.dev:5000/api/images/cme996hfm000bj4h1cu57rrca/heroImage.jpg"
+	(anonymous function) (eruda.js:2:135522)
+	onError (RestaurantDetail.tsx:305)
+	executeDispatch (react-dom_client.js:11736)
+	runWithFiberInDEV (react-dom_client.js:1487)
+	processDispatchQueue (react-dom_client.js:11772)
+	(anonymous function) (react-dom_client.js:12182)
+	batchedUpdates$1 (react-dom_client.js:2628)
+	dispatchEventForPluginEventSystem (react-dom_client.js:11877)
+	dispatchEvent (react-dom_client.js:14792)
+[Error] heroImageUrl from data: – "/api/images/cme996hfm000bj4h1cu57rrca/heroImage.jpg"
+	(anonymous function) (eruda.js:2:135522)
+	onError (RestaurantDetail.tsx:306)
+	executeDispatch (react-dom_client.js:11736)
+	runWithFiberInDEV (react-dom_client.js:1487)
+	processDispatchQueue (react-dom_client.js:11772)
+	(anonymous function) (react-dom_client.js:12182)
+	batchedUpdates$1 (react-dom_client.js:2628)
+	dispatchEventForPluginEventSystem (react-dom_client.js:11877)
+	dispatchEvent (react-dom_client.js:14792)
+[Error] Full restaurant data: – {id: "cme996hfm000bj4h1cu57rrca", name: "ZLB 23 (at The Leela Palace)", slug: "zlb-23-at-the-leela-palace", …}
+{id: "cme996hfm000bj4h1cu57rrca", name: "ZLB 23 (at The Leela Palace)", slug: "zlb-23-at-the-leela-palace", emoji: "🍸", position: {lat: 12.960695, lng: 77.648663}, …}Object
+	(anonymous function) (eruda.js:2:135522)
+	onError (RestaurantDetail.tsx:307)
+	executeDispatch (react-dom_client.js:11736)
+	runWithFiberInDEV (react-dom_client.js:1487)
+	processDispatchQueue (react-dom_client.js:11772)
+	(anonymous function) (react-dom_client.js:12182)
+	batchedUpdates$1 (react-dom_client.js:2628)
+	dispatchEventForPluginEventSystem (react-dom_client.js:11877)
+	dispatchEvent (react-dom_client.js:14792)
