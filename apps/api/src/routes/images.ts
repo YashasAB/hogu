@@ -80,11 +80,14 @@ router.get('/*', async (req, res) => {
 router.get('/storage/*', async (req, res) => {
   try {
     // Extract the path after /storage/
-    const imagePath = (req.params as any)[0];
+    let imagePath = (req.params as any)[0];
     
     if (!imagePath) {
       return res.status(400).json({ error: 'No image path provided' });
     }
+    
+    // Remove 'storage/' prefix if it exists since the file was uploaded without it
+    imagePath = imagePath.replace(/^storage\//, '');
     
     console.log(`Proxying storage image: ${imagePath}`);
     
