@@ -40,11 +40,43 @@ router.get('/*', async (req, res) => {
     console.log(`Final cleaned image path: ${imagePath}`);
     
     // Try to serve from Object Storage
-    const result = await storageClient.downloadAsBytes(imagePath);
+    let result = await storageClient.downloadAsBytes(imagePath);
     
     if (!result.ok) {
-      console.error('Failed to download image from storage:', result.error);
-      console.error('Attempted path:', imagePath);
+      console.log('Primary storage failed, trying direct Replit storage URL...');
+      
+      // Try to fetch from direct Replit storage URL as fallback
+      const knownStorageUrl = `https://storage.replit.com/a5596f5b-0e64-44d2-9f7e-86e86ceed4ae/${imagePath}`;
+      try {
+        const response = await fetch(knownStorageUrl);
+        if (response.ok) {
+          console.log('✅ Successfully fetched from direct Replit storage URL');
+          const buffer = Buffer.from(await response.arrayBuffer());
+          
+          // Set appropriate content type
+          const extension = imagePath.split('.').pop()?.toLowerCase();
+          let contentType = 'image/jpeg';
+          
+          switch (extension) {
+            case 'png': contentType = 'image/png'; break;
+            case 'jpg':
+            case 'jpeg': contentType = 'image/jpeg'; break;
+            case 'gif': contentType = 'image/gif'; break;
+            case 'webp': contentType = 'image/webp'; break;
+          }
+          
+          res.set('Content-Type', contentType);
+          res.set('Cache-Control', 'public, max-age=86400');
+          res.set('Content-Length', buffer.length.toString());
+          res.set('Access-Control-Allow-Origin', '*');
+          return res.send(buffer);
+        }
+      } catch (fetchError) {
+        console.log('Direct fetch also failed:', fetchError);
+      }
+      
+      console.error('All storage methods failed for path:', imagePath);
+      console.error('Primary storage error:', result.error);
       return res.status(404).json({ error: 'Image not found' });
     }
     
