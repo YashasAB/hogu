@@ -66,7 +66,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
       const result = await response.json();
       onDataChange({ heroImageUrl: result.imageUrl });
-      setPhotoPreview(null); // Clear preview after successful upload
+      setPhotoPreview(null); // Clear preview so current image shows
     } catch (error) {
       console.error('Error uploading photo:', error);
       alert('Failed to upload photo. Please try again.');
@@ -137,19 +137,25 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
             Hero Image
           </label>
           
-          {/* Image Preview */}
-          {photoPreview && (
+          {/* Current/Preview Image */}
+          {(photoPreview || profileData.heroImageUrl) && (
             <div className="mb-4">
               <div className="relative">
                 <img
-                  src={photoPreview}
-                  alt="Preview"
+                  src={photoPreview || profileData.heroImageUrl}
+                  alt={photoPreview ? "Preview" : "Current hero image"}
                   className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
                 />
               </div>
-              <p className="text-sm text-blue-400 mt-2">
-                Preview - click Save to confirm upload
-              </p>
+              {photoPreview ? (
+                <p className="text-sm text-blue-400 mt-2">
+                  Preview - click Save to confirm upload
+                </p>
+              ) : (
+                <p className="text-sm text-slate-400 mt-2">
+                  Current hero image
+                </p>
+              )}
             </div>
           )}
 
