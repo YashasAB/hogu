@@ -99,13 +99,30 @@ app.get('/ready', (req, res) => {
   });
 });
 
-// Routes
+// Mount routes
 app.use('/api/auth', authRoutes);
-app.use('/api/reservations', reservationRoutes);
 app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/reservations', reservationRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/images', imagesRouter);
+
+// Placeholder image route
+app.get('/api/placeholder/:width/:height', (req, res) => {
+  const { width, height } = req.params;
+  const svg = `
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#374151"/>
+      <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="16">
+        ${width}×${height}
+      </text>
+    </svg>
+  `;
+
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  res.send(svg);
+});
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {

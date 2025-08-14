@@ -24,8 +24,8 @@ async function fixImageUrls() {
       // Extract the path after /api/images/
       const imagePath = oldUrl.replace('/api/images/', '');
       
-      // Create the new direct URL
-      const newUrl = `https://storage.replit.com/${process.env.REPL_ID}/${imagePath}`;
+      // Create the new proxy URL
+      const newUrl = `/api/images/storage/${imagePath}`;
       
       console.log(`Updating ${restaurant.name}:`);
       console.log(`  Old: ${oldUrl}`);

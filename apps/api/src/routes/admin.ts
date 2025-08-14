@@ -192,8 +192,8 @@ router.post('/restaurant/hero-image', authenticateRestaurant, (upload.single('he
         throw new Error(`Storage upload failed: ${errorMessage}`);
       }
 
-      // Construct the direct URL for the uploaded file
-      const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
+      // Construct the proxy URL for the uploaded file  
+      const heroImageUrl = `/api/images/storage/${fileName}`;
       console.log(`File uploaded successfully, available at: ${heroImageUrl}`);
 
       // Update the restaurant's heroImageUrl in the database

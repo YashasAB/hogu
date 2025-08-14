@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { Client } from '@replit/object-storage';
 
 const router = Router();
+const storageClient = new Client();
 
 const storageClient = new Client();
 
@@ -74,6 +75,59 @@ router.get('/*', async (req, res) => {
   } catch (error) {
     console.error('Error serving image:', error);
     res.status(500).json({ error: 'Failed to serve image' });
+  }
+});
+
+// Proxy route for Replit Object Storage images
+router.get('/storage/*', async (req, res) => {
+  try {
+    // Extract the path after /storage/
+    const imagePath = req.params[0];
+    
+    if (!imagePath) {
+      return res.status(400).json({ error: 'No image path provided' });
+    }
+    
+    console.log(`Proxying storage image: ${imagePath}`);
+    
+    // Try to serve from Object Storage
+    const result = await storageClient.downloadAsBytes(imagePath);
+    
+    if (!result.ok) {
+      console.error('Failed to download image from storage:', result.error);
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Determine content type based on file extension
+    const ext = imagePath.split('.').pop()?.toLowerCase();
+    let contentType = 'application/octet-stream';
+    
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'gif':
+        contentType = 'image/gif';
+        break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
+      case 'svg':
+        contentType = 'image/svg+xml';
+        break;
+    }
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.send(Buffer.from(result.value));
+    
+  } catch (error) {
+    console.error('Error proxying storage image:', error);
+    res.status(500).json({ error: 'Failed to load image' });
   }
 });
 

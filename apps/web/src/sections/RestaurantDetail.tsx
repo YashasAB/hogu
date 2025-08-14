@@ -264,7 +264,7 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={restaurant.heroImageUrl}
+            src={restaurant.heroImageUrl || '/api/placeholder/400/300'}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             loading="lazy"
@@ -272,8 +272,11 @@ export default function RestaurantDetail() {
               console.error('=== HERO IMAGE LOAD ERROR ===');
               console.error('Failed to load image URL:', e.currentTarget.src);
               console.error('heroImageUrl from data:', restaurant.heroImageUrl);
-              console.error('Full restaurant data:', restaurant);
               console.error('==============================');
+              // Fallback to placeholder if hero image fails
+              if (e.currentTarget.src !== '/api/placeholder/400/300') {
+                e.currentTarget.src = '/api/placeholder/400/300';
+              }
             }}
             onLoad={() => {
               console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
