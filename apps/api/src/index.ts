@@ -133,7 +133,7 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     // Download the image as bytes
     console.log(`⬇️ Starting download for: ${filePath}`);
     const startTime = Date.now();
-    
+
     const {
       ok,
       value: bytesValue,
@@ -148,9 +148,9 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       console.error(`❌ Error details:`, error);
       console.error(`❌ Error type:`, typeof error);
       console.error(`❌ Error stringified:`, JSON.stringify(error, null, 2));
-      return res.status(404).json({ 
-        error: "Image not found", 
-        path: filePath, 
+      return res.status(404).json({
+        error: "Image not found",
+        path: filePath,
         details: error,
         timestamp: new Date().toISOString()
       });
@@ -162,16 +162,16 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     console.log(`   - Bytes type: ${typeof bytesValue}`);
     console.log(`   - Is Array: ${Array.isArray(bytesValue)}`);
     console.log(`   - Constructor: ${bytesValue?.constructor?.name}`);
-    
+
     // Log first few bytes for verification
     if (bytesValue && bytesValue.length > 0) {
       const firstBytes = Array.from(bytesValue.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' ');
       console.log(`   - First 16 bytes (hex): ${firstBytes}`);
-      
+
       // Check for common image file signatures
       const signature = Array.from(bytesValue.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('');
       console.log(`   - File signature: ${signature}`);
-      
+
       if (signature.startsWith('ffd8')) {
         console.log(`   - ✅ Valid JPEG signature detected`);
       } else if (signature.startsWith('8950')) {
@@ -232,10 +232,10 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     console.log(`🚀 Sending response...`);
     console.log(`   - Sending buffer of ${buffer.length} bytes`);
     console.log(`   - Response status: 200`);
-    
+
     // Send the image bytes as a Buffer
     res.send(buffer);
-    
+
     console.log(`✅ Response sent successfully`);
     console.log(`=== IMAGE PROXY REQUEST END ===\n`);
 
@@ -246,9 +246,9 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     console.error(`   - Error type: ${typeof error}`);
     console.error(`   - Error stringified:`, JSON.stringify(error, null, 2));
     console.error(`=== IMAGE PROXY ERROR END ===\n`);
-    
-    res.status(500).json({ 
-      error: "Error loading image", 
+
+    res.status(500).json({
+      error: "Error loading image",
       details: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     });
