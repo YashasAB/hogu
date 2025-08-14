@@ -130,19 +130,15 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       });
     }
 
-    // Ensure we have a Buffer (use ArrayBuffer+offsets to avoid TS overload issues)
-    const bytes: Uint8Array = result.value as Uint8Array;
-    const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    // value is already Uint8Array
+    const u8 = result.value as Uint8Array;
 
-    // Optional: log first 16 bytes safely using Buffer's hex toString
-    const first16Hex = buffer.subarray(0, 16).toString("hex");
-    const spaced = first16Hex.match(/.{2}/g)?.join(" ") ?? "";
-    const sig = first16Hex.slice(0, 8);
-    console.log(`   - First 16 bytes: ${spaced}`);
-    console.log(`   - File signature: ${sig}`);
-    if (sig.startsWith("ffd8")) console.log("   - ✅ JPEG");
-    else if (sig.startsWith("8950")) console.log("   - ✅ PNG");
-    else console.log("   - ⚠️ Unknown signature");
+    // Safest Buffer construction (no TS overload ambiguity)
+    const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+
+    // Optional: quick hex sig log, *no* number.toString(16) confusion
+    const sigHex = buffer.subarray(0, 4).toString("hex");
+    console.log("signature:", sigHex);
 
     // Content type from extension
     const ext = filename.split(".").pop()?.toLowerCase();
@@ -157,7 +153,7 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
 
     res.set({
       "Content-Type": contentType,
-      "Content-Length": buffer.length.toString(),
+      "Content-Length": String(buffer.length),
       "Cache-Control": "public, max-age=31536000, immutable",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -165,6 +161,7 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       "Content-Disposition": `inline; filename="${filename}"`,
     });
 
+    // ✅ Send the raw Buffer (no brackets!)
     return res.send(buffer);
   } catch (err) {
     console.error("💥 FATAL ERROR in image proxy:", err);
