@@ -44,7 +44,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
     try {
       const formData = new FormData();
       formData.append("image", file);
-      formData.append("restaurantId", restaurantId);
+      formData.append("restaurantId", restaurant.id);
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
