@@ -67,7 +67,7 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
 
       const result = await response.json();
       onDataChange({ heroImageUrl: result.imageUrl });
-      setPhotoPreview(null); // Clear preview so current image shows
+      setPhotoPreview(dataUrl); // Clear preview so current image shows
     } catch (error) {
       console.error('Error uploading photo:', error);
       alert('Failed to upload photo. Please try again.');
