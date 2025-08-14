@@ -165,11 +165,11 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
 
     // Log first few bytes for verification
     if (bytesValue && bytesValue.length > 0) {
-      const firstBytes = Array.from(bytesValue.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+      const firstBytes = Array.from(bytesValue.slice(0, 16) as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join(' ');
       console.log(`   - First 16 bytes (hex): ${firstBytes}`);
 
       // Check for common image file signatures
-      const signature = Array.from(bytesValue.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const signature = Array.from(bytesValue.slice(0, 4) as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join('');
       console.log(`   - File signature: ${signature}`);
 
       if (signature.startsWith('ffd8')) {
