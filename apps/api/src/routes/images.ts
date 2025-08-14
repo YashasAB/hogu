@@ -9,7 +9,7 @@ const storageClient = new Client();
 // Serve images from Object Storage
 router.get('/*', async (req, res) => {
   try {
-    const path = req.params[0]; // Get the full path after /api/images/
+    const path = req.url.slice(1); // Get the full path after /api/images/ (remove leading slash)
     
     console.log(`Attempting to serve image: ${path}`);
     
