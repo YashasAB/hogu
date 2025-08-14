@@ -270,9 +270,27 @@ export default function RestaurantDetail() {
             style={{ 
               display: 'block', 
               width: '100%', 
-              height: '38vh',
+              height: 'auto',
+              maxHeight: '56vh',
               objectFit: 'cover',
               backgroundColor: '#f3f4f6'
+            }}
+            onLoad={(e) => {
+              console.log('=== HERO IMAGE LOADED SUCCESSFULLY ===');
+              console.log('Loaded image URL:', e.target.src);
+              console.log('Image dimensions:', {
+                width: e.target.width,
+                height: e.target.height,
+                naturalWidth: e.target.naturalWidth,
+                naturalHeight: e.target.naturalHeight
+              });
+              console.log('Image computed styles:', window.getComputedStyle(e.target));
+              console.log('======================================');
+            }}
+            onError={(e) => {
+              console.error('=== HERO IMAGE FAILED TO LOAD ===');
+              console.error('Failed image URL:', e.target.src);
+              console.error('================================');
             }}
             loading="eager"
             onError={(e) => {
