@@ -11,6 +11,7 @@ declare global {
 import DarkDatePicker from "../components/DarkDatePicker";
 import TonightNearYou from "../components/TonightNearYou"; // Import the new component
 import UserReservations from "../components/UserReservations"; // Import the UserReservations component
+import ImageModal from "../components/ImageModal";
 
 // Define types for better type safety
 type Slot = { slot_id: string; time: string; party_size: number };
@@ -47,6 +48,7 @@ export default function Home() {
   });
   const [userReservations, setUserReservations] = useState<Reservation[]>([]);
   const [loadingReservations, setLoadingReservations] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
@@ -329,6 +331,19 @@ export default function Home() {
           onReservationsUpdate={fetchReservations}
         />
       ) : null}
+
+      {/* TEMP IMG BUTTON */}
+      <section className="flex justify-center">
+        <button
+          onClick={() => setShowImageModal(true)}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+        >
+          Temp Img
+        </button>
+      </section>
+
+      {/* IMAGE MODAL */}
+      <ImageModal isOpen={showImageModal} onClose={() => setShowImageModal(false)} />
 
       {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">

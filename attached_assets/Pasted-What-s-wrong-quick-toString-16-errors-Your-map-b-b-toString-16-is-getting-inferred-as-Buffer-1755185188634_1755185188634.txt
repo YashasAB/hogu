@@ -1,0 +1,94 @@
+What’s wrong (quick)
+toString(16) errors
+Your map(b => b.toString(16)) is getting inferred as Buffer.toString(encoding) (expects a string like "hex"), not number.toString(radix). Hence: “Argument of type '16' is not assignable to parameter of type 'BufferEncoding'”.
+Buffer.from(...) overload error
+downloadAsBytes() returns a Uint8Array. Creating a Node Buffer with Buffer.from(bytesValue) is OK, but TS sometimes infers the wrong shape. Using the ArrayBuffer + offsets overload removes ambiguity.
+Sending the bytes
+res.send(buffer) is correct once buffer is a real Buffer. Also set the content-type from the filename.
+Drop-in fixed route (TypeScript)
+Paste this over your route; it compiles cleanly and serves the image:
+app.get("/api/images/storage/:replId/:filename", async (req, res) => {
+  try {
+    const { replId, filename } = req.params;
+    const key = `${replId}/${filename}`;
+
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    const result = await storage.downloadAsBytes(key);
+
+    if (!result.ok || !result.value) {
+      console.error("❌ DOWNLOAD FAILED:", result.error);
+      return res.status(404).json({
+        error: "Image not found",
+        path: key,
+        details: result.error,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Ensure we have a Buffer (use ArrayBuffer+offsets to avoid TS overload issues)
+    const bytes: Uint8Array = result.value as Uint8Array;
+    const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+    // Optional: log first 16 bytes safely using Buffer’s hex toString
+    const first16Hex = buffer.subarray(0, 16).toString("hex");
+    const spaced = first16Hex.match(/.{2}/g)?.join(" ") ?? "";
+    const sig = first16Hex.slice(0, 8);
+    console.log(`   - First 16 bytes: ${spaced}`);
+    console.log(`   - File signature: ${sig}`);
+    if (sig.startsWith("ffd8")) console.log("   - ✅ JPEG");
+    else if (sig.startsWith("8950")) console.log("   - ✅ PNG");
+    else console.log("   - ⚠️ Unknown signature");
+
+    // Content type from extension
+    const ext = filename.split(".").pop()?.toLowerCase();
+    const contentType =
+      ext === "png"  ? "image/png"  :
+      ext === "jpg"  ? "image/jpeg" :
+      ext === "jpeg" ? "image/jpeg" :
+      ext === "gif"  ? "image/gif"  :
+      ext === "webp" ? "image/webp" :
+      ext === "svg"  ? "image/svg+xml" :
+      "application/octet-stream";
+
+    res.set({
+      "Content-Type": contentType,
+      "Content-Length": buffer.length.toString(),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Cache-Control",
+      "Content-Disposition": `inline; filename="${filename}"`,
+    });
+
+    return res.send(buffer);
+  } catch (err) {
+    console.error("💥 FATAL ERROR in image proxy:", err);
+    return res.status(500).json({
+      error: "Error loading image",
+      details: err instanceof Error ? err.message : String(err),
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+If you want the CORS preflight super-clean
+app.options("/api/images/storage/:replId/:filename", (req, res) => {
+  res.set({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Cache-Control",
+  });
+  res.sendStatus(204);
+});
+Frontend usage
+<img
+  src={`/api/images/storage/${replId}/${encodeURIComponent(filename)}`}
+  alt=""
+  width={400}
+/>
+Quick sanity checks
+Curl it:
+curl -i http://localhost:PORT/api/images/storage/<replId>/<file>.jpg
+You should see Content-Type: image/jpeg and a non-zero Content-Length.
+Make sure your key (path in object storage) is exactly <replId>/<filename>.

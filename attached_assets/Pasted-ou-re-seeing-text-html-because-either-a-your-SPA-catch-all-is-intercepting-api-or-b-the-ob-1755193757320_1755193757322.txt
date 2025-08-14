@@ -1,0 +1,137 @@
+ou’re seeing text/html because either (a) your SPA catch-all is intercepting /api/..., or (b) the object you saved previously was a base64 string and your GET route returned HTML due to routing. Let’s fix the upload to (1) store raw bytes, (2) use the right key + extension, (3) always return the canonical proxy URL your frontend should use, and (4) clean up any old objects reliably.
+Below is a drop-in upload route that’s strict about images, normalizes the extension, deletes any previous hero image, uploads binary bytes (not text), and stores /api/images/storage/<restaurantId>/heroImage.<ext> in the DB so your frontend doesn’t have to guess.
+Important (server wiring): Ensure your API routes are above the SPA wildcard and exclude /api from it. Also set app.set('trust proxy', true) once at startup to avoid proxy loops.
+// at top of file
+import mime from "mime-types";
+import type { Request, Response } from "express";
+
+// Helper to extract the object-storage key from any previously stored URL
+function extractObjectKeyFromUrl(url: string): string | null {
+  // Your proxy URL: /api/images/storage/<restaurantId>/<file>
+  const m1 = url.match(/\/api\/images\/storage\/([^?]+)/);
+  if (m1) return decodeURIComponent(m1[1]);
+
+  // GCS-like path: .../o/<encodedKey>?alt=media
+  const m2 = url.match(/\/o\/([^?]+)/);
+  if (m2) return decodeURIComponent(m2[1]);
+
+  // Legacy: storage.replit.com/<REPL_ID>/<key>
+  const m3 = url.match(/storage\.replit\.com\/[^/]+\/(.+)/);
+  if (m3) return decodeURIComponent(m3[1]);
+
+  return null;
+}
+
+// Upload hero image for a restaurant
+router.post(
+  "/restaurant/hero-image",
+  authenticateRestaurant,
+  upload.single("heroImage") as any,
+  async (req: AuthenticatedRestaurantRequest, res: Response) => {
+    try {
+      const restaurantId = req.restaurantId!;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Accept only images
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ error: "Only image uploads are allowed" });
+      }
+
+      // Normalize extension from the MIME type first; fall back to original name
+      const extFromMime = mime.extension(file.mimetype) || "";
+      const extFromName = (file.originalname.split(".").pop() || "").toLowerCase();
+      // Prefer MIME-derived extension when possible
+      const ext = (extFromMime || extFromName || "jpg").toLowerCase().replace("jpeg", "jpg");
+
+      // Final key in object storage
+      const objectKey = `${restaurantId}/heroImage.${ext}`;
+
+      // Ensure we have a client each request (avoids "client not initialized")
+      const { Client } = await import("@replit/object-storage");
+      const storageClient = new Client();
+
+      // Delete any existing image first (regardless of URL format previously stored)
+      const existing = await prisma.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { heroImageUrl: true },
+      });
+
+      if (existing?.heroImageUrl) {
+        const oldKey = extractObjectKeyFromUrl(existing.heroImageUrl);
+        if (oldKey) {
+          try {
+            const del = await storageClient.delete(oldKey);
+            if (!del.ok) {
+              console.warn("⚠️ Failed to delete old hero image:", del.error);
+            } else {
+              console.log("✅ Deleted old hero image:", oldKey);
+            }
+          } catch (e) {
+            console.warn("⚠️ Error deleting old hero image:", e);
+          }
+        }
+      }
+
+      // --- Upload RAW BYTES (not text) ---
+      // multer's memory storage gives a Node Buffer (a Uint8Array). Convert explicitly to Uint8Array.
+      const u8 = new Uint8Array(file.buffer);
+
+      // If your SDK supports metadata, pass it; otherwise it will still store raw bytes fine.
+      // Some versions accept: { contentType: string, cacheControl: string }
+      // If the options aren't supported, remove the third argument; your GET route will set proper headers anyway.
+      const upload = await storageClient.uploadFromBytes(objectKey, u8 /*, {
+        contentType: file.mimetype,
+        cacheControl: "public, max-age=31536000, immutable",
+      }*/);
+
+      if (!upload.ok) {
+        const msg = (upload as any).error?.message || JSON.stringify(upload.error);
+        return res.status(500).json({ error: `Storage upload failed: ${msg}` });
+      }
+
+      // Store the canonical PROXY URL (your API will serve correct image bytes & headers)
+      const proxyUrl = `/api/images/storage/${restaurantId}/heroImage.${ext}`;
+
+      await prisma.restaurant.update({
+        where: { id: restaurantId },
+        data: { heroImageUrl: proxyUrl },
+      });
+
+      return res.json({
+        message: "Hero image uploaded successfully",
+        imageUrl: proxyUrl,
+      });
+    } catch (err) {
+      console.error("Error uploading hero image:", err);
+      return res.status(500).json({ error: "Failed to upload hero image" });
+    }
+  }
+);
+Why this fixes the “uploads as text/html” symptom
+We never call uploadFromText (which would save base64/strings and later look like HTML/text to your pipeline). We always upload binary Uint8Array.
+We normalize the file extension from the MIME type and use a single canonical key: restaurantId/heroImage.<ext>.
+We store the proxy URL (/api/images/storage/...) in the DB so the frontend always requests your own image endpoint (which you control to set headers and decode legacy base64 objects if you ever had them).
+Your GET route (from earlier) should:
+Convert the Uint8Array back to a Buffer with Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength).
+Sniff the first bytes to set a correct Content-Type (JPEG/PNG/WebP/GIF/SVG).
+res.end(buffer) without a bogus Content-Length mismatch.
+Place all API routes before the SPA wildcard and guard the wildcard:
+app.set("trust proxy", true);
+
+// API routes here...
+
+if (isProduction) {
+  const webDistPath = path.join(__dirname, "../../web/dist");
+  app.use(express.static(webDistPath, { index: false }));
+  app.get(/^\/(?!api\/).*/, (req, res) => {
+    res.sendFile(path.join(webDistPath, "index.html"));
+  });
+}
+One-liner to verify after this change
+# Should return 200 and image/* (not text/html)
+curl -i "https://<host>/api/images/storage/<restaurantId>/heroImage.jpg"
+If you still see text/html at that endpoint, the SPA catch-all is still intercepting it. Move the wildcard below the API routes and use the regex guard shown above.
