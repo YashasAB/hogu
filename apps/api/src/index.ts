@@ -9,7 +9,6 @@ import reservationRoutes from "./routes/reservations";
 import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
 import multer from "multer"; // Import multer
-import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -32,7 +31,7 @@ const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
 // Trust proxy for proper request handling
-app.set("trust proxy", true);
+app.set('trust proxy', true);
 
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -58,20 +57,7 @@ app.use(express.json());
 
 // Multer configuration for handling file uploads
 const storage = multer.memoryStorage(); // Store file in memory
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Only allow images
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
+const upload = multer({ storage: storage });
 
 // Serve static files from React build in production
 const isProduction = process.env.NODE_ENV === "production";
@@ -126,13 +112,11 @@ app.get("/ready", (req, res) => {
 // Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v: unknown): Buffer {
   if (Buffer.isBuffer(v)) return v;
-  if (v instanceof Uint8Array)
-    return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+  if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
   if (Array.isArray(v) && v[0]) {
     const first = (v as any[])[0];
     if (Buffer.isBuffer(first)) return first;
-    if (first instanceof Uint8Array)
-      return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+    if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
   }
   throw new Error("Unexpected storage value type");
 }
@@ -142,11 +126,7 @@ function detectContentType(buf: Buffer, filename: string): string {
   const hex4 = buf.subarray(0, 4).toString("hex");
   if (hex4.startsWith("ffd8")) return "image/jpeg";
   if (hex4 === "89504e47") return "image/png";
-  if (
-    buf.subarray(0, 4).toString("ascii") === "RIFF" &&
-    buf.subarray(8, 12).toString("ascii") === "WEBP"
-  )
-    return "image/webp";
+  if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
   if (hex4.startsWith("4749")) return "image/gif";
   if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
   const ext = filename.split(".").pop()?.toLowerCase();
@@ -168,9 +148,7 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
 
     const out: any = await storage.downloadAsBytes(key);
     if (!out?.ok || !out?.value) {
-      return res
-        .status(404)
-        .json({ error: "Image not found", key, details: out?.error });
+      return res.status(404).json({ error: "Image not found", key, details: out?.error });
     }
 
     // Ensure we have raw binary
@@ -213,22 +191,20 @@ app.get("/api/images/list", async (req, res) => {
     const { ok, value, error } = await storage.list();
 
     if (!ok) {
-      return res
-        .status(500)
-        .json({ error: "Failed to list images", details: error });
+      return res.status(500).json({ error: "Failed to list images", details: error });
     }
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const images = value.map((item: any) => ({
       key: item.key,
       size: item.size,
       lastModified: item.lastModified,
-      publicUrl: `${baseUrl}/api/images/storage/${item.key}`,
+      publicUrl: `${baseUrl}/api/images/storage/${item.key}`
     }));
 
     res.json({
       totalImages: images.length,
-      images: images,
+      images: images
     });
   } catch (error) {
     console.error("Error listing images:", error);
@@ -237,47 +213,30 @@ app.get("/api/images/list", async (req, res) => {
 });
 
 // Upload endpoint for testing
-app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaurantRequest, res) => {
+app.post("/api/upload", upload.single("image"), async (req, res) => {
   try {
     const file = req.file;
-    const restaurantId = req.body.restaurantId; // Get from form data instead
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
-    if (!restaurantId)
-      return res.status(400).json({ error: "restaurantId is required" });
 
-    // Validate file type
-    if (!file.mimetype.startsWith('image/')) {
-      return res.status(400).json({ error: "Only image files are allowed" });
-    }
+    console.log(`Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
 
-    console.log(
-      `Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
-    );
-    console.log(`File buffer length: ${file.buffer.length}`);
-
-    const ext = file.originalname.split(".").pop() || "jpg";
-    const filename = `heroImage.${ext}`;
-    const objectKey = `${restaurantId}/${filename}`;
+    // Generate a unique filename
+    const timestamp = Date.now();
+    const ext = file.originalname.split('.').pop() || 'jpg';
+    const filename = `test-${timestamp}.${ext}`;
+    const objectKey = `test-uploads/${filename}`;
 
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    // Upload to storage with proper options
-    const uploadResult = await storage.uploadFromBytes(
-      objectKey,
-      file.buffer,
-      {
-        compress: false // Don't compress images
-      },
-    );
+    // Upload to storage
+    const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
 
     if (!uploadResult.ok) {
       console.error("Storage upload failed:", uploadResult.error);
-      return res
-        .status(500)
-        .json({ error: "Storage upload failed", details: uploadResult.error });
+      return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
     }
 
     // Return the proxy URL
@@ -289,7 +248,7 @@ app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaur
       url: imageUrl,
       filename: filename,
       size: file.size,
-      mimetype: file.mimetype,
+      mimetype: file.mimetype
     });
   } catch (error) {
     console.error("Upload error:", error);
