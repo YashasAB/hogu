@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -24,10 +23,10 @@ app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
 async function startServer() {
   const defaultPort = Number(process.env.PORT || 8080);
-  
+
   // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
-  const PORT = process.env.NODE_ENV === 'production' 
-    ? defaultPort 
+  const PORT = process.env.NODE_ENV === 'production'
+    ? defaultPort
     : await getPort({ port: defaultPort });
 
   console.log("Environment check:");
@@ -390,12 +389,11 @@ async function startServer() {
           id: restaurant.id,
           name: restaurant.name,
           slug: restaurant.slug,
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
           neighborhood: restaurant.neighborhood,
           hero_image_url: restaurant.heroImageUrl,
-          instagram_url: restaurant.instagramUrl,
-          website: restaurant.website,
           emoji: restaurant.emoji,
-          position: restaurant.position,
         },
         slots: formattedSlots,
       });
