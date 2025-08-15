@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import mime from "mime-types";
 import { Client } from "@replit/object-storage";
 import getPort from "get-port";
+import { toNodeBuffer } from "@replit/object-storage/dist/node";
 
 // --- Health FIRST & non-blocking ---
 const app = express();
@@ -177,10 +178,16 @@ async function startServer() {
       console.log("📁 Uploading to object storage with key:", key);
 
       // Upload to object storage
-      await storage.uploadFromBytes(key, req.file.buffer, {
+      const uploadResult = await storage.uploadFromBytes(key, req.file.buffer, {
         compress: false,
-        contentType: req.file.mimetype,
       });
+
+      if (!uploadResult.ok) {
+        return res.status(500).json({ 
+          error: "Upload failed", 
+          details: uploadResult.error 
+        });
+      }
 
       console.log("✅ Upload successful, updating database...");
 
@@ -220,19 +227,37 @@ async function startServer() {
 
       if (!obj.ok || !obj.value) {
         console.log("❌ Image not found in storage:", key);
-        return res.status(404).json({ error: "Image not found" });
+        return res.status(404).json({ 
+          error: "Image not found", 
+          key, 
+          details: obj?.error 
+        });
       }
 
-      const u8 = obj.value; // Uint8Array
-      const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+      const buffer = toNodeBuffer(obj.value);
 
-      // Set content type
-      const contentType = mime.lookup(filename) || "application/octet-stream";
-      res.set("Content-Type", contentType);
-      res.set("Cache-Control", "public, max-age=31536000"); // 1 year cache
+      // Detect content type by file signature and extension
+      const contentType = (() => {
+        const sig = buffer.subarray(0, 4).toString("hex");
+        if (sig.startsWith("ffd8")) return "image/jpeg";
+        if (sig === "89504e47") return "image/png";
+        if (buffer.subarray(0,4).toString("ascii")==="RIFF" && buffer.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+        if (sig.startsWith("4749")) return "image/gif";
+        if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
+        const ext = filename.split(".").pop()?.toLowerCase();
+        if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+        if (ext === "png") return "image/png";
+        if (ext === "gif") return "image/gif";
+        if (ext === "webp") return "image/webp";
+        return "application/octet-stream";
+      })();
 
-      console.log("✅ Serving image:", key, "Size:", buffer.length, "bytes");
-      res.send(buffer);
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      console.log("✅ Serving image:", key, "Size:", buffer.length, "bytes", "Type:", contentType);
+      return res.end(buffer);
     } catch (error) {
       console.error("❌ Error serving image:", error);
       res.status(500).json({ error: "Failed to serve image" });
@@ -417,7 +442,11 @@ async function startServer() {
   // Admin routes
   app.get("/api/admin/restaurants", authenticateToken, async (req: any, res) => {
     try {
-      if (req.user.role !== "ADMIN") {
+      // Assuming user.role is set by authenticateToken or a subsequent middleware
+      // For this example, we'll hardcode admin check if role isn't available.
+      // In a real app, ensure `req.user` has the correct role information.
+      const isAdmin = req.user && req.user.role === "ADMIN";
+      if (!isAdmin) {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -434,7 +463,9 @@ async function startServer() {
 
   app.put("/api/admin/restaurants/:id", authenticateToken, async (req: any, res) => {
     try {
-      if (req.user.role !== "ADMIN") {
+      // Assuming user.role is set by authenticateToken or a subsequent middleware
+      const isAdmin = req.user && req.user.role === "ADMIN";
+      if (!isAdmin) {
         return res.status(403).json({ error: "Admin access required" });
       }
 
