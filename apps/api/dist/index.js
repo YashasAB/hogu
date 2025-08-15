@@ -86,13 +86,6 @@ app.use(express_1.default.json());
 // Multer configuration for handling file uploads
 const storage = multer_1.default.memoryStorage(); // Store file in memory
 const upload = (0, multer_1.default)({ storage: storage });
-// Serve static files from React build in production
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
-    const webDistPath = path_1.default.join(__dirname, "../../web/dist");
-    app.use(express_1.default.static(webDistPath));
-    console.log("Serving static files from:", webDistPath);
-}
 // Health check endpoint for deployment
 app.get("/", (req, res) => {
     res.status(200).send("OK");
@@ -360,7 +353,7 @@ app.use("/api/reservations", reservations_1.default);
 app.use("/api/discover", discover_1.default);
 app.use("/api/admin", admin_1.default);
 app.use("/api/images", images_1.default);
-// Serve static files from React build in production
+// Check if running in production and serve static files
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
     const webDistPath = path_1.default.join(__dirname, "../../web/dist");
