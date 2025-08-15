@@ -108,32 +108,48 @@ router.get('/tonight', async (req, res) => {
 // Get all restaurants with available slots in the next 24 hours
 router.get('/available-today', async (req, res) => {
   try {
-    const currentTime = new Date();
-    const currentDate = currentTime.toISOString().split('T')[0];
-    const tomorrowDate = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
-    const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+    const now = new Date();
+    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
+    // Get current date and time info
+    const currentDate = now.toISOString().split('T')[0];
+    const tomorrowDate = next24Hours.toISOString().split('T')[0];
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Build time conditions for the next 24 hours
+    const timeConditions = [];
+    
+    // For today: all slots from current time onwards
+    for (let hour = currentHour; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) { // Assuming 30-min slots
+        if (hour === currentHour && minute < currentMinute) continue;
+        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        timeConditions.push({
+          date: currentDate,
+          time: timeSlot,
+          status: 'AVAILABLE'
+        });
+      }
+    }
+    
+    // For tomorrow: slots up to the same time as now
+    for (let hour = 0; hour <= currentHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === currentHour && minute >= currentMinute) break;
+        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        timeConditions.push({
+          date: tomorrowDate,
+          time: timeSlot,
+          status: 'AVAILABLE'
+        });
+      }
+    }
 
-    // Get all available slots for today and tomorrow within 24 hours
+    // Get all available slots matching our time conditions
     const availableSlots = await prisma.timeSlot.findMany({
       where: {
-        OR: [
-          {
-            date: currentDate,
-            time: {
-              gte: currentTimeString
-            },
-            status: 'AVAILABLE'
-          },
-          {
-            date: tomorrowDate,
-            time: {
-              lt: currentTimeString
-            },
-            status: 'AVAILABLE'
-          }
-        ]
+        OR: timeConditions,
       },
       include: {
         restaurant: {
@@ -191,6 +207,7 @@ router.get('/available-today', async (req, res) => {
 
     const restaurants = Array.from(restaurantMap.values());
 
+    console.log(`Found ${restaurants.length} restaurants with ${availableSlots.length} total available slots in next 24 hours`);
     res.json({ restaurants });
   } catch (error) {
     console.error('Error fetching available restaurants:', error);
