@@ -60,14 +60,6 @@ app.use(express.json());
 const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 
-// Serve static files from React build in production
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
-  const webDistPath = path.join(__dirname, "../../web/dist");
-  app.use(express.static(webDistPath));
-  console.log("Serving static files from:", webDistPath);
-}
-
 // Health check endpoint for deployment
 app.get("/", (req, res) => {
   res.status(200).send("OK");
@@ -378,7 +370,7 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// Serve static files from React build in production
+// Check if running in production and serve static files
 const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
   const webDistPath = path.join(__dirname, "../../web/dist");
