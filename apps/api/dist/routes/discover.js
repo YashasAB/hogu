@@ -7,20 +7,34 @@ const prisma = new client_1.PrismaClient();
 // Get tonight availability
 router.get('/tonight', async (req, res) => {
     try {
-        const { city, party_size } = req.query;
+        const { party_size } = req.query;
         const partySize = parseInt(party_size) || 2;
-        // Get today's date
-        const today = new Date().toISOString().split('T')[0];
-        const currentHour = new Date().getHours();
-        // Get available slots for today from current time onwards
+        const currentTime = new Date();
+        const todayDate = currentTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const tomorrowDate = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Tomorrow's date
+        // Get current time and 24 hours from now
+        const currentHour = currentTime.getHours();
+        // Get all available slots for today and tomorrow within 24 hours
+        const timeSlots = [];
+        // Add remaining slots for today
+        for (let hour = currentHour; hour < 24; hour++) {
+            const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+            timeSlots.push({ date: todayDate, time: timeSlot });
+        }
+        // Add slots for tomorrow up to the same hour
+        for (let hour = 0; hour < currentHour; hour++) {
+            const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+            timeSlots.push({ date: tomorrowDate, time: timeSlot });
+        }
+        // Get available slots for today and tomorrow within the 24-hour range
         const availableSlots = await prisma.timeSlot.findMany({
             where: {
-                date: today,
+                OR: timeSlots.map(slot => ({
+                    date: slot.date,
+                    time: slot.time,
+                })),
                 partySize: partySize,
-                status: 'AVAILABLE', // Only show truly available slots
-                time: {
-                    gte: `${currentHour.toString().padStart(2, '0')}:00`,
-                },
+                status: 'AVAILABLE',
             },
             include: {
                 restaurant: {
@@ -28,16 +42,20 @@ router.get('/tonight', async (req, res) => {
                         id: true,
                         name: true,
                         slug: true,
+                        emoji: true,
                         neighborhood: true,
                         heroImageUrl: true,
-                        emoji: true,
                     },
                 },
             },
-            orderBy: {
-                time: 'asc',
-            },
-            take: 20, // Limit results
+            orderBy: [
+                {
+                    date: 'asc',
+                },
+                {
+                    time: 'asc',
+                },
+            ],
         });
         // Group slots by restaurant
         const restaurantSlots = new Map();
@@ -66,13 +84,114 @@ router.get('/tonight', async (req, res) => {
                 });
             }
         });
-        const now = Array.from(restaurantSlots.values()).slice(0, 6);
+        const nowSlots = Array.from(restaurantSlots.values()).slice(0, 6);
         const later = Array.from(restaurantSlots.values()).slice(6, 12);
-        res.json({ now, later });
+        res.json({ now: nowSlots, later });
     }
     catch (error) {
         console.error('Error fetching tonight availability:', error);
         res.status(500).json({ error: 'Failed to fetch tonight availability' });
+    }
+});
+// Get all restaurants with available slots in the next 24 hours
+router.get('/available-today', async (req, res) => {
+    try {
+        const now = new Date();
+        const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        // Get current date and time info
+        const currentDate = now.toISOString().split('T')[0];
+        const tomorrowDate = next24Hours.toISOString().split('T')[0];
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        // Build time conditions for the next 24 hours
+        const timeConditions = [];
+        // For today: all slots from current time onwards
+        for (let hour = currentHour; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) { // Assuming 30-min slots
+                if (hour === currentHour && minute < currentMinute)
+                    continue;
+                const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                timeConditions.push({
+                    date: currentDate,
+                    time: timeSlot,
+                    status: 'AVAILABLE'
+                });
+            }
+        }
+        // For tomorrow: slots up to the same time as now
+        for (let hour = 0; hour <= currentHour; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                if (hour === currentHour && minute >= currentMinute)
+                    break;
+                const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                timeConditions.push({
+                    date: tomorrowDate,
+                    time: timeSlot,
+                    status: 'AVAILABLE'
+                });
+            }
+        }
+        // Get all available slots matching our time conditions
+        const availableSlots = await prisma.timeSlot.findMany({
+            where: {
+                OR: timeConditions,
+            },
+            include: {
+                restaurant: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        emoji: true,
+                        neighborhood: true,
+                        heroImageUrl: true,
+                    },
+                },
+            },
+            orderBy: [
+                {
+                    date: 'asc',
+                },
+                {
+                    time: 'asc',
+                },
+            ],
+        });
+        // Group slots by restaurant
+        const restaurantMap = new Map();
+        availableSlots.forEach((slot) => {
+            const restaurant = slot.restaurant;
+            const key = restaurant.id;
+            if (!restaurantMap.has(key)) {
+                restaurantMap.set(key, {
+                    restaurant: {
+                        id: restaurant.id,
+                        name: restaurant.name,
+                        slug: restaurant.slug,
+                        neighborhood: restaurant.neighborhood,
+                        hero_image_url: restaurant.heroImageUrl,
+                        emoji: restaurant.emoji,
+                    },
+                    slots: [],
+                });
+            }
+            const restaurantData = restaurantMap.get(key);
+            if (restaurantData) {
+                restaurantData.slots.push({
+                    slot_id: slot.id,
+                    time: formatTime(slot.time),
+                    party_size: slot.partySize,
+                    date: slot.date,
+                });
+            }
+        });
+        const restaurants = Array.from(restaurantMap.values());
+        console.log(`Found ${restaurants.length} restaurants with ${availableSlots.length} total available slots in next 24 hours`);
+        res.json({ restaurants });
+    }
+    catch (error) {
+        console.error('Error fetching available restaurants:', error);
+        res.status(500).json({ error: 'Failed to fetch available restaurants' });
     }
 });
 // Get week availability
