@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -9,7 +8,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { Client } from "@replit/object-storage";
-import mime from "mime-types";
 import getPort from "get-port";
 
 // Extend Express Request interface to include user
@@ -23,21 +21,14 @@ declare global {
 
 const app = express();
 
-// Health check endpoint FIRST and non-blocking
-app.get("/", (_req, res) => {
-  console.log("[API] HEALTH HIT", new Date().toISOString());
-  res.status(200).type("text/plain").send("ok");
-});
-app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
-app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
-
 async function startServer() {
   const defaultPort = Number(process.env.PORT || 8080);
 
   // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
-  const PORT = process.env.NODE_ENV === 'production'
-    ? defaultPort
-    : await getPort({ port: defaultPort });
+  const PORT =
+    process.env.NODE_ENV === "production"
+      ? defaultPort
+      : await getPort({ port: defaultPort });
 
   console.log("Environment check:");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -88,6 +79,16 @@ async function startServer() {
     }
   };
 
+  // Health check endpoint FIRST and non-blocking
+  app.get("/", (_req, res) => {
+    console.log("[API] HEALTH HIT", new Date().toISOString());
+    res.status(200).type("text/plain").send("ok");
+  });
+  app.get("/health", (_req, res) =>
+    res.status(200).json({ status: "healthy" }),
+  );
+  app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
   // Helper function to normalize buffer data
   function toNodeBuffer(v: unknown): Buffer {
     if (Buffer.isBuffer(v)) return v;
@@ -111,7 +112,8 @@ async function startServer() {
     if (
       buf.subarray(0, 4).toString("ascii") === "RIFF" &&
       buf.subarray(8, 12).toString("ascii") === "WEBP"
-    ) return "image/webp";
+    )
+      return "image/webp";
     if (hex4.startsWith("4749")) return "image/gif";
     if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
 
@@ -160,9 +162,9 @@ async function startServer() {
       });
 
       if (!uploadResult.ok) {
-        return res.status(500).json({ 
-          error: "Upload failed", 
-          details: uploadResult.error 
+        return res.status(500).json({
+          error: "Upload failed",
+          details: uploadResult.error,
         });
       }
 
@@ -199,13 +201,15 @@ async function startServer() {
       const key = `${replId}/${filename}`;
       console.log("🖼️  Fetching image:", key);
 
-      const out = await storage.downloadAsBytes(key) as
+      const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
 
       if (!out?.ok) {
         console.warn("❌ Not found:", key, out?.error);
-        return res.status(404).json({ error: "Image not found", key, details: out?.error });
+        return res
+          .status(404)
+          .json({ error: "Image not found", key, details: out?.error });
       }
 
       const buf = toNodeBuffer(out.value);
@@ -232,7 +236,7 @@ async function startServer() {
     try {
       const { replId, filename } = req.params;
       const key = `${replId}/${filename}`;
-      const out = await storage.downloadAsBytes(key) as
+      const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
 
@@ -259,24 +263,29 @@ async function startServer() {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).json({ error: "Username and password required" });
+        return res
+          .status(400)
+          .json({ error: "Username and password required" });
       }
 
       const userAuth = await prisma.userAuth.findUnique({
         where: { username },
         include: {
-          user: true
-        }
+          user: true,
+        },
       });
 
-      if (!userAuth || !(await bcrypt.compare(password, userAuth.passwordHash))) {
+      if (
+        !userAuth ||
+        !(await bcrypt.compare(password, userAuth.passwordHash))
+      ) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
       const token = jwt.sign(
         { userId: userAuth.user.id, username: userAuth.username },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
       );
 
       res.cookie("token", token, {
@@ -306,8 +315,8 @@ async function startServer() {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
         include: {
-          auth: true
-        }
+          auth: true,
+        },
       });
 
       if (!user) {
@@ -320,7 +329,7 @@ async function startServer() {
           username: user.auth?.username,
           name: user.name,
           email: user.email,
-        }
+        },
       });
     } catch (error) {
       console.error("Auth check error:", error);
@@ -383,7 +392,8 @@ async function startServer() {
       const { slug } = req.params;
       const { date } = req.query;
 
-      const targetDate = (date as string) || new Date().toISOString().split("T")[0];
+      const targetDate =
+        (date as string) || new Date().toISOString().split("T")[0];
 
       const restaurant = await prisma.restaurant.findUnique({
         where: { slug },
@@ -429,24 +439,28 @@ async function startServer() {
   });
 
   // Admin routes
-  app.get("/api/admin/restaurants", authenticateToken, async (req: any, res) => {
-    try {
-      // Check admin access
-      const isAdmin = req.user && req.user.role === "ADMIN";
-      if (!isAdmin) {
-        return res.status(403).json({ error: "Admin access required" });
+  app.get(
+    "/api/admin/restaurants",
+    authenticateToken,
+    async (req: any, res) => {
+      try {
+        // Check admin access
+        const isAdmin = req.user && req.user.role === "ADMIN";
+        if (!isAdmin) {
+          return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const restaurants = await prisma.restaurant.findMany({
+          orderBy: { name: "asc" },
+        });
+
+        res.json({ restaurants });
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        res.status(500).json({ error: "Failed to fetch restaurants" });
       }
-
-      const restaurants = await prisma.restaurant.findMany({
-        orderBy: { name: "asc" },
-      });
-
-      res.json({ restaurants });
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      res.status(500).json({ error: "Failed to fetch restaurants" });
-    }
-  });
+    },
+  );
 
   // Start server
   app.listen(PORT, "0.0.0.0", () => {
