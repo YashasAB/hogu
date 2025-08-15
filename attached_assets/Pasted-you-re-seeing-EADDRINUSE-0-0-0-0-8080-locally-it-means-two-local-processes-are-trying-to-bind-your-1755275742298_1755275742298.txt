@@ -1,0 +1,61 @@
+you’re seeing EADDRINUSE: 0.0.0.0:8080 locally, it means two local processes are trying to bind your API port. In your setup, the most likely cause is that your .replit is starting dev twice (top-level run = "pnpm dev" and the [workflows] task also running pnpm dev), so your API tries to listen on 8080 twice and explodes.
+Here’s how to fix local dev cleanly (and keep your ports + bucket):
+1) Stop double-starting dev
+In .replit, remove the entire [workflows] section (or comment it out). Keep just one dev entry:
+modules = ["nodejs-20"]
+
+# Single dev entry for the IDE Run button
+run = "bash -lc \"pnpm dev\""
+
+[nix]
+channel = "stable-25_05"
+
+# keep your ports/bucket for local – they don't affect this error
+[[ports]]
+localPort = 5000
+externalPort = 3000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[objectStorage]
+defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
+If you keep [workflows], it also runs pnpm dev, so you get two dev runners → two API processes → EADDRINUSE.
+2) Make sure your root dev script starts exactly one API + one Vite
+In root package.json:
+{
+  "scripts": {
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\""
+  },
+  "devDependencies": { "concurrently": "^8.2.0" }
+}
+And in apps/api/package.json:
+{
+  "scripts": {
+    "dev": "ts-node src/index.ts"
+  }
+}
+(If your pnpm version doesn’t support -C, change the root script to:)
+{
+  "scripts": {
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"bash -lc 'cd apps/web && pnpm dev'\" \"bash -lc 'cd apps/api && pnpm dev'\""
+  }
+}
+3) Add a tiny “double-start guard” around app.listen
+In apps/api/src/index.ts:
+// health first
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+
+const PORT = Number(process.env.PORT || 8080);
+
+// Prevent double-binding when something starts dev twice
+if (!(globalThis as any).__serverStarted) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("[API] LISTENING PORT:", PORT, "PID:", process.pid);
+  });
+  (globalThis as any).__serverStarted = true;
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout   = 66000;
+  server.requestTimeout   = 60000;
+}
