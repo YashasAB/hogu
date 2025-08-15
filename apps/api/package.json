@@ -1,11 +1,13 @@
+
 {
   "name": "hogu-api",
   "version": "0.0.1",
   "scripts": {
     "dev": "nodemon --quiet --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "prod": "ts-node src/index.ts"
+    "start": "NODE_ENV=production node dist/index.js",
+    "prod": "ts-node src/index.ts",
+    "migrate": "npx prisma migrate deploy"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

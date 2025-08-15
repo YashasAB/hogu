@@ -1,12 +1,14 @@
-modules = ["nodejs-18", "nodejs-20", "web"]
+
+modules = ["nodejs-20"]
+
 run = "npm run dev"
 
 [nix]
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && npm start"]
-build = ["sh", "-c", "cd apps/api && npm run build"]
+build = ["bash", "-lc", "npm ci && cd apps/api && npm ci && npm run build && npx prisma migrate deploy"]
+run = ["bash", "-lc", "cd apps/api && PORT=$PORT NODE_ENV=production node dist/index.js"]
 
 [workflows]
 runButton = "Development"

@@ -24,24 +24,24 @@ const prisma = new PrismaClient({
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
+// Add process error handlers to prevent silent crashes during deployment
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("UNHANDLED REJECTION at:", promise, "reason:", reason);
+  // DO NOT process.exit here during deploy
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("UNCAUGHT EXCEPTION:", error);
+  // DO NOT process.exit here during deploy
+});
+
 // Trust proxy for proper request handling
 app.set("trust proxy", true);
 
-// Health check endpoints for deployment - return immediately
-app.get("/", (req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("OK");
-});
-
-app.get("/health", (req, res) => {
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end('{"status":"healthy"}');
-});
-
-app.get("/ready", (req, res) => {
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end('{"status":"ready"}');
-});
+// Health check endpoints FIRST - trivial and fast responses for deployment
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -396,10 +396,11 @@ if (isProduction) {
 }
 
 const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log("✅ Hogu API listening on http://0.0.0.0:" + PORT);
-  console.log("Environment:", process.env.NODE_ENV || "development");
-  console.log("Health check available at: http://0.0.0.0:" + PORT + "/");
-  console.log("LISTENING PORT:", PORT); // keep this log for deployment debugging
+  console.log("LISTENING PORT:", PORT);
+  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
+  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
 });
 
 // Configure server timeouts to prevent odd load balancer behavior
