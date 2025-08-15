@@ -105,6 +105,99 @@ router.get('/tonight', async (req, res) => {
   }
 });
 
+// Get all restaurants with available slots in the next 24 hours
+router.get('/available-today', async (req, res) => {
+  try {
+    const currentTime = new Date();
+    const currentDate = currentTime.toISOString().split('T')[0];
+    const tomorrowDate = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+    const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+
+    // Get all available slots for today and tomorrow within 24 hours
+    const availableSlots = await prisma.timeSlot.findMany({
+      where: {
+        OR: [
+          {
+            date: currentDate,
+            time: {
+              gte: currentTimeString
+            },
+            status: 'AVAILABLE'
+          },
+          {
+            date: tomorrowDate,
+            time: {
+              lt: currentTimeString
+            },
+            status: 'AVAILABLE'
+          }
+        ]
+      },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            emoji: true,
+            neighborhood: true,
+            heroImageUrl: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          date: 'asc',
+        },
+        {
+          time: 'asc',
+        },
+      ],
+    });
+
+    // Group slots by restaurant
+    const restaurantMap = new Map();
+
+    availableSlots.forEach((slot) => {
+      const restaurant = slot.restaurant;
+      const key = restaurant.id;
+
+      if (!restaurantMap.has(key)) {
+        restaurantMap.set(key, {
+          restaurant: {
+            id: restaurant.id,
+            name: restaurant.name,
+            slug: restaurant.slug,
+            neighborhood: restaurant.neighborhood,
+            hero_image_url: restaurant.heroImageUrl,
+            emoji: restaurant.emoji,
+          },
+          slots: [],
+        });
+      }
+
+      const restaurantData = restaurantMap.get(key);
+      if (restaurantData) {
+        restaurantData.slots.push({
+          slot_id: slot.id,
+          time: formatTime(slot.time),
+          party_size: slot.partySize,
+          date: slot.date,
+        });
+      }
+    });
+
+    const restaurants = Array.from(restaurantMap.values());
+
+    res.json({ restaurants });
+  } catch (error) {
+    console.error('Error fetching available restaurants:', error);
+    res.status(500).json({ error: 'Failed to fetch available restaurants' });
+  }
+});
+
 // Get week availability
 router.get('/week', async (req, res) => {
   try {

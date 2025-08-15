@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -32,27 +31,16 @@ export default function TodayNearYou({ city }: TodayNearYouProps) {
     const fetchAvailableRestaurants = async () => {
       setTodayLoading(true);
       try {
-        console.log("Fetching today restaurants from /api/discover/tonight");
-        const response = await fetch("/api/discover/tonight?party_size=2");
+        console.log("Fetching available restaurants from /api/discover/available-today");
+        const response = await fetch("/api/discover/available-today");
         console.log("Response status:", response.status);
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Today API response:", data);
-
-          // The /api/discover/tonight returns { now: [], later: [] }
-          // Combine both now and later arrays
-          const allRestaurants = [...(data.now || []), ...(data.later || [])];
-          console.log("Combined restaurants:", allRestaurants);
-
-          setTodayRestaurants(allRestaurants);
+          console.log("Available restaurants API response:", data);
+          setTodayRestaurants(data.restaurants || []);
         } else {
-          console.error(
-            "Failed to fetch available restaurants, status:",
-            response.status,
-          );
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
+          console.error("Failed to fetch available restaurants, status:", response.status);
           setTodayRestaurants([]);
         }
       } catch (error) {
