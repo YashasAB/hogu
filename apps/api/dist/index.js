@@ -39,7 +39,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
-const client_1 = require("@prisma/client");
 const auth_1 = __importDefault(require("./routes/auth"));
 const discover_1 = __importDefault(require("./routes/discover"));
 const restaurants_1 = __importDefault(require("./routes/restaurants"));
@@ -47,25 +46,34 @@ const reservations_1 = __importDefault(require("./routes/reservations"));
 const admin_1 = __importDefault(require("./routes/admin"));
 const images_1 = __importDefault(require("./routes/images"));
 const multer_1 = __importDefault(require("multer")); // Import multer
+// Set DATABASE_URL fallback BEFORE creating PrismaClient
+const fs_1 = __importDefault(require("fs"));
+const dbDir = path_1.default.join(process.cwd(), "data");
+fs_1.default.mkdirSync(dbDir, { recursive: true });
+if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = `file:${path_1.default.join(dbDir, "prod.db")}`;
+}
+const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient({
     log: ["query", "info", "warn", "error"],
 });
-// Test database connection on startup
-async function testDatabaseConnection() {
-    try {
-        await prisma.$connect();
-        console.log("✅ Database connected successfully");
-    }
-    catch (error) {
-        console.error("❌ Database connection failed:", error);
-        process.exit(1);
-    }
-}
-testDatabaseConnection();
 const app = (0, express_1.default)();
 const PORT = Number(process.env.PORT) || 8080;
+// Add process error handlers to prevent silent crashes during deployment
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("UNHANDLED REJECTION at:", promise, "reason:", reason);
+    // DO NOT process.exit here during deploy
+});
+process.on("uncaughtException", (error) => {
+    console.error("UNCAUGHT EXCEPTION:", error);
+    // DO NOT process.exit here during deploy
+});
 // Trust proxy for proper request handling
 app.set("trust proxy", true);
+// Health check endpoints FIRST - trivial and fast responses for deployment
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("PORT:", process.env.PORT);
@@ -73,10 +81,6 @@ console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
 console.log("REPL_ID set:", !!process.env.REPL_ID);
 if (process.env.REPL_ID) {
     console.log("REPL_ID:", process.env.REPL_ID);
-}
-// Set DATABASE_URL if not present (for deployment)
-if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = "file:./dev.db";
 }
 app.use((0, cors_1.default)({
     origin: true,
@@ -86,18 +90,19 @@ app.use(express_1.default.json());
 // Multer configuration for handling file uploads
 const storage = multer_1.default.memoryStorage(); // Store file in memory
 const upload = (0, multer_1.default)({ storage: storage });
-// Health check endpoint for deployment - must respond quickly
-app.get("/", (req, res) => {
-    res.status(200).json({ status: "OK", service: "Hogu API" });
-});
-// Additional health check endpoint
-app.get("/health", (req, res) => {
-    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
-});
-// Readiness check endpoint
-app.get("/ready", (req, res) => {
-    res.status(200).json({ status: "ready" });
-});
+// Test database connection on startup - don't exit on failure during deploy
+async function testDatabaseConnection() {
+    try {
+        await prisma.$connect();
+        console.log("✅ Database connected successfully");
+    }
+    catch (error) {
+        console.error("❌ Database connection failed (continuing to serve):", error);
+        // DO NOT process.exit(1) during deploy - keep serving health checks
+    }
+}
+// Initialize database connection asynchronously after health checks are set up
+testDatabaseConnection();
 // Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v) {
     if (Buffer.isBuffer(v))
@@ -156,47 +161,6 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
         // Pick the correct image/* (NO charset)
         const ct = detectContentType(buf, filename);
         // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
-        // Dynamic hero image endpoint - finds the latest hero image for a restaurant
-        app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
-            try {
-                const { restaurantId } = req.params;
-                const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-                const storage = new Client();
-                // List all files in the restaurant's folder
-                const listResult = await storage.list();
-                if (!listResult.ok || !listResult.value) {
-                    return res.status(404).json({ error: "No images found" });
-                }
-                // Find hero images for this restaurant
-                const heroImages = listResult.value
-                    .filter((item) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
-                    .sort((a, b) => new Date(b.updated || b.timeCreated).getTime() - new Date(a.updated || a.timeCreated).getTime());
-                if (heroImages.length === 0) {
-                    return res.status(404).json({ error: "No hero image found for this restaurant" });
-                }
-                // Get the most recent hero image
-                const latestHeroImage = heroImages[0];
-                const imageData = await storage.downloadAsBytes(latestHeroImage.name);
-                if (!imageData.ok || !imageData.value) {
-                    return res.status(404).json({ error: "Failed to retrieve image" });
-                }
-                // Ensure we have raw binary
-                const buf = toNodeBuffer(imageData.value);
-                // Detect content type
-                const filename = latestHeroImage.name.split('/').pop() || 'image.jpg';
-                const contentType = detectContentType(buf, filename);
-                // Set headers
-                res.setHeader("Content-Type", contentType);
-                res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-                res.setHeader("Access-Control-Allow-Origin", "*");
-                // Send the image
-                return res.end(buf);
-            }
-            catch (error) {
-                console.error("Error serving hero image:", error);
-                return res.status(500).json({ error: "Failed to serve hero image" });
-            }
-        });
         res.setHeader("Content-Type", ct);
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         res.setHeader("Access-Control-Allow-Origin", "*");
@@ -258,7 +222,7 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
         if (!restaurantId)
             return res.status(400).json({ error: "restaurantId is required" });
         // Validate file type
-        if (!file.mimetype.startsWith('image/')) {
+        if (!file.mimetype.startsWith("image/")) {
             return res.status(400).json({ error: "Only image files are allowed" });
         }
         console.log(`Uploading hero image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
@@ -272,7 +236,9 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
         try {
             const listResult = await storage.list();
             if (listResult.ok && listResult.value) {
-                const oldHeroImages = listResult.value.filter((item) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`) && item.name !== objectKey);
+                const oldHeroImages = listResult.value.filter((item) => item.name &&
+                    item.name.startsWith(`${restaurantId}/heroImage-`) &&
+                    item.name !== objectKey);
                 for (const oldImage of oldHeroImages) {
                     console.log(`Deleting old hero image: ${oldImage.name}`);
                     await storage.delete(oldImage.name);
@@ -284,7 +250,7 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
         }
         // Upload to storage
         const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {
-            compress: false // Don't compress images
+            compress: false, // Don't compress images
         });
         if (!uploadResult.ok) {
             console.error("Storage upload failed:", uploadResult.error);
@@ -298,7 +264,7 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
         try {
             await prisma.restaurant.update({
                 where: { id: restaurantId },
-                data: { heroImageUrl: imageUrl }
+                data: { heroImageUrl: imageUrl },
             });
             console.log(`✅ Updated restaurant ${restaurantId} heroImageUrl in database`);
         }
@@ -306,7 +272,7 @@ app.post("/api/upload", upload.single("image"), async (req, res) => {
             console.error("Failed to update database:", dbError);
             return res.status(500).json({
                 error: "Image uploaded but failed to update database",
-                details: dbError
+                details: dbError,
             });
         }
         console.log(`✅ Hero image uploaded successfully: ${imageUrl}`);
@@ -338,6 +304,50 @@ app.get("/api/placeholder/:width/:height", (req, res) => {
     res.setHeader("Cache-Control", "public, max-age=31536000");
     res.send(svg);
 });
+// Dynamic hero image endpoint - standalone route (not nested)
+app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
+    try {
+        const { restaurantId } = req.params;
+        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
+        const storage = new Client();
+        // List all files in the restaurant's folder
+        const listResult = await storage.list();
+        if (!listResult.ok || !listResult.value) {
+            return res.status(404).json({ error: "No images found" });
+        }
+        // Find hero images for this restaurant
+        const heroImages = listResult.value
+            .filter((item) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
+            .sort((a, b) => new Date(b.updated || b.timeCreated).getTime() -
+            new Date(a.updated || a.timeCreated).getTime());
+        if (heroImages.length === 0) {
+            return res
+                .status(404)
+                .json({ error: "No hero image found for this restaurant" });
+        }
+        // Get the most recent hero image
+        const latestHeroImage = heroImages[0];
+        const imageData = await storage.downloadAsBytes(latestHeroImage.name);
+        if (!imageData.ok || !imageData.value) {
+            return res.status(404).json({ error: "Failed to retrieve image" });
+        }
+        // Ensure we have raw binary
+        const buf = toNodeBuffer(imageData.value);
+        // Detect content type
+        const filename = latestHeroImage.name.split("/").pop() || "image.jpg";
+        const contentType = detectContentType(buf, filename);
+        // Set headers
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        // Send the image
+        return res.end(buf);
+    }
+    catch (error) {
+        console.error("Error serving hero image:", error);
+        return res.status(500).json({ error: "Failed to serve hero image" });
+    }
+});
 // Mount API routes BEFORE static files
 app.use("/api/auth", auth_1.default);
 app.use("/api/restaurants", restaurants_1.default);
@@ -357,10 +367,16 @@ if (isProduction) {
     });
 }
 const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("LISTENING PORT:", PORT);
     console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
     console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
 });
+// Configure server timeouts to prevent odd load balancer behavior
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+server.requestTimeout = 60000;
 server.on("error", (error) => {
     console.error("❌ Server error:", error);
     process.exit(1);
@@ -371,12 +387,5 @@ process.on("SIGTERM", () => {
     server.close(() => {
         console.log("Process terminated");
         process.exit(0);
-    });
-});
-// Graceful shutdown
-process.on("SIGTERM", () => {
-    console.log("SIGTERM received, shutting down gracefully");
-    server.close(() => {
-        console.log("Process terminated");
     });
 });
