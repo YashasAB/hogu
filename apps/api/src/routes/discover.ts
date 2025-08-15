@@ -10,12 +10,12 @@ router.get('/tonight', async (req, res) => {
     const { party_size } = req.query;
     const partySize = parseInt(party_size as string) || 2;
 
-    const now = new Date();
-    const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const tomorrowDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Tomorrow's date
+    const currentTime = new Date();
+    const todayDate = currentTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const tomorrowDate = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Tomorrow's date
 
     // Get current time and 24 hours from now
-    const currentHour = now.getHours();
+    const currentHour = currentTime.getHours();
 
     // Get all available slots for today and tomorrow within 24 hours
     const timeSlots = [];
@@ -95,10 +95,10 @@ router.get('/tonight', async (req, res) => {
       }
     });
 
-    const now = Array.from(restaurantSlots.values()).slice(0, 6);
+    const nowSlots = Array.from(restaurantSlots.values()).slice(0, 6);
     const later = Array.from(restaurantSlots.values()).slice(6, 12);
 
-    res.json({ now, later });
+    res.json({ now: nowSlots, later });
   } catch (error) {
     console.error('Error fetching tonight availability:', error);
     res.status(500).json({ error: 'Failed to fetch tonight availability' });
