@@ -1,0 +1,95 @@
+Short answer: your app likely dies before the health check ever runs in the deploy container—even though it’s fine locally.
+The smoking gun in your file is this order:
+create PrismaClient
+call testDatabaseConnection() (and process.exit(1) on failure)
+after that, set a fallback DATABASE_URL = "file:./dev.db"
+In deployment, DATABASE_URL often isn’t set the same way as local. Because you set the fallback after trying to connect, prisma.$connect() fails and you exit(1). The process restarts, promote waits… and eventually times out. Locally you probably have .env, so it “works awesome.”
+Fix it in-place (minimal)
+Set DATABASE_URL before creating PrismaClient or before calling $connect().
+Don’t process.exit(1) on connect failure during deploy—log and keep serving / so promote can pass.
+Also: unnest the hero-image route (it’s inside your image route right now), and remove the duplicate SIGTERM.
+Here’s a tight patch showing only the changed parts:
+// 1) Move fallback BEFORE creating prisma / connecting
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient({
+  log: ["query", "info", "warn", "error"],
+});
+
+// 2) Don't exit on failure – keep serving health checks
+async function testDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed (continuing to serve):", error);
+    // DO NOT process.exit(1) during deploy
+  }
+}
+testDatabaseConnection();
+
+// 3) Keep health endpoints trivial & early
+app.get("/", (_req, res) => res.status(200).send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+// 4) Unnest this: make sure NO route is declared inside another
+// (your hero-image route was inside the image proxy handler)
+app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    const list = await storage.list();
+    if (!list.ok || !list.value) return res.status(404).json({ error: "No images found" });
+
+    const match = list.value.find((i: any) => i.name?.startsWith(`${restaurantId}/heroImage-`))
+              || list.value.find((i: any) => i.name?.startsWith(`${restaurantId}/heroImage.`));
+    if (!match) return res.status(404).json({ error: "No hero image found" });
+
+    const data = await storage.downloadAsBytes(match.name);
+    if (!data.ok || !data.value) return res.status(404).json({ error: "Failed to retrieve image" });
+
+    const buf = Buffer.isBuffer(data.value)
+      ? data.value
+      : Buffer.from((data.value as Uint8Array).buffer, (data.value as Uint8Array).byteOffset, (data.value as Uint8Array).byteLength);
+
+    const sig4 = buf.subarray(0, 4).toString("hex");
+    let ct = "application/octet-stream";
+    if (sig4.startsWith("ffd8")) ct = "image/jpeg";
+    else if (sig4 === "89504e47") ct = "image/png";
+    else if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") ct = "image/webp";
+    else if (sig4.startsWith("4749")) ct = "image/gif";
+
+    res.setHeader("Content-Type", ct);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    return res.end(buf);
+  } catch (e) {
+    console.error("hero-image error:", e);
+    return res.status(500).json({ error: "Failed to serve hero image" });
+  }
+});
+
+// 5) Single SIGTERM handler only (remove duplicate)
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  server.close(() => {
+    console.log("Process terminated");
+    process.exit(0);
+  });
+});
+And make sure you’re listening on the injected port and host:
+const PORT = Number(process.env.PORT) || 8080;
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ API listening on http://0.0.0.0:${PORT}`);
+});
+Why this fails only in deploy
+Different env: DATABASE_URL not set the same as local → your code tried to connect before setting the fallback → crash.
+Health checker timing: Promote pings /. If your process exits while connecting to DB or registering routes, there’s nothing to reply → promote hangs then fails.
+Nested route: a route defined inside another is only registered once that outer handler runs; in a fresh container it may never be registered, causing weirdness. Not the sole cause, but it’s a footgun—remove it.
+Extra handlers / headers: duplicate SIGTERM, global CORS with credentials—these don’t usually kill promote, but removing friction helps.
