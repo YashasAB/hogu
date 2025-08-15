@@ -360,13 +360,14 @@ app.use("/api/reservations", reservations_1.default);
 app.use("/api/discover", discover_1.default);
 app.use("/api/admin", admin_1.default);
 app.use("/api/images", images_1.default);
-// In production, serve the React app for all non-API routes
+// Serve static files from React build in production
+const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
     const webDistPath = path_1.default.join(__dirname, "../../web/dist");
-    console.log("Serving static files from:", webDistPath);
     app.use(express_1.default.static(webDistPath, { index: false }));
-    // Only catch non-API routes for SPA - this regex excludes any path starting with /api/
-    app.get(/^\/(?!api\/).*/, (req, res) => {
+    console.log("Serving static files from:", webDistPath);
+    // SPA fallback - only catch non-API routes that don't start with /api, /, /health, /ready
+    app.get(/^\/(?!api\/)(?!\/$)(?!health$)(?!ready$).*/, (req, res) => {
         res.sendFile(path_1.default.join(webDistPath, "index.html"));
     });
 }
