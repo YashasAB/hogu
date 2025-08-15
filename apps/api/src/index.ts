@@ -145,7 +145,25 @@ async function startServer() {
         return res.status(400).json({ error: "Restaurant ID is required" });
       }
 
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ 
+          error: "Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed." 
+        });
+      }
+
+      // Validate file size (10MB limit already set in multer, but double-check)
+      if (req.file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: "File too large. Maximum size is 10MB." });
+      }
+
       console.log("📤 Starting upload process for restaurant:", restaurantId);
+      console.log("📄 File info:", {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
 
       // Get restaurant first to make sure it exists
       const restaurant = await prisma.restaurant.findUnique({
@@ -156,10 +174,14 @@ async function startServer() {
         return res.status(404).json({ error: "Restaurant not found" });
       }
 
-      // Create unique filename
+      // Create unique filename with better sanitization
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const extension = req.file.originalname.split(".").pop() || "jpg";
-      const filename = `heroImage-${timestamp}.${extension}`;
+      const extension = req.file.originalname.split(".").pop()?.toLowerCase() || "jpg";
+      const sanitizedName = req.file.originalname
+        .replace(/\.[^/.]+$/, "") // Remove extension
+        .replace(/[^a-zA-Z0-9-_]/g, "-") // Replace special chars with dash
+        .substring(0, 20); // Limit length
+      const filename = `${sanitizedName}-${timestamp}.${extension}`;
       const key = `${restaurantId}/${filename}`;
 
       console.log("📁 Uploading to object storage with key:", key);
@@ -170,6 +192,7 @@ async function startServer() {
       });
 
       if (!uploadResult.ok) {
+        console.error("❌ Upload to storage failed:", uploadResult.error);
         return res.status(500).json({
           error: "Upload failed",
           details: uploadResult.error,
@@ -191,6 +214,9 @@ async function startServer() {
         success: true,
         url: imageUrl,
         filename,
+        key,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
         restaurant: updatedRestaurant,
       });
     } catch (error) {
@@ -242,6 +268,12 @@ async function startServer() {
       const key = `${replId}/${filename}`;
       console.log("🖼️  Fetching image:", key);
 
+      // Validate filename to prevent path traversal
+      if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+        console.warn("❌ Invalid filename:", filename);
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+
       const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
@@ -256,16 +288,25 @@ async function startServer() {
       const buf = toNodeBuffer(out.value);
       const contentType = detectContentType(buf, filename);
 
+      // Add ETag for better caching
+      const etag = `"${Buffer.from(key).toString('base64')}"`;
+
       res.set({
-        "Content-Type": contentType, // no charset
+        "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
         "Access-Control-Allow-Origin": "*",
         "Content-Length": String(buf.length),
         "Content-Disposition": `inline; filename="${filename}"`,
+        "ETag": etag,
       });
 
+      // Handle conditional requests
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+
       console.log(`✅ Serving ${key} (${contentType}, ${buf.length} bytes)`);
-      return res.end(buf); // send raw bytes
+      return res.end(buf);
     } catch (err) {
       console.error("❌ Image proxy error:", err);
       return res.status(500).json({ error: "Failed to serve image" });
@@ -277,6 +318,12 @@ async function startServer() {
     try {
       const { replId, filename } = req.params;
       const key = `${replId}/${filename}`;
+      
+      // Validate filename
+      if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+        return res.sendStatus(400);
+      }
+      
       const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
@@ -285,16 +332,95 @@ async function startServer() {
 
       const buf = toNodeBuffer(out.value);
       const contentType = detectContentType(buf, filename);
+      const etag = `"${Buffer.from(key).toString('base64')}"`;
+      
       res.set({
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
         "Access-Control-Allow-Origin": "*",
         "Content-Length": String(buf.length),
         "Content-Disposition": `inline; filename="${filename}"`,
+        "ETag": etag,
       });
       return res.sendStatus(200);
     } catch {
       return res.sendStatus(500);
+    }
+  });
+
+  // Admin endpoint to check image status for all restaurants
+  app.get("/api/admin/images/status", authenticateToken, async (req: any, res) => {
+    try {
+      const restaurants = await prisma.restaurant.findMany({
+        select: {
+          id: true,
+          name: true,
+          heroImageUrl: true,
+        },
+      });
+
+      const imageStatus = await Promise.all(
+        restaurants.map(async (restaurant) => {
+          let status = "no-image";
+          let error = null;
+          let imageSize = null;
+
+          if (restaurant.heroImageUrl) {
+            try {
+              // Extract key from URL
+              const urlMatch = restaurant.heroImageUrl.match(/\/api\/images\/storage\/(.+)/);
+              if (urlMatch) {
+                const key = urlMatch[1];
+                const out = (await storage.downloadAsBytes(key)) as
+                  | { ok: true; value: unknown }
+                  | { ok: false; error: unknown };
+                
+                if (out?.ok) {
+                  const buf = toNodeBuffer(out.value);
+                  status = "exists";
+                  imageSize = buf.length;
+                } else {
+                  status = "missing";
+                  error = out?.error;
+                }
+              } else {
+                status = "invalid-url";
+              }
+            } catch (err) {
+              status = "error";
+              error = err instanceof Error ? err.message : String(err);
+            }
+          }
+
+          return {
+            restaurantId: restaurant.id,
+            restaurantName: restaurant.name,
+            heroImageUrl: restaurant.heroImageUrl,
+            status,
+            imageSize,
+            error,
+          };
+        })
+      );
+
+      const summary = {
+        total: restaurants.length,
+        withImages: imageStatus.filter(r => r.status === "exists").length,
+        missing: imageStatus.filter(r => r.status === "missing").length,
+        noImage: imageStatus.filter(r => r.status === "no-image").length,
+        errors: imageStatus.filter(r => r.status === "error").length,
+      };
+
+      res.json({
+        summary,
+        restaurants: imageStatus,
+      });
+    } catch (error) {
+      console.error("❌ Image status check error:", error);
+      res.status(500).json({
+        error: "Failed to check image status",
+        details: error instanceof Error ? error.message : String(error),
+      });
     }
   });
 
