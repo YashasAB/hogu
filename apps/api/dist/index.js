@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const discover_1 = __importDefault(require("./routes/discover"));
 const restaurants_1 = __importDefault(require("./routes/restaurants"));
@@ -47,7 +48,6 @@ const admin_1 = __importDefault(require("./routes/admin"));
 const images_1 = __importDefault(require("./routes/images"));
 const multer_1 = __importDefault(require("multer")); // Import multer
 // Set DATABASE_URL fallback BEFORE creating PrismaClient
-const fs_1 = __importDefault(require("fs"));
 const dbDir = path_1.default.join(process.cwd(), "data");
 fs_1.default.mkdirSync(dbDir, { recursive: true });
 if (!process.env.DATABASE_URL) {
