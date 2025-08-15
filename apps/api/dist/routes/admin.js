@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,9 +39,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
+const mime_types_1 = __importDefault(require("mime-types"));
 const object_storage_1 = require("@replit/object-storage");
 const client_s3_1 = require("@aws-sdk/client-s3");
-const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
@@ -21,41 +54,41 @@ const hasAWSCredentials = process.env.AWS_ACCESS_KEY_ID &&
     process.env.S3_BUCKET_NAME;
 if (hasAWSCredentials) {
     s3Client = new client_s3_1.S3Client({
-        region: process.env.AWS_REGION || 'us-east-1',
+        region: process.env.AWS_REGION || "us-east-1",
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
         },
     });
 }
-// Multer configuration for file uploads
-const upload = (0, multer_1.default)({ storage: multer_1.default.diskStorage({}) });
+// Multer configuration for file uploads (use memory storage for buffer access)
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 // Get restaurant profile
-router.get('/restaurant', auth_1.authenticateRestaurant, async (req, res) => {
+router.get("/restaurant", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
-        console.log('Fetching restaurant profile for ID:', restaurantId);
+        console.log("Fetching restaurant profile for ID:", restaurantId);
         const restaurant = await prisma.restaurant.findUnique({
             where: { id: restaurantId },
         });
         if (!restaurant) {
-            console.error('Restaurant not found for ID:', restaurantId);
-            return res.status(404).json({ error: 'Restaurant not found' });
+            console.error("Restaurant not found for ID:", restaurantId);
+            return res.status(404).json({ error: "Restaurant not found" });
         }
-        console.log('Successfully fetched restaurant profile:', restaurant.name);
+        console.log("Successfully fetched restaurant profile:", restaurant.name);
         res.json(restaurant);
     }
     catch (error) {
-        console.error('Error fetching restaurant:', error);
-        res.status(500).json({ error: 'Failed to fetch restaurant' });
+        console.error("Error fetching restaurant:", error);
+        res.status(500).json({ error: "Failed to fetch restaurant" });
     }
 });
 // Update restaurant profile
-router.put('/restaurant', auth_1.authenticateRestaurant, async (req, res) => {
+router.put("/restaurant", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const { name, neighborhood, instagramUrl, website, heroImageUrl } = req.body;
-        console.log('Updating restaurant profile for ID:', restaurantId, 'with data:', req.body);
+        console.log("Updating restaurant profile for ID:", restaurantId, "with data:", req.body);
         const restaurant = await prisma.restaurant.update({
             where: { id: restaurantId },
             data: {
@@ -66,54 +99,110 @@ router.put('/restaurant', auth_1.authenticateRestaurant, async (req, res) => {
                 heroImageUrl,
             },
         });
-        console.log('Successfully updated restaurant profile:', restaurant.name);
+        console.log("Successfully updated restaurant profile:", restaurant.name);
         res.json(restaurant);
     }
     catch (error) {
-        console.error('Error updating restaurant:', error);
-        res.status(500).json({ error: 'Failed to update restaurant' });
+        console.error("Error updating restaurant:", error);
+        res.status(500).json({ error: "Failed to update restaurant" });
     }
 });
+// Helper to extract the object-storage key from any previously stored URL
+function extractObjectKeyFromUrl(url) {
+    // Your proxy URL: /api/images/storage/<restaurantId>/<file>
+    const m1 = url.match(/\/api\/images\/storage\/([^?]+)/);
+    if (m1)
+        return decodeURIComponent(m1[1]);
+    // GCS-like path: .../o/<encodedKey>?alt=media
+    const m2 = url.match(/\/o\/([^?]+)/);
+    if (m2)
+        return decodeURIComponent(m2[1]);
+    // Legacy: storage.replit.com/<REPL_ID>/<key>
+    const m3 = url.match(/storage\.replit\.com\/[^/]+\/(.+)/);
+    if (m3)
+        return decodeURIComponent(m3[1]);
+    return null;
+}
 // Upload hero image for a restaurant
-router.post('/restaurant/hero-image', auth_1.authenticateRestaurant, upload.single('heroImage'), async (req, res) => {
+router.post("/restaurant/hero-image", auth_1.authenticateRestaurant, upload.single("heroImage"), async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const file = req.file;
         if (!file) {
-            return res.status(400).json({ error: 'No file uploaded' });
+            return res.status(400).json({ error: "No file uploaded" });
         }
-        console.log(`Uploading hero image for restaurant ID: ${restaurantId}`);
-        // Upload the file to Replit Object Storage
-        const fileName = `${restaurantId}/heroImage.${file.originalname.split('.').pop()}`;
-        const uploadResult = await storageClient.uploadFromBytes(fileName, file.buffer);
-        if (!uploadResult.ok) {
-            throw new Error('Failed to upload to storage');
+        // Accept only images
+        if (!file.mimetype.startsWith("image/")) {
+            return res
+                .status(400)
+                .json({ error: "Only image uploads are allowed" });
         }
-        // Construct the URL for the uploaded file
-        const heroImageUrl = `https://storage.replit.com/${process.env.REPL_ID}/${fileName}`;
-        console.log(`File uploaded successfully to: ${heroImageUrl}`);
-        // Update the restaurant's heroImageUrl in the database
-        const updatedRestaurant = await prisma.restaurant.update({
+        console.log(`Uploading hero image for restaurant ID: ${restaurantId}, size: ${file.size}, type: ${file.mimetype}`);
+        // Use simple filename
+        const filename = `heroImage.jpg`;
+        const objectKey = `${restaurantId}/${filename}`;
+        // Delete any existing image first
+        const existing = await prisma.restaurant.findUnique({
             where: { id: restaurantId },
-            data: { heroImageUrl },
+            select: { heroImageUrl: true },
         });
-        console.log(`Updated restaurant ${restaurantId} with new hero image URL: ${heroImageUrl}`);
-        res.json({ message: 'Hero image updated successfully', imageUrl: updatedRestaurant.heroImageUrl });
+        if (existing?.heroImageUrl) {
+            const oldKey = extractObjectKeyFromUrl(existing.heroImageUrl);
+            if (oldKey) {
+                try {
+                    const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
+                    const storageClient = new Client();
+                    const del = await storageClient.delete(oldKey);
+                    if (!del.ok) {
+                        console.warn("⚠️ Failed to delete old hero image:", del.error);
+                    }
+                    else {
+                        console.log("✅ Deleted old hero image:", oldKey);
+                    }
+                }
+                catch (e) {
+                    console.warn("⚠️ Error deleting old hero image:", e);
+                }
+            }
+        }
+        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
+        const storage = new Client();
+        // Upload to storage
+        const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {});
+        if (!uploadResult.ok) {
+            console.error("Storage upload failed:", uploadResult.error);
+            return res.status(500).json({ error: "Storage upload failed", details: uploadResult.error });
+        }
+        // Return the proxy URL
+        const imageUrl = `/api/images/storage/${objectKey}`;
+        console.log(`✅ Hero image uploaded successfully: ${imageUrl}`);
+        // Update database
+        await prisma.restaurant.update({
+            where: { id: restaurantId },
+            data: { heroImageUrl: imageUrl },
+        });
+        res.json({
+            message: "Hero image uploaded successfully",
+            url: imageUrl,
+            filename: filename,
+            size: file.size,
+            mimetype: file.mimetype
+        });
     }
     catch (error) {
-        console.error('Error uploading hero image:', error);
-        res.status(500).json({ error: 'Failed to upload hero image' });
+        console.error("Upload error:", error);
+        res.status(500).json({ error: "Upload failed" });
     }
 });
 // Get slots for a date
-router.get('/slots', auth_1.authenticateRestaurant, async (req, res) => {
+router.get("/slots", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const { date } = req.query;
         console.log(`Fetching slots for restaurant ID: ${restaurantId} on date: ${date}`);
         if (!date) {
-            console.error('Date is required for fetching slots');
-            return res.status(400).json({ error: 'Date is required' });
+            console.error("Date is required for fetching slots");
+            return res.status(400).json({ error: "Date is required" });
         }
         const slots = await prisma.timeSlot.findMany({
             where: {
@@ -128,11 +217,11 @@ router.get('/slots', auth_1.authenticateRestaurant, async (req, res) => {
                 },
             },
             orderBy: {
-                time: 'asc',
+                time: "asc",
             },
         });
         console.log(`Found ${slots.length} slots for restaurant ID: ${restaurantId} on date: ${date}`);
-        const formattedSlots = slots.map(slot => ({
+        const formattedSlots = slots.map((slot) => ({
             id: slot.id,
             date: slot.date,
             time: slot.time,
@@ -143,51 +232,51 @@ router.get('/slots', auth_1.authenticateRestaurant, async (req, res) => {
         res.json(formattedSlots);
     }
     catch (error) {
-        console.error('Error fetching slots:', error);
-        res.status(500).json({ error: 'Failed to fetch slots' });
+        console.error("Error fetching slots:", error);
+        res.status(500).json({ error: "Failed to fetch slots" });
     }
 });
 // Get all upcoming bookings for the restaurant (pending/confirmed from today onwards)
-router.get('/bookings', auth_1.authenticateRestaurant, async (req, res) => {
+router.get("/bookings", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
-        console.log('Fetching upcoming bookings for restaurant ID:', restaurantId);
-        const today = new Date().toISOString().split('T')[0];
-        console.log('Today date for filtering:', today);
+        console.log("Fetching upcoming bookings for restaurant ID:", restaurantId);
+        const today = new Date().toISOString().split("T")[0];
+        console.log("Today date for filtering:", today);
         // First, let's check if there are ANY reservations for this restaurant
         const allBookingsForRestaurant = await prisma.reservation.findMany({
             where: { restaurantId: restaurantId },
             include: {
                 slot: { select: { date: true, time: true } },
-                user: { select: { name: true, email: true } }
-            }
+                user: { select: { name: true, email: true } },
+            },
         });
-        console.log('ALL bookings for this restaurant:', allBookingsForRestaurant.length);
-        console.log('All bookings details:', allBookingsForRestaurant.map(b => ({
+        console.log("ALL bookings for this restaurant:", allBookingsForRestaurant.length);
+        console.log("All bookings details:", allBookingsForRestaurant.map((b) => ({
             id: b.id,
             status: b.status,
             date: b.slot.date,
             time: b.slot.time,
             user: b.user.name || b.user.email,
-            restaurantId: b.restaurantId
+            restaurantId: b.restaurantId,
         })));
         // Also check what restaurants exist
         const allRestaurants = await prisma.restaurant.findMany({
-            select: { id: true, name: true }
+            select: { id: true, name: true },
         });
-        console.log('All restaurants in database:', allRestaurants);
+        console.log("All restaurants in database:", allRestaurants);
         // Fetch upcoming bookings (excluding completed/cancelled)
         const bookings = await prisma.reservation.findMany({
             where: {
                 restaurantId: restaurantId,
                 status: {
-                    in: ['PENDING', 'CONFIRMED', 'HELD', 'SEATED']
+                    in: ["PENDING", "CONFIRMED", "HELD", "SEATED"],
                 },
                 slot: {
                     date: {
-                        gte: today
-                    }
-                }
+                        gte: today,
+                    },
+                },
             },
             include: {
                 user: {
@@ -195,44 +284,46 @@ router.get('/bookings', auth_1.authenticateRestaurant, async (req, res) => {
                         id: true,
                         name: true,
                         email: true,
-                        phone: true
-                    }
+                        phone: true,
+                    },
                 },
                 slot: {
                     select: {
                         date: true,
                         time: true,
-                        partySize: true
-                    }
-                }
+                        partySize: true,
+                    },
+                },
             },
-            orderBy: [
-                { slot: { date: 'asc' } },
-                { slot: { time: 'asc' } },
-            ],
+            orderBy: [{ slot: { date: "asc" } }, { slot: { time: "asc" } }],
         });
-        console.log('Raw bookings found:', bookings.length);
-        console.log('Bookings details:', bookings.map(b => ({ id: b.id, restaurantId: b.restaurantId, status: b.status, date: b.slot.date })));
+        console.log("Raw bookings found:", bookings.length);
+        console.log("Bookings details:", bookings.map((b) => ({
+            id: b.id,
+            restaurantId: b.restaurantId,
+            status: b.status,
+            date: b.slot.date,
+        })));
         // Fetch all bookings for today to calculate live status
         const todayBookings = await prisma.reservation.findMany({
             where: {
                 restaurantId: restaurantId,
                 slot: {
-                    date: today
-                }
+                    date: today,
+                },
             },
             select: {
-                status: true
-            }
+                status: true,
+            },
         });
         // Calculate live status from today's bookings
         const liveStatus = {
-            pending: todayBookings.filter(b => b.status === 'PENDING' || b.status === 'HELD').length,
-            confirmed: todayBookings.filter(b => b.status === 'CONFIRMED' || b.status === 'SEATED').length,
-            completed: todayBookings.filter(b => b.status === 'COMPLETED').length,
+            pending: todayBookings.filter((b) => b.status === "PENDING" || b.status === "HELD").length,
+            confirmed: todayBookings.filter((b) => b.status === "CONFIRMED" || b.status === "SEATED").length,
+            completed: todayBookings.filter((b) => b.status === "COMPLETED").length,
         };
         // Transform to match frontend format
-        const formattedBookings = bookings.map(booking => ({
+        const formattedBookings = bookings.map((booking) => ({
             id: booking.id,
             slotId: booking.slotId,
             partySize: booking.partySize,
@@ -242,48 +333,48 @@ router.get('/bookings', auth_1.authenticateRestaurant, async (req, res) => {
                 id: booking.user.id,
                 name: booking.user.name,
                 email: booking.user.email,
-                phone: booking.user.phone
+                phone: booking.user.phone,
             },
             slot: {
                 date: booking.slot.date,
                 time: booking.slot.time,
-                partySize: booking.slot.partySize
-            }
+                partySize: booking.slot.partySize,
+            },
         }));
-        console.log('Live status calculated:', liveStatus);
-        console.log('Successfully fetched upcoming bookings:', formattedBookings.length, 'bookings found');
+        console.log("Live status calculated:", liveStatus);
+        console.log("Successfully fetched upcoming bookings:", formattedBookings.length, "bookings found");
         // Return both bookings and live status
         res.json({
             bookings: formattedBookings,
-            liveStatus: liveStatus
+            liveStatus: liveStatus,
         });
     }
     catch (error) {
-        console.error('Error fetching upcoming bookings:', error);
-        res.status(500).json({ error: 'Failed to fetch bookings' });
+        console.error("Error fetching upcoming bookings:", error);
+        res.status(500).json({ error: "Failed to fetch bookings" });
     }
 });
 // Add multiple slots
-router.post('/slots/bulk', auth_1.authenticateRestaurant, async (req, res) => {
+router.post("/slots/bulk", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const { date, start, end, interval, capacity } = req.body;
         console.log(`Creating slots for restaurant ID: ${restaurantId} on date: ${date} from ${start} to ${end} with interval ${interval} and capacity ${capacity}`);
-        const [startHour, startMin] = start.split(':').map(Number);
-        const [endHour, endMin] = end.split(':').map(Number);
+        const [startHour, startMin] = start.split(":").map(Number);
+        const [endHour, endMin] = end.split(":").map(Number);
         const startTime = startHour * 60 + startMin;
         const endTime = endHour * 60 + endMin;
         const slots = [];
         for (let time = startTime; time < endTime; time += interval) {
             const hour = Math.floor(time / 60);
             const minute = time % 60;
-            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            const timeString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
             slots.push({
                 restaurantId: restaurantId,
                 date,
                 time: timeString,
                 partySize: capacity,
-                status: 'AVAILABLE',
+                status: "AVAILABLE",
             });
         }
         const createdSlots = await prisma.timeSlot.createMany({
@@ -293,12 +384,12 @@ router.post('/slots/bulk', auth_1.authenticateRestaurant, async (req, res) => {
         res.json({ created: createdSlots.count });
     }
     catch (error) {
-        console.error('Error creating slots:', error);
-        res.status(500).json({ error: 'Failed to create slots' });
+        console.error("Error creating slots:", error);
+        res.status(500).json({ error: "Failed to create slots" });
     }
 });
 // Update slot status
-router.patch('/slots/:id', auth_1.authenticateRestaurant, async (req, res) => {
+router.patch("/slots/:id", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const { id } = req.params;
@@ -317,12 +408,12 @@ router.patch('/slots/:id', auth_1.authenticateRestaurant, async (req, res) => {
         res.json(slot);
     }
     catch (error) {
-        console.error('Error updating slot:', error);
-        res.status(500).json({ error: 'Failed to update slot' });
+        console.error("Error updating slot:", error);
+        res.status(500).json({ error: "Failed to update slot" });
     }
 });
 // Update booking status
-router.patch('/bookings/:id', auth_1.authenticateRestaurant, async (req, res) => {
+router.patch("/bookings/:id", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const { id } = req.params;
@@ -337,29 +428,29 @@ router.patch('/bookings/:id', auth_1.authenticateRestaurant, async (req, res) =>
                 },
                 data: {
                     status: normalizedStatus,
-                    confirmedAt: normalizedStatus === 'CONFIRMED' ? new Date() : undefined,
+                    confirmedAt: normalizedStatus === "CONFIRMED" ? new Date() : undefined,
                 },
                 include: {
                     slot: true,
                 },
             });
-            if (normalizedStatus === 'CONFIRMED') {
+            if (normalizedStatus === "CONFIRMED") {
                 await prisma.timeSlot.update({
                     where: {
                         id: booking.slotId,
                     },
                     data: {
-                        status: 'FULL',
+                        status: "FULL",
                     },
                 });
             }
-            else if (normalizedStatus === 'CANCELLED') {
+            else if (normalizedStatus === "CANCELLED") {
                 await prisma.timeSlot.update({
                     where: {
                         id: booking.slotId,
                     },
                     data: {
-                        status: 'AVAILABLE',
+                        status: "AVAILABLE",
                     },
                 });
             }
@@ -369,12 +460,12 @@ router.patch('/bookings/:id', auth_1.authenticateRestaurant, async (req, res) =>
         res.json(result);
     }
     catch (error) {
-        console.error('Error updating booking:', error);
-        res.status(500).json({ error: 'Failed to update booking' });
+        console.error("Error updating booking:", error);
+        res.status(500).json({ error: "Failed to update booking" });
     }
 });
 // Accept a booking request
-router.post('/bookings/:id/accept', auth_1.authenticateRestaurant, async (req, res) => {
+router.post("/bookings/:id/accept", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const reservationId = req.params.id;
@@ -384,12 +475,14 @@ router.post('/bookings/:id/accept', auth_1.authenticateRestaurant, async (req, r
             where: {
                 id: reservationId,
                 restaurantId: restaurantId,
-                status: 'PENDING'
-            }
+                status: "PENDING",
+            },
         });
         if (!reservation) {
             console.log(`Reservation ${reservationId} not found or not pending for restaurant ${restaurantId}`);
-            return res.status(404).json({ error: 'Reservation not found or already processed' });
+            return res
+                .status(404)
+                .json({ error: "Reservation not found or already processed" });
         }
         // Update the reservation status to CONFIRMED and slot status to FULL in a transaction
         const updatedReservation = await prisma.$transaction(async (tx) => {
@@ -397,34 +490,34 @@ router.post('/bookings/:id/accept', auth_1.authenticateRestaurant, async (req, r
             const confirmedReservation = await tx.reservation.update({
                 where: { id: reservationId },
                 data: {
-                    status: 'CONFIRMED',
-                    confirmedAt: new Date()
+                    status: "CONFIRMED",
+                    confirmedAt: new Date(),
                 },
                 include: {
                     user: { select: { name: true, email: true } },
-                    slot: { select: { date: true, time: true } }
-                }
+                    slot: { select: { date: true, time: true } },
+                },
             });
             // Update the time slot status to FULL
             await tx.timeSlot.update({
                 where: { id: reservation.slotId },
-                data: { status: 'FULL' }
+                data: { status: "FULL" },
             });
             return confirmedReservation;
         });
         console.log(`Successfully accepted reservation ${reservationId}`);
         res.json({
-            message: 'Booking accepted successfully',
-            reservation: updatedReservation
+            message: "Booking accepted successfully",
+            reservation: updatedReservation,
         });
     }
     catch (error) {
-        console.error('Error accepting booking:', error);
-        res.status(500).json({ error: 'Failed to accept booking' });
+        console.error("Error accepting booking:", error);
+        res.status(500).json({ error: "Failed to accept booking" });
     }
 });
 // Reject a booking request
-router.post('/bookings/:id/reject', auth_1.authenticateRestaurant, async (req, res) => {
+router.post("/bookings/:id/reject", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         const reservationId = req.params.id;
@@ -434,96 +527,76 @@ router.post('/bookings/:id/reject', auth_1.authenticateRestaurant, async (req, r
             where: {
                 id: reservationId,
                 restaurantId: restaurantId,
-                status: 'PENDING'
-            }
+                status: "PENDING",
+            },
         });
         if (!reservation) {
             console.log(`Reservation ${reservationId} not found or not pending for restaurant ${restaurantId}`);
-            return res.status(404).json({ error: 'Reservation not found or already processed' });
+            return res
+                .status(404)
+                .json({ error: "Reservation not found or already processed" });
         }
         // Update the reservation status to CANCELLED and slot status back to AVAILABLE in a transaction
         const updatedReservation = await prisma.$transaction(async (tx) => {
             // Update the reservation status to CANCELLED
             const cancelledReservation = await tx.reservation.update({
                 where: { id: reservationId },
-                data: { status: 'CANCELLED' },
+                data: { status: "CANCELLED" },
                 include: {
                     user: { select: { name: true, email: true } },
-                    slot: { select: { date: true, time: true } }
-                }
+                    slot: { select: { date: true, time: true } },
+                },
             });
             // Update the time slot status back to AVAILABLE
             await tx.timeSlot.update({
                 where: { id: reservation.slotId },
-                data: { status: 'AVAILABLE' }
+                data: { status: "AVAILABLE" },
             });
             return cancelledReservation;
         });
         console.log(`Successfully rejected reservation ${reservationId}`);
         res.json({
-            message: 'Booking rejected successfully',
-            reservation: updatedReservation
+            message: "Booking rejected successfully",
+            reservation: updatedReservation,
         });
     }
     catch (error) {
-        console.error('Error rejecting booking:', error);
-        res.status(500).json({ error: 'Failed to reject booking' });
+        console.error("Error rejecting booking:", error);
+        res.status(500).json({ error: "Failed to reject booking" });
     }
 });
-// Upload photo to S3
-router.post('/:restaurantId/hero-image', upload.single('image'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No image file provided' });
-    }
-    if (!s3Client || !hasAWSCredentials) {
-        return res.status(503).json({
-            error: 'S3 upload not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME environment variables.'
-        });
-    }
+router.post("/api/images/storage/:restaurantId/hero-image", upload.single("image"), //multer memory storage
+async (req, res) => {
     try {
-        const restaurantId = req.params.restaurantId;
-        const fileName = `hero-images/${restaurantId}-${Date.now()}.jpg`;
-        const command = new client_s3_1.PutObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: fileName,
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
-        });
-        await s3Client.send(command);
-        const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${fileName}`;
-        res.json({ imageUrl });
-    }
-    catch (error) {
-        console.error('Error uploading to S3:', error);
-        res.status(500).json({ error: 'Failed to upload image' });
-    }
-});
-// Generate presigned URL for S3 upload
-router.post('/:restaurantId/photos/presign', async (req, res) => {
-    if (!s3Client || !hasAWSCredentials) {
-        return res.status(503).json({
-            error: 'S3 upload not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME environment variables.'
-        });
-    }
-    try {
-        const restaurantId = req.params.restaurantId;
-        const { fileName, contentType } = req.body;
-        if (!fileName || !contentType) {
-            return res.status(400).json({ error: 'fileName and contentType are required' });
+        const { restaurantId } = req.params;
+        const file = req.file;
+        if (!file)
+            return res.status(400).json({ error: "No image file provided" });
+        if (!file.mimetype.startsWith("image/"))
+            return res.status(400).json({ error: "Only image uploads are allowed" });
+        const extMime = (mime_types_1.default.extension(file.mimetype) || "").toLowerCase();
+        const extName = (file.originalname.split(".").pop() || "").toLowerCase();
+        const ext = (extMime || extName || "jpg").replace("jpeg", "jpg");
+        const objectKey = `${restaurantId}/heroImage.${ext}`;
+        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
+        const storage = new Client();
+        // Multer gives a Node Buffer already (binary)
+        const buf = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from(file.buffer);
+        // Upload as BYTES (never as text)
+        const uploadRes = await storage.uploadFromBytes(objectKey, buf /*, {
+          contentType: file.mimetype,
+          cacheControl: "public, max-age=31536000, immutable",
+        }*/);
+        if (!uploadRes?.ok) {
+            const msg = uploadRes?.error?.message || JSON.stringify(uploadRes?.error) || "Unknown storage error";
+            return res.status(500).json({ error: `Storage upload failed: ${msg}` });
         }
-        const key = `photos/${restaurantId}/${Date.now()}-${fileName}`;
-        const command = new client_s3_1.PutObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: key,
-            ContentType: contentType,
-        });
-        const uploadUrl = await (0, s3_request_presigner_1.getSignedUrl)(s3Client, command, { expiresIn: 3600 });
-        const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-        res.json({ uploadUrl, imageUrl });
+        const imageUrl = `/api/images/storage/${objectKey}`;
+        return res.json({ message: "Hero image uploaded successfully", imageUrl });
     }
-    catch (error) {
-        console.error('Error generating presigned URL:', error);
-        res.status(500).json({ error: 'Failed to generate upload URL' });
+    catch (err) {
+        console.error("Error uploading hero image:", err);
+        return res.status(500).json({ error: "Failed to upload hero image" });
     }
 });
 exports.default = router;

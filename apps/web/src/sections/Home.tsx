@@ -186,7 +186,7 @@ export default function Home() {
 
   const renderUserGreeting = (): any => {
     if (!user) {
-      return null;  // Explicitly return null if the user is not available
+      return null; // Explicitly return null if the user is not available
     }
 
     return (
@@ -203,8 +203,7 @@ export default function Home() {
                 Hello {user.name}!
               </h2>
               <p className="text-gray-600">
-                Welcome back to Hogu. Ready to discover tonight's hottest
-                spots?
+                Welcome back to Hogu. Ready to discover tonight's hottest spots?
               </p>
             </div>
           </div>
@@ -218,9 +217,7 @@ export default function Home() {
               }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
             >
-              <span className="font-medium text-gray-900">
-                {user.username}
-              </span>
+              <span className="font-medium text-gray-900">{user.username}</span>
               <svg
                 className={`w-4 h-4 transition-transform ${showUserDropdown ? "rotate-180" : ""}`}
                 fill="none"
@@ -330,16 +327,6 @@ export default function Home() {
           onReservationsUpdate={fetchReservations}
         />
       ) : null}
-
-      {/* TEMP IMG BUTTON */}
-      <section className="flex justify-center">
-        <button
-          onClick={() => setShowImageModal(true)}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
-        >
-          Temp Img
-        </button>
-      </section>
 
       {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
