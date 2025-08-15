@@ -1,0 +1,44 @@
+Do these three things and it’ll deploy:
+1) Make / return 200 immediately
+In your API entry (e.g. apps/api/src/index.ts), add this before your SPA fallback:
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+app.get("/", (_req, res) => res.status(200).send("ok")); // simple, fast 200
+Replit’s health checker pings / and expects 200; if your SPA/static handler grabs it first or it 404s, promotion fails. 
+Replit
+2) Listen on the injected port, on 0.0.0.0
+const PORT = Number(process.env.PORT) || 8080; // Replit sets PORT in Deployments
+const HOST = "0.0.0.0";
+app.set("trust proxy", true);
+app.listen(PORT, HOST, () => {
+  console.log(`API listening on http://${HOST}:${PORT}`);
+});
+Autoscale/Reserved VM allow one external port only; binding elsewhere or to localhost causes failures. 
+Replit Docs
+3) Ensure the start command runs from apps/api
+You have a monorepo; deployments were trying to run from the repo root. Fix with either the Deploy UI “Run command” or a .replit file.
+Option A — Set the Run command in the Deploy UI
+Use a single shell line that cd’s into apps/api, builds, and starts:
+bash -lc "cd apps/api && npm ci && npm run build && node dist/index.js"
+(Replace with your build/start as needed.)
+Option B — Commit a .replit file (lets Replit know how to run)
+Create a .replit at repo root:
+[deployment]
+# build step for your monorepo (adjust as needed)
+build = ["bash", "-lc", "npm ci && npm --workspace apps/api run build && npm --workspace apps/web run build"]
+
+# start the API from the correct directory
+run   = ["bash", "-lc", "cd apps/api && node dist/index.js"]
+Replit supports configuring deployment run commands via .replit. 
+Replit Docs
+4) Make sure you’re not starting multiple servers/ports
+Don’t run a Vite/webpack dev server in production.
+If you serve the built frontend from Express, do it after your API routes and keep the SPA fallback from catching /api or / healthz:
+// API routes here (including "/" and "/healthz")
+
+if (process.env.NODE_ENV === "production") {
+  const webDist = path.join(__dirname, "../../web/dist");
+  app.use(express.static(webDist, { index: false }));
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(path.join(webDist, "index.html"));
+  });
+}
