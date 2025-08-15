@@ -224,57 +224,63 @@ app.get("/api/images/list", async (req, res) => {
 });
 
 // Upload endpoint for testing
-app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaurantRequest, res) => {
-  try {
-    const file = req.file;
-    const restaurantId = req.body.restaurantId; // Get from form data instead
-    if (!file) {
-      return res.status(400).json({ error: "No file uploaded" });
+app.post(
+  "/api/upload",
+  upload.single("image"),
+  async (req: AuthenticatedRestaurantRequest, res) => {
+    try {
+      const file = req.file;
+      const restaurantId = req.body.restaurantId; // Get from form data instead
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      if (!restaurantId)
+        return res.status(400).json({ error: "restaurantId is required" });
+
+      console.log(
+        `Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
+      );
+
+      const ext = file.originalname.split(".").pop() || "jpg";
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `heroImage-${timestamp}.${ext}`;
+      const objectKey = `${restaurantId}/${filename}`;
+
+      const { Client } = await import("@replit/object-storage");
+      const storage = new Client();
+
+      // Upload to storage
+      const uploadResult = await storage.uploadFromBytes(
+        objectKey,
+        file.buffer,
+        {},
+      );
+
+      if (!uploadResult.ok) {
+        console.error("Storage upload failed:", uploadResult.error);
+        return res.status(500).json({
+          error: "Storage upload failed",
+          details: uploadResult.error,
+        });
+      }
+
+      // Return the proxy URL
+      const imageUrl = `/api/images/storage/${objectKey}`;
+      console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
+
+      res.json({
+        message: "Upload successful",
+        url: imageUrl,
+        filename: filename,
+        size: file.size,
+        mimetype: file.mimetype,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
     }
-    if (!restaurantId)
-      return res.status(400).json({ error: "restaurantId is required" });
-
-    console.log(
-      `Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
-    );
-
-    const ext = file.originalname.split(".").pop() || "jpg";
-    const filename = `heroImage.${ext}`;
-    const objectKey = `${restaurantId}/${filename}`;
-
-    const { Client } = await import("@replit/object-storage");
-    const storage = new Client();
-
-    // Upload to storage
-    const uploadResult = await storage.uploadFromBytes(
-      objectKey,
-      file.buffer,
-      {},
-    );
-
-    if (!uploadResult.ok) {
-      console.error("Storage upload failed:", uploadResult.error);
-      return res
-        .status(500)
-        .json({ error: "Storage upload failed", details: uploadResult.error });
-    }
-
-    // Return the proxy URL
-    const imageUrl = `/api/images/storage/${objectKey}`;
-    console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
-
-    res.json({
-      message: "Upload successful",
-      url: imageUrl,
-      filename: filename,
-      size: file.size,
-      mimetype: file.mimetype,
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-    res.status(500).json({ error: "Upload failed" });
-  }
-});
+  },
+);
 
 // Placeholder image route
 app.get("/api/placeholder/:width/:height", (req, res) => {
