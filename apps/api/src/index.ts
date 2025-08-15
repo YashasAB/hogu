@@ -12,7 +12,6 @@ import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
 // Set DATABASE_URL fallback BEFORE creating PrismaClient
 import fs from "fs";
-import path from "path";
 
 const dbDir = path.join(process.cwd(), "data");
 fs.mkdirSync(dbDir, { recursive: true });
