@@ -404,7 +404,11 @@ if (process.env.NODE_ENV === "production") {
 
 async function startServer() {
   const defaultPort = Number(process.env.PORT || 8080);
-  const PORT = await getPort({ port: defaultPort }); // picks 8080 or next free
+  
+  // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
+  const PORT = process.env.NODE_ENV === 'production' 
+    ? defaultPort 
+    : await getPort({ port: defaultPort });
 
   console.log("Environment check:");
   console.log("NODE_ENV:", process.env.NODE_ENV);
