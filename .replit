@@ -1,6 +1,7 @@
+
 modules = ["nodejs-20"]
 
-# IDE Run button (local dev). Use your dev script; pnpm to avoid npm/pnpm mismatch.
+# IDE Run button (local dev)
 run = "bash -lc \"pnpm dev\""
 
 [nix]
@@ -17,13 +18,16 @@ build = [
 run = [
   "bash",
   "-lc",
-  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=8080 NODE_ENV=production node dist/index.js",
+  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=${PORT:-8080} NODE_ENV=production node dist/index.js",
 ]
 
-# ---- keep your object storage bucket exactly as-is ----
 [objectStorage]
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
 
 [[ports]]
+localPort = 5000
+externalPort = 3000
+
+[[ports]]
 localPort = 8080
-externalPort = 80
+externalPort = 8080

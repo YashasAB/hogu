@@ -1,3 +1,4 @@
+
 {
   "name": "hogu-api",
   "version": "0.0.1",
@@ -12,24 +13,6 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.637.0",
-    "@aws-sdk/s3-presigned-post": "^3.637.0",
-    "@aws-sdk/s3-request-presigner": "^3.864.0",
-    "@prisma/client": "^5.22.0",
-    "@replit/object-storage": "^1.0.0",
-    "@types/bcrypt": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.5",
-    "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
-    "mime-types": "^2.1.35",
-    "multer": "^1.4.5-lts.1",
-    "zod": "^3.23.8"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.637.0",
