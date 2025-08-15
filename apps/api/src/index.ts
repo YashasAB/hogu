@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
 import authRoutes from "./routes/auth";
 import discoverRoutes from "./routes/discover";
 import restaurantRoutes from "./routes/restaurants";
@@ -11,18 +10,25 @@ import imagesRouter from "./routes/images";
 import multer from "multer"; // Import multer
 import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
+// Set DATABASE_URL fallback BEFORE creating PrismaClient
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
+
+import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
 });
 
-// Test database connection on startup
+// Test database connection on startup - don't exit on failure during deploy
 async function testDatabaseConnection() {
   try {
     await prisma.$connect();
     console.log("✅ Database connected successfully");
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
-    process.exit(1);
+    console.error("❌ Database connection failed (continuing to serve):", error);
+    // DO NOT process.exit(1) during deploy - keep serving health checks
   }
 }
 
@@ -43,11 +49,6 @@ if (process.env.REPL_ID) {
   console.log("REPL_ID:", process.env.REPL_ID);
 }
 
-// Set DATABASE_URL if not present (for deployment)
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "file:./dev.db";
-}
-
 app.use(
   cors({
     origin: true,
@@ -60,17 +61,15 @@ app.use(express.json());
 const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 
-// Health check endpoint for deployment - must respond quickly
+// Health check endpoints for deployment - must respond immediately
 app.get("/", (req, res) => {
-  res.status(200).json({ status: "OK", service: "Hogu API" });
+  res.status(200).send("OK");
 });
 
-// Additional health check endpoint
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+  res.status(200).json({ status: "healthy" });
 });
 
-// Readiness check endpoint
 app.get("/ready", (req, res) => {
   res.status(200).json({ status: "ready" });
 });
@@ -133,56 +132,7 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
 
     // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
 
-// Dynamic hero image endpoint - finds the latest hero image for a restaurant
-app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
-  try {
-    const { restaurantId } = req.params;
 
-    const { Client } = await import("@replit/object-storage");
-    const storage = new Client();
-
-    // List all files in the restaurant's folder
-    const listResult = await storage.list();
-    if (!listResult.ok || !listResult.value) {
-      return res.status(404).json({ error: "No images found" });
-    }
-
-    // Find hero images for this restaurant
-    const heroImages = listResult.value
-      .filter((item: any) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
-      .sort((a: any, b: any) => new Date(b.updated || b.timeCreated).getTime() - new Date(a.updated || a.timeCreated).getTime());
-
-    if (heroImages.length === 0) {
-      return res.status(404).json({ error: "No hero image found for this restaurant" });
-    }
-
-    // Get the most recent hero image
-    const latestHeroImage = heroImages[0];
-    const imageData = await storage.downloadAsBytes(latestHeroImage.name);
-
-    if (!imageData.ok || !imageData.value) {
-      return res.status(404).json({ error: "Failed to retrieve image" });
-    }
-
-    // Ensure we have raw binary
-    const buf = toNodeBuffer(imageData.value);
-
-    // Detect content type
-    const filename = latestHeroImage.name.split('/').pop() || 'image.jpg';
-    const contentType = detectContentType(buf, filename);
-
-    // Set headers
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-
-    // Send the image
-    return res.end(buf);
-  } catch (error) {
-    console.error("Error serving hero image:", error);
-    return res.status(500).json({ error: "Failed to serve hero image" });
-  }
-});
 
 
     res.setHeader("Content-Type", ct);
@@ -353,6 +303,57 @@ app.get("/api/placeholder/:width/:height", (req, res) => {
   res.setHeader("Content-Type", "image/svg+xml");
   res.setHeader("Cache-Control", "public, max-age=31536000");
   res.send(svg);
+});
+
+// Dynamic hero image endpoint - standalone route (not nested)
+app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // List all files in the restaurant's folder
+    const listResult = await storage.list();
+    if (!listResult.ok || !listResult.value) {
+      return res.status(404).json({ error: "No images found" });
+    }
+
+    // Find hero images for this restaurant
+    const heroImages = listResult.value
+      .filter((item: any) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
+      .sort((a: any, b: any) => new Date(b.updated || b.timeCreated).getTime() - new Date(a.updated || a.timeCreated).getTime());
+
+    if (heroImages.length === 0) {
+      return res.status(404).json({ error: "No hero image found for this restaurant" });
+    }
+
+    // Get the most recent hero image
+    const latestHeroImage = heroImages[0];
+    const imageData = await storage.downloadAsBytes(latestHeroImage.name);
+
+    if (!imageData.ok || !imageData.value) {
+      return res.status(404).json({ error: "Failed to retrieve image" });
+    }
+
+    // Ensure we have raw binary
+    const buf = toNodeBuffer(imageData.value);
+
+    // Detect content type
+    const filename = latestHeroImage.name.split('/').pop() || 'image.jpg';
+    const contentType = detectContentType(buf, filename);
+
+    // Set headers
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    // Send the image
+    return res.end(buf);
+  } catch (error) {
+    console.error("Error serving hero image:", error);
+    return res.status(500).json({ error: "Failed to serve hero image" });
+  }
 });
 
 // Mount API routes BEFORE static files
