@@ -1,17 +1,14 @@
-
 {
   "name": "hogu",
+  "version": "1.0.0",
   "private": true,
-  "engines": {
-    "node": ">=18"
-  },
+  "packageManager": "pnpm@9",
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,magenta \"npm --prefix apps/api run dev\" \"npm --prefix apps/web run dev\"",
-    "build": "npm --prefix apps/web run build && npm --prefix apps/api run build",
-    "build:api": "npm --prefix apps/api run build",
-    "build:web": "npm --prefix apps/web run build",
-    "start": "npm --prefix apps/api run start",
-    "migrate": "cd apps/api && npx prisma migrate deploy"
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\"",
+    "build": "pnpm -C apps/web build && pnpm -C apps/api build",
+    "build:api": "pnpm -C apps/api build",
+    "build:web": "pnpm -C apps/web build",
+    "migrate": "cd apps/api && pnpm prisma migrate deploy"
   },
   "devDependencies": {
     "@types/mime-types": "^3.0.1",

@@ -11,8 +11,14 @@ import multer from "multer"; // Import multer
 import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
 // Set DATABASE_URL fallback BEFORE creating PrismaClient
+import fs from "fs";
+import path from "path";
+
+const dbDir = path.join(process.cwd(), "data");
+fs.mkdirSync(dbDir, { recursive: true });
+
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "file:./dev.db";
+  process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
 }
 
 import { PrismaClient } from "@prisma/client";
