@@ -10,25 +10,16 @@ channel = "stable-25_05"
 [deployment]
 # Build with pnpm (no -C / recursive flags), DB-safe for Prisma
 build = [
-  "bash","-lc",
-  "set -euo pipefail; \
-   corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; \
-   # remove npm lockfiles so Deploy won't try npm
-   rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; \
-   # root install (ok if you have monorepo bits here)
-   pnpm install --frozen-lockfile || true; \
-   # build web if present
-   if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; \
-   # build api
-   cd apps/api && pnpm install --frozen-lockfile && pnpm build; \
-   # prisma needs a DB url at build time for generate/migrate
-   mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; \
-   pnpm prisma generate; \
-   pnpm prisma migrate deploy || pnpm prisma db push"
+  "bash",
+  "-lc",
+  'set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push',
 ]
 
-# Run API only, bound to the platform port, in production; give Prisma a fallback DB URL
-run = ["bash","-lc","cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"]
+run = [
+  "bash",
+  "-lc",
+  'cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js',
+]
 
 [workflows]
 runButton = "Development"

@@ -1,0 +1,37 @@
+The error (“listening on 5000… health checks to 80”) means Autoscale is seeing a process bound to 5000—that’s almost always the Vite dev or preview server—so the probe on port 80 can’t hit your app.
+Here’s how to keep your local setup unchanged while making promote pass:
+What to check (and fix)
+Deployment run command must NOT start Vite.
+In .replit under [deployment], run must start only the API on the platform port:
+[deployment]
+run = ["bash","-lc","cd apps/api && PORT=$PORT NODE_ENV=production node dist/index.js"]
+Do not call pnpm dev, vite, or vite preview here.
+If the Deploy UI overrides this, change the Start/Run command to the line above.
+Build step must NOT start Vite either.
+It can build the web app, but never run it:
+[deployment]
+build = ["bash","-lc", "… pnpm build … (web & api) …"]
+No vite dev / vite preview in build.
+API must bind to the injected port, not 5000.
+At the very top of apps/api/src/index.ts:
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+const PORT = Number(process.env.PORT || 8080);
+app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT));
+If deploy logs ever say LISTENING PORT: 5000, something is still starting Vite.
+Serve the built frontend from the API (production).
+Keep Vite dev at 5000 for local, but in production just serve the built files:
+if (process.env.NODE_ENV === "production") {
+  const webDistPath = path.join(__dirname, "../../web/dist");
+  app.use(express.static(webDistPath, { index: false }));
+  // SPA fallback that doesn’t hijack / or /api
+  app.get(/^\/(?!api\/)(?!$)(?!health$)(?!ready$).*/, (_req, res) => {
+    res.sendFile(path.join(webDistPath, "index.html"));
+  });
+}
+That way only one HTTP server (the API) runs in deploy, on $PORT.
+Keep your local ports — they don’t affect Autoscale.
+Your [[ports]] and vite.config.ts (server.port = 5000, proxy to 8080) are fine for local dev. They’re ignored by the deploy runtime as long as you’re not starting Vite in [deployment].run.
+Quick self-check
+Add these logs temporarily in index.ts:
+console.log("DEPLOY PORT ENV:", process.env.PORT, "NODE_ENV:", process.env.NODE_ENV);
+app.get("/", (_req, res) => { console.log("HEALTH HIT"); res.status(200).send("ok"); });
