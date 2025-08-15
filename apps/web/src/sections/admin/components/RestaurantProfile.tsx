@@ -57,7 +57,10 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
       }
 
       const result = await response.json();
-      setFreshUploadedImageUrl(result.url || result.heroImageUrl);
+      const newImageUrl = result.url || result.heroImageUrl;
+      setFreshUploadedImageUrl(newImageUrl);
+      // Auto-update the heroImageUrl field so it gets saved
+      onDataChange({ heroImageUrl: newImageUrl });
     } catch (error) {
       console.error("Error uploading photo:", error);
       alert(
