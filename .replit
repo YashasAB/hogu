@@ -15,7 +15,7 @@ build = [
 
 run = [
   "bash","-lc",
-  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"
+  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=8080 NODE_ENV=production node dist/index.js"
 ]
 
 [[ports]]
@@ -23,12 +23,8 @@ localPort = 5000
 externalPort = 3000
 
 [[ports]]
-localPort = 5555
-externalPort = 80
-
-[[ports]]
 localPort = 8080
-externalPort = 8080
+externalPort = 80
 
 # ---- keep your object storage bucket exactly as-is ----
 [objectStorage]
