@@ -1,0 +1,21 @@
+bject literal may only specify known properties, and 'contentType' does not exist in type 'UploadOptions'.
+[API] src/index.ts(227,37): error TS2339: Property 'buffer' does not exist on type '[Buffer<ArrayBufferLike>]'.
+[API] src/index.ts(227,48): error TS2339: Property 'byteOffset' does not exist on type '[Buffer<ArrayBufferLike>]'.
+[API] src/index.ts(227,63): error TS2339: Property 'byteLength' does not exist on type '[Buffer<ArrayBufferLike>]'.
+[API] src/index.ts(252,18): error TS2353: Object literal may only specify known properties, and 'username' does not exist in type 'UserWhereUniqueInput'.
+[API] src/index.ts(255,58): error TS2339: Property 'password' does not exist on type '{ id: string; name: string | null; email: string; createdAt: Date; phone: string | null; verified: boolean; }'.
+[API] src/index.ts(260,43): error TS2339: Property 'username' does not exist on type '{ id: string; name: string | null; email: string; createdAt: Date; phone: string | null; verified: boolean; }'.
+[API] src/index.ts(260,64): error TS2339: Property 'role' does not exist on type '{ id: string; name: string | null; email: string; createdAt: Date; phone: string | null; verified: boolean; }'.
+[API] src/index.ts(275,26): error TS2339: Property 'username' does not exist on type '{ id: string; name: string | null; email: string; createdAt: Date; phone: string | null; verified: boolean; }'.
+[API] src/index.ts(276,22): error TS2339: Property 'role' does not exist on type '{ id: string; name: string | null; email: string; createdAt: Date; phone: string | null; verified: boolean; }'.
+[API] src/index.ts(290,29): error TS2353: Object literal may only specify known properties, and 'username' does not exist in type 'UserSelect<DefaultArgs>'.
+[API] 
+[API]     at createTSError (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:859:12)
+[API]     at reportTSError (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:863:19)
+[API]     at getOutput (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:1077:36)
+[API]     at Object.compile (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:1433:41)
+[API]     at Module.m._compile (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:1617:30)
+[API]     at Module._extensions..js (node:internal/modules/cjs/loader:1613:10)
+[API]     at Object.require.extensions.<computed> [as .ts] (/home/runner/workspace/node_modules/.pnpm/ts-node@10.9.2_@types+node@22.17.2_typescript@5.9.2/node_modules/ts-node/src/index.ts:1621:12)
+[API]     at Module.load (node:internal/modules/cjs/loader:1275:32)
+[API]     at Function.Module._load (node:internal/modules/cjs/loader:1096:12)
