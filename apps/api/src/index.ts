@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import authRoutes from "./routes/auth";
 import discoverRoutes from "./routes/discover";
 import restaurantRoutes from "./routes/restaurants";
@@ -11,8 +12,6 @@ import multer from "multer"; // Import multer
 import { AuthenticatedRestaurantRequest } from "./middleware/auth";
 
 // Set DATABASE_URL fallback BEFORE creating PrismaClient
-import fs from "fs";
-
 const dbDir = path.join(process.cwd(), "data");
 fs.mkdirSync(dbDir, { recursive: true });
 
