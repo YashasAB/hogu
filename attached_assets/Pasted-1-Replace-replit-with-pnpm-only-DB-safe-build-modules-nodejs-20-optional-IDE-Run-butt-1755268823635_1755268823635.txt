@@ -1,0 +1,85 @@
+1) Replace .replit with pnpm-only + DB-safe build
+modules = ["nodejs-20"]
+
+# (optional) IDE Run button for local dev
+run = "bash -lc \"pnpm dev\""
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+# Build from ROOT using pnpm; prisma commands run *inside* apps/api
+build = [
+  "bash","-lc",
+  "set -euo pipefail; corepack enable; pnpm -v; \
+   # clean mixed managers
+   rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json; \
+   # install
+   pnpm i --frozen-lockfile; \
+   pnpm -C apps/api i --frozen-lockfile; \
+   pnpm -C apps/web i --frozen-lockfile || true; \
+   # build
+   pnpm -C apps/web build || true; \
+   pnpm -C apps/api build; \
+   # prisma needs a DB URL at build-time for generate/migrate
+   mkdir -p apps/api/data; \
+   export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; \
+   pnpm -C apps/api prisma generate; \
+   pnpm -C apps/api prisma migrate deploy || pnpm -C apps/api prisma db push"
+]
+
+# Run from apps/api, bind to platform port, force production & DB URL fallback
+run = ["bash","-lc","cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=$PORT NODE_ENV=production node dist/index.js"]
+Also delete every [[ports]] block from .replit. Autoscale injects a single $PORT; extra mappings cause confusion.
+2) Make sure your package scripts don’t call npm
+Root package.json (optional but recommended):
+{
+  "name": "root",
+  "private": true,
+  "packageManager": "pnpm@9",
+  "scripts": {
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\"",
+    "build": "pnpm -C apps/web build && pnpm -C apps/api build",
+    "build:api": "pnpm -C apps/api build",
+    "build:web": "pnpm -C apps/web build",
+    "migrate": "cd apps/api && pnpm prisma migrate deploy"
+  },
+  "devDependencies": { "concurrently": "^8.2.0" }
+}
+apps/api/package.json:
+{
+  "name": "hogu-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "NODE_ENV=production node dist/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:push": "prisma db push"
+  }
+}
+If any script contains bare npm (e.g., "postinstall": "npm"), remove/replace it with pnpm.
+Ensure pnpm-lock.yaml exists and no package-lock.json files remain in the repo.
+3) Give Prisma a DB during build & run
+In code (very early in apps/api/src/index.ts), set a safe SQLite fallback and ensure the directory exists:
+import fs from "fs";
+import path from "path";
+const dbDir = path.join(process.cwd(), "data");
+fs.mkdirSync(dbDir, { recursive: true });
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
+}
+In Deploy UI, you can also set DATABASE_URL env var if you have a real DB. If not, the fallback above + .replit exports will handle it.
+If your prisma/schema.prisma datasource provider is not sqlite, change the fallback to the correct DB URL format (e.g., Postgres), or switch the provider to sqlite for now.
+4) Health check + port (confirm once)
+At the top of your server:
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+Bind to $PORT:
+const PORT = Number(process.env.PORT || 8080);
+app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT, "NODE_ENV:", process.env.NODE_ENV));
+Why this fixes your errors
+“npm called without a proper subcommand”: gone — we never invoke npm during build/run; only pnpm.
+“Using npm ci but project uses pnpm”: gone — build uses pnpm i --frozen-lockfile.
+“Prisma migration may fail due to missing database configuration”: gone — we export a DATABASE_URL in both build and run, and create apps/api/data so SQLite can write.
