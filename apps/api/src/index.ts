@@ -28,7 +28,10 @@ const prisma = new PrismaClient({
 const app = express();
 
 // Health check endpoint for Autoscale - must be at root and return 200 immediately
-app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+app.get("/", (_req, res) => {
+  console.log("HEALTH HIT");
+  res.status(200).type("text/plain").send("ok");
+});
 app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
 app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
@@ -48,6 +51,7 @@ process.on("uncaughtException", (error) => {
 // Trust proxy for proper request handling
 app.set("trust proxy", true);
 
+console.log("DEPLOY PORT ENV:", process.env.PORT);
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("PORT:", PORT);
