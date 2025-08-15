@@ -248,16 +248,19 @@ async function startServer() {
         return res.status(400).json({ error: "Username and password required" });
       }
 
-      const user = await prisma.user.findUnique({
+      const userAuth = await prisma.userAuth.findUnique({
         where: { username },
+        include: {
+          user: true
+        }
       });
 
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      if (!userAuth || !(await bcrypt.compare(password, userAuth.passwordHash))) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
       const token = jwt.sign(
-        { userId: user.id, username: user.username, role: user.role },
+        { userId: userAuth.user.id, username: userAuth.username },
         JWT_SECRET,
         { expiresIn: "7d" }
       );
@@ -271,9 +274,10 @@ async function startServer() {
 
       res.json({
         user: {
-          id: user.id,
-          username: user.username,
-          role: user.role,
+          id: userAuth.user.id,
+          username: userAuth.username,
+          name: userAuth.user.name,
+          email: userAuth.user.email,
         },
       });
     } catch (error) {
@@ -287,14 +291,23 @@ async function startServer() {
     try {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
-        select: { id: true, username: true, role: true },
+        include: {
+          auth: true
+        }
       });
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      res.json({ user });
+      res.json({
+        user: {
+          id: user.id,
+          username: user.auth?.username,
+          name: user.name,
+          email: user.email,
+        }
+      });
     } catch (error) {
       console.error("Auth check error:", error);
       res.status(500).json({ error: "Failed to check auth status" });
