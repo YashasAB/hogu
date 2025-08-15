@@ -1,0 +1,72 @@
+You’ve got two things causing the “stuck in promote” right now:
+Your container is being mapped to port 5555 → 80, but your app is not clearly listening (no “LISTENING PORT …” log, no “HEALTH HIT” lines), so the probe never gets a 200.
+Your .replit has a static mapping for 5555 → 80 which is brittle. Either force 8080 in deploy or let the platform choose a $PORT and don’t hard-map 5555.
+Below is a minimal set of edits that will make both local and deploy work.
+1) Fix index.ts to always reply to health checks and actually start the server
+Put this at the very top, before any heavy middleware or DB work:
+// apps/api/src/index.ts
+import express from "express";
+import cors from "cors";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+
+// --- Health FIRST & non-blocking ---
+const app = express();
+
+app.get("/", (_req, res) => {
+  console.log("[API] HEALTH HIT", new Date().toISOString());
+  res.status(200).type("text/plain").send("ok");
+});
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+// Bind immediately so the probe succeeds even if other setup is slow
+const PORT = Number(process.env.PORT || 8080);
+
+// prevent double-binding in dev
+if (!(globalThis as any).__apiServer) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("[API] LISTENING PORT:", PORT, "NODE_ENV:", process.env.NODE_ENV);
+  });
+  (globalThis as any).__apiServer = server;
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout   = 66000;
+  server.requestTimeout   = 60000;
+}
+
+// ---- the rest of your setup AFTER listen() ----
+app.set("trust proxy", true);
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+
+// DB fallback dir (safe even in deploy)
+const dbDir = path.join(process.cwd(), "data");
+fs.mkdirSync(dbDir, { recursive: true });
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
+}
+
+// (import and connect Prisma, routes, object-storage routes, static serving, etc.)
+// ... keep your existing code here ...
+
+process.on("unhandledRejection", (r) => console.error("[API] UNHANDLED REJECTION:", r));
+process.on("uncaughtException", (e) => console.error("[API] UNCAUGHT EXCEPTION:", e));
+Why: health checks must return 200 fast; starting listen() before DB and other setup guarantees the probe hits a live server.
+2) Make port mapping consistent (pick one strategy)
+Option A (recommended): fixed 8080 → 80
+Change deployment run to force 8080.
+Keep a single mapping 8080 → 80.
+Remove the 5555 → 80 mapping.
+.replit
+[deployment]
+run = [
+  "bash","-lc",
+  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=8080 NODE_ENV=production node dist/index.js"
+]
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+# keep your other local dev ports (5000->3000 etc.) if you want; they don't affect deploy
