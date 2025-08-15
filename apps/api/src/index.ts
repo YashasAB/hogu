@@ -58,7 +58,20 @@ app.use(express.json());
 
 // Multer configuration for handling file uploads
 const storage = multer.memoryStorage(); // Store file in memory
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow images
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Serve static files from React build in production
 const isProduction = process.env.NODE_ENV === "production";
@@ -234,9 +247,15 @@ app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaur
     if (!restaurantId)
       return res.status(400).json({ error: "restaurantId is required" });
 
+    // Validate file type
+    if (!file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: "Only image files are allowed" });
+    }
+
     console.log(
       `Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
     );
+    console.log(`File buffer length: ${file.buffer.length}`);
 
     const ext = file.originalname.split(".").pop() || "jpg";
     const filename = `heroImage.${ext}`;
@@ -245,11 +264,13 @@ app.post("/api/upload", upload.single("image"), async (req: AuthenticatedRestaur
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
-    // Upload to storage
+    // Upload to storage with proper options
     const uploadResult = await storage.uploadFromBytes(
       objectKey,
       file.buffer,
-      {},
+      {
+        compress: false // Don't compress images
+      },
     );
 
     if (!uploadResult.ok) {
