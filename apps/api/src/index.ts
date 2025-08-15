@@ -184,8 +184,8 @@ app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
 
     // Find hero images for this restaurant
     const heroImages = listResult.value
-      .filter((item: any) => item.key.startsWith(`${restaurantId}/heroImage-`))
-      .sort((a: any, b: any) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+      .filter((item: any) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
+      .sort((a: any, b: any) => new Date(b.updated || b.timeCreated).getTime() - new Date(a.updated || a.timeCreated).getTime());
 
     if (heroImages.length === 0) {
       return res.status(404).json({ error: "No hero image found for this restaurant" });
@@ -193,7 +193,7 @@ app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
 
     // Get the most recent hero image
     const latestHeroImage = heroImages[0];
-    const imageData = await storage.downloadAsBytes(latestHeroImage.key);
+    const imageData = await storage.downloadAsBytes(latestHeroImage.name);
 
     if (!imageData.ok || !imageData.value) {
       return res.status(404).json({ error: "Failed to retrieve image" });
@@ -203,7 +203,7 @@ app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
     const buf = toNodeBuffer(imageData.value);
 
     // Detect content type
-    const filename = latestHeroImage.key.split('/').pop() || 'image.jpg';
+    const filename = latestHeroImage.name.split('/').pop() || 'image.jpg';
     const contentType = detectContentType(buf, filename);
 
     // Set headers
@@ -260,10 +260,10 @@ app.get("/api/images/list", async (req, res) => {
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const images = value.map((item: any) => ({
-      key: item.key,
+      key: item.name,
       size: item.size,
-      lastModified: item.lastModified,
-      publicUrl: `${baseUrl}/api/images/storage/${item.key}`,
+      lastModified: item.updated || item.timeCreated,
+      publicUrl: `${baseUrl}/api/images/storage/${item.name}`,
     }));
 
     res.json({
@@ -312,12 +312,12 @@ app.post(
         const listResult = await storage.list();
         if (listResult.ok && listResult.value) {
           const oldHeroImages = listResult.value.filter((item: any) => 
-            item.key.startsWith(`${restaurantId}/heroImage-`) && item.key !== objectKey
+            item.name && item.name.startsWith(`${restaurantId}/heroImage-`) && item.name !== objectKey
           );
           
           for (const oldImage of oldHeroImages) {
-            console.log(`Deleting old hero image: ${oldImage.key}`);
-            await storage.delete(oldImage.key);
+            console.log(`Deleting old hero image: ${oldImage.name}`);
+            await storage.delete(oldImage.name);
           }
         }
       } catch (error) {
