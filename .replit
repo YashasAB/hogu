@@ -8,9 +8,6 @@ channel = "stable-25_05"
 run = ["sh", "-c", "cd apps/api && npm run start"]
 build = ["sh", "-c", "cd apps/api && npm run build"]
 
-[objectStorage]
-defaultBucketID = "replit-objstore-0a421abc-4a91-43c3-a052-c47f2fa08f7a"
-
 [workflows]
 runButton = "Development"
 
@@ -44,6 +41,10 @@ localPort = 5002
 externalPort = 4200
 
 [[ports]]
+localPort = 5003
+externalPort = 6800
+
+[[ports]]
 localPort = 5173
 externalPort = 5173
 
@@ -58,3 +59,6 @@ externalPort = 6000
 [[ports]]
 localPort = 8080
 externalPort = 80
+
+[objectStorage]
+defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
