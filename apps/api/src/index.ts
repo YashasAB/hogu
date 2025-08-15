@@ -230,7 +230,7 @@ app.post(
       try {
         const listResult = await storage.list();
         if (listResult.ok && listResult.value) {
-          const oldHeroImages = listResult.value.filter((item: any) => 
+          const oldHeroImages = listResult.value.filter((item: any) =>
             item.name && item.name.startsWith(`${restaurantId}/heroImage-`) && item.name !== objectKey
           );
 
@@ -382,10 +382,16 @@ if (isProduction) {
 }
 
 const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
+  console.log("✅ Hogu API listening on http://0.0.0.0:" + PORT);
+  console.log("Environment:", process.env.NODE_ENV || "development");
+  console.log("Health check available at: http://0.0.0.0:" + PORT + "/");
+  console.log("LISTENING PORT:", PORT); // keep this log for deployment debugging
 });
+
+// Configure server timeouts to prevent odd load balancer behavior
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+server.requestTimeout = 60000;
 
 server.on("error", (error) => {
   console.error("❌ Server error:", error);
