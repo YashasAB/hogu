@@ -1,0 +1,87 @@
+modules = ["nodejs-20"]
+
+# IDE Run button (local dev). Use your dev script; pnpm to avoid npm/pnpm mismatch.
+run = "bash -lc \"pnpm dev\""
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+# Build with pnpm (no -C / recursive flags), DB-safe for Prisma
+build = [
+  "bash","-lc",
+  "set -euo pipefail; \
+   corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; \
+   # remove npm lockfiles so Deploy won't try npm
+   rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; \
+   # root install (ok if you have monorepo bits here)
+   pnpm install --frozen-lockfile || true; \
+   # build web if present
+   if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; \
+   # build api
+   cd apps/api && pnpm install --frozen-lockfile && pnpm build; \
+   # prisma needs a DB url at build time for generate/migrate
+   mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; \
+   pnpm prisma generate; \
+   pnpm prisma migrate deploy || pnpm prisma db push"
+]
+
+# Run API only, bound to the platform port, in production; give Prisma a fallback DB URL
+run = ["bash","-lc","cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"]
+
+[workflows]
+runButton = "Development"
+
+[[workflows.workflow]]
+name = "Development"
+author = 45771689
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm dev"
+
+# ---- keep your local port mappings for Workspace (these do not affect Autoscale) ----
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 3002
+externalPort = 3002
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[[ports]]
+localPort = 5002
+externalPort = 4200
+
+[[ports]]
+localPort = 5003
+externalPort = 6800
+
+[[ports]]
+localPort = 5173
+externalPort = 5173
+
+[[ports]]
+localPort = 5555
+externalPort = 3003
+
+[[ports]]
+localPort = 5556
+externalPort = 6000
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+# ---- keep your object storage bucket exactly as-is ----
+[objectStorage]
+defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
