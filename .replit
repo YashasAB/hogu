@@ -5,7 +5,7 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "npm start"]
+run = ["sh", "-c", "cd apps/api && npm start"]
 build = ["sh", "-c", "cd apps/api && npm run build"]
 
 [workflows]

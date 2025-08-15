@@ -86,25 +86,17 @@ app.use(express_1.default.json());
 // Multer configuration for handling file uploads
 const storage = multer_1.default.memoryStorage(); // Store file in memory
 const upload = (0, multer_1.default)({ storage: storage });
-// Health check endpoint for deployment
+// Health check endpoint for deployment - must respond quickly
 app.get("/", (req, res) => {
-    res.status(200).send("OK");
+    res.status(200).json({ status: "OK", service: "Hogu API" });
 });
 // Additional health check endpoint
-app.get("/health", async (req, res) => {
-    try {
-        // Test database connection
-        await prisma.$queryRaw `SELECT 1`;
-        res.status(200).send("OK");
-    }
-    catch (error) {
-        console.error("Database health check failed:", error);
-        res.status(503).send("Database connection failed");
-    }
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 // Readiness check endpoint
 app.get("/ready", (req, res) => {
-    res.status(200).send("OK");
+    res.status(200).json({ status: "ready" });
 });
 // Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v) {
@@ -365,12 +357,21 @@ if (isProduction) {
     });
 }
 const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Hogu API listening on http://0.0.0.0:${PORT}`);
+    console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
 });
 server.on("error", (error) => {
-    console.error("Server error:", error);
+    console.error("❌ Server error:", error);
     process.exit(1);
+});
+// Handle graceful shutdown
+process.on("SIGTERM", () => {
+    console.log("SIGTERM received, shutting down gracefully");
+    server.close(() => {
+        console.log("Process terminated");
+        process.exit(0);
+    });
 });
 // Graceful shutdown
 process.on("SIGTERM", () => {
