@@ -21,24 +21,27 @@ const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
 });
 
-// Test database connection on startup - don't exit on failure during deploy
-async function testDatabaseConnection() {
-  try {
-    await prisma.$connect();
-    console.log("✅ Database connected successfully");
-  } catch (error) {
-    console.error("❌ Database connection failed (continuing to serve):", error);
-    // DO NOT process.exit(1) during deploy - keep serving health checks
-  }
-}
-
-testDatabaseConnection();
-
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
 // Trust proxy for proper request handling
 app.set("trust proxy", true);
+
+// Health check endpoints for deployment - return immediately
+app.get("/", (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end("OK");
+});
+
+app.get("/health", (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end('{"status":"healthy"}');
+});
+
+app.get("/ready", (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end('{"status":"ready"}');
+});
 
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -61,18 +64,19 @@ app.use(express.json());
 const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage: storage });
 
-// Health check endpoints for deployment - must respond immediately
-app.get("/", (req, res) => {
-  res.status(200).send("OK");
-});
+// Test database connection on startup - don't exit on failure during deploy
+async function testDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed (continuing to serve):", error);
+    // DO NOT process.exit(1) during deploy - keep serving health checks
+  }
+}
 
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "healthy" });
-});
-
-app.get("/ready", (req, res) => {
-  res.status(200).json({ status: "ready" });
-});
+// Initialize database connection asynchronously after health checks are set up
+testDatabaseConnection();
 
 // Small helper: whatever comes back -> Node Buffer
 function toNodeBuffer(v: unknown): Buffer {
