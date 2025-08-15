@@ -7,10 +7,8 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
-import mime from "mime-types";
-import { Client} from "@replit/object-storage";
+import { Client } from "@replit/object-storage";
 import getPort from "get-port";
-
 
 // --- Health FIRST & non-blocking ---
 const app = express();
@@ -26,9 +24,10 @@ async function startServer() {
   const defaultPort = Number(process.env.PORT || 8080);
 
   // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
-  const PORT = process.env.NODE_ENV === 'production'
-    ? defaultPort
-    : await getPort({ port: defaultPort });
+  const PORT =
+    process.env.NODE_ENV === "production"
+      ? defaultPort
+      : await getPort({ port: defaultPort });
 
   console.log("Environment check:");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -40,7 +39,9 @@ async function startServer() {
   // prevent double-binding in dev
   if (!(globalThis as any).__apiServer) {
     const server = app.listen(PORT, "0.0.0.0", () => {
-      console.log(`[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`);
+      console.log(
+        `[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`,
+      );
       console.log("✅ Hogu API listening on http://0.0.0.0:" + PORT);
       console.log("Environment:", process.env.NODE_ENV || "development");
       console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
@@ -148,9 +149,9 @@ async function startServer() {
       });
 
       if (!uploadResult.ok) {
-        return res.status(500).json({ 
-          error: "Upload failed", 
-          details: uploadResult.error 
+        return res.status(500).json({
+          error: "Upload failed",
+          details: uploadResult.error,
         });
       }
 
@@ -183,11 +184,13 @@ async function startServer() {
   // tiny helper: normalize whatever the SDK returns to a Node Buffer
   function toNodeBuffer(v: unknown): Buffer {
     if (Buffer.isBuffer(v)) return v;
-    if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+    if (v instanceof Uint8Array)
+      return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
     if (Array.isArray(v) && v.length) {
       const first = (v as any)[0];
       if (Buffer.isBuffer(first)) return first;
-      if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+      if (first instanceof Uint8Array)
+        return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
     }
     throw new Error("Unexpected storage value type from downloadAsBytes");
   }
@@ -196,7 +199,11 @@ async function startServer() {
     const hex4 = buf.subarray(0, 4).toString("hex");
     if (hex4.startsWith("ffd8")) return "image/jpeg";
     if (hex4 === "89504e47") return "image/png";
-    if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+    if (
+      buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buf.subarray(8, 12).toString("ascii") === "WEBP"
+    )
+      return "image/webp";
     if (hex4.startsWith("4749")) return "image/gif";
     if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
     const ext = filename.split(".").pop()?.toLowerCase();
@@ -214,20 +221,22 @@ async function startServer() {
       const key = `${replId}/${filename}`;
       console.log("🖼️  Fetching image:", key);
 
-      const out = await storage.downloadAsBytes(key) as
+      const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
 
       if (!out?.ok) {
         console.warn("❌ Not found:", key, out?.error);
-        return res.status(404).json({ error: "Image not found", key, details: out?.error });
+        return res
+          .status(404)
+          .json({ error: "Image not found", key, details: out?.error });
       }
 
       const buf = toNodeBuffer(out.value);
       const contentType = detectContentType(buf, filename);
 
       res.set({
-        "Content-Type": contentType,                // no charset
+        "Content-Type": contentType, // no charset
         "Cache-Control": "public, max-age=31536000, immutable",
         "Access-Control-Allow-Origin": "*",
         "Content-Length": String(buf.length),
@@ -247,7 +256,7 @@ async function startServer() {
     try {
       const { replId, filename } = req.params;
       const key = `${replId}/${filename}`;
-      const out = await storage.downloadAsBytes(key) as
+      const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
 
@@ -274,24 +283,29 @@ async function startServer() {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).json({ error: "Username and password required" });
+        return res
+          .status(400)
+          .json({ error: "Username and password required" });
       }
 
       const userAuth = await prisma.userAuth.findUnique({
         where: { username },
         include: {
-          user: true
-        }
+          user: true,
+        },
       });
 
-      if (!userAuth || !(await bcrypt.compare(password, userAuth.passwordHash))) {
+      if (
+        !userAuth ||
+        !(await bcrypt.compare(password, userAuth.passwordHash))
+      ) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
       const token = jwt.sign(
         { userId: userAuth.user.id, username: userAuth.username },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
       );
 
       res.cookie("token", token, {
@@ -321,8 +335,8 @@ async function startServer() {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
         include: {
-          auth: true
-        }
+          auth: true,
+        },
       });
 
       if (!user) {
@@ -335,7 +349,7 @@ async function startServer() {
           username: user.auth?.username,
           name: user.name,
           email: user.email,
-        }
+        },
       });
     } catch (error) {
       console.error("Auth check error:", error);
@@ -398,7 +412,8 @@ async function startServer() {
       const { slug } = req.params;
       const { date } = req.query;
 
-      const targetDate = (date as string) || new Date().toISOString().split("T")[0];
+      const targetDate =
+        (date as string) || new Date().toISOString().split("T")[0];
 
       const restaurant = await prisma.restaurant.findUnique({
         where: { slug },
@@ -444,59 +459,72 @@ async function startServer() {
   });
 
   // Admin routes
-  app.get("/api/admin/restaurants", authenticateToken, async (req: any, res) => {
-    try {
-      // Assuming user.role is set by authenticateToken or a subsequent middleware
-      // For this example, we'll hardcode admin check if role isn't available.
-      // In a real app, ensure `req.user` has the correct role information.
-      const isAdmin = req.user && req.user.role === "ADMIN";
-      if (!isAdmin) {
-        return res.status(403).json({ error: "Admin access required" });
+  app.get(
+    "/api/admin/restaurants",
+    authenticateToken,
+    async (req: any, res) => {
+      try {
+        // Assuming user.role is set by authenticateToken or a subsequent middleware
+        // For this example, we'll hardcode admin check if role isn't available.
+        // In a real app, ensure `req.user` has the correct role information.
+        const isAdmin = req.user && req.user.role === "ADMIN";
+        if (!isAdmin) {
+          return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const restaurants = await prisma.restaurant.findMany({
+          orderBy: { name: "asc" },
+        });
+
+        res.json({ restaurants });
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        res.status(500).json({ error: "Failed to fetch restaurants" });
       }
+    },
+  );
 
-      const restaurants = await prisma.restaurant.findMany({
-        orderBy: { name: "asc" },
-      });
+  app.put(
+    "/api/admin/restaurants/:id",
+    authenticateToken,
+    async (req: any, res) => {
+      try {
+        // Assuming user.role is set by authenticateToken or a subsequent middleware
+        const isAdmin = req.user && req.user.role === "ADMIN";
+        if (!isAdmin) {
+          return res.status(403).json({ error: "Admin access required" });
+        }
 
-      res.json({ restaurants });
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      res.status(500).json({ error: "Failed to fetch restaurants" });
-    }
-  });
+        const { id } = req.params;
+        const { name, neighborhood, instagramUrl, website, heroImageUrl } =
+          req.body;
 
-  app.put("/api/admin/restaurants/:id", authenticateToken, async (req: any, res) => {
-    try {
-      // Assuming user.role is set by authenticateToken or a subsequent middleware
-      const isAdmin = req.user && req.user.role === "ADMIN";
-      if (!isAdmin) {
-        return res.status(403).json({ error: "Admin access required" });
+        const restaurant = await prisma.restaurant.update({
+          where: { id },
+          data: {
+            name,
+            neighborhood,
+            instagramUrl,
+            website,
+            heroImageUrl,
+          },
+        });
+
+        res.json({ restaurant });
+      } catch (error) {
+        console.error("Error updating restaurant:", error);
+        res.status(500).json({ error: "Failed to update restaurant" });
       }
-
-      const { id } = req.params;
-      const { name, neighborhood, instagramUrl, website, heroImageUrl } = req.body;
-
-      const restaurant = await prisma.restaurant.update({
-        where: { id },
-        data: {
-          name,
-          neighborhood,
-          instagramUrl,
-          website,
-          heroImageUrl,
-        },
-      });
-
-      res.json({ restaurant });
-    } catch (error) {
-      console.error("Error updating restaurant:", error);
-      res.status(500).json({ error: "Failed to update restaurant" });
-    }
-  });
+    },
+  );
 
   // Error handlers
-  process.on("unhandledRejection", (r) => console.error("[API] UNHANDLED REJECTION:", r));
-  process.on("uncaughtException", (e) => console.error("[API] UNCAUGHT EXCEPTION:", e));
+  process.on("unhandledRejection", (r) =>
+    console.error("[API] UNHANDLED REJECTION:", r),
+  );
+  process.on("uncaughtException", (e) =>
+    console.error("[API] UNCAUGHT EXCEPTION:", e),
+  );
 }
 
 // Start the server
