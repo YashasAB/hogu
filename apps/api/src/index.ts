@@ -427,30 +427,24 @@ app.listen(PORT, '0.0.0.0', async () => {
   }
 });
 
-// Configure server timeouts to prevent odd load balancer behavior
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log('LISTENING PORT:', PORT);
-  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
-  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
-});
-
-// Configure server timeouts to prevent odd load balancer behavior
-server.keepAliveTimeout = 65000;
-server.headersTimeout = 66000;
-server.requestTimeout = 60000;
-
-server.on("error", (error) => {
-  console.error("❌ Server error:", error);
-  process.exit(1);
-});
-
-// Handle graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully");
-  server.close(() => {
-    console.log("Process terminated");
-    process.exit(0);
+// prevent double-binding in dev if something imports twice
+if (!(globalThis as any).__apiServer) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("[API] LISTENING PORT:", PORT, "PID:", process.pid, "NODE_ENV:", process.env.NODE_ENV);
+    console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
+    console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
   });
-});
+  (globalThis as any).__apiServer = server;
+
+  // Configure server timeouts to prevent odd load balancer behavior
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+  server.requestTimeout = 60000;
+
+  server.on("error", (error) => {
+    console.error("❌ Server error:", error);
+    process.exit(1);
+  });
+}
