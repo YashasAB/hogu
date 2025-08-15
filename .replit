@@ -25,9 +25,21 @@ run = [
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
 
 [[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 5001
+externalPort = 3001
+
+[[ports]]
 localPort = 5555
 externalPort = 3000
 
 [[ports]]
 localPort = 8080
 externalPort = 80
+
+[[ports]]
+localPort = 37399
+externalPort = 3002
