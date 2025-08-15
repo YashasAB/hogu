@@ -1,0 +1,73 @@
+1) Make sure Autoscale is probing the same port you’re listening on
+Your app logs 8080. If Autoscale is probing 80 (or anything else), health will never pass.
+Best practice: always bind to the injected env var:
+const PORT = Number(process.env.PORT) || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("LISTENING PORT:", PORT);  // keep this log
+});
+In the Deploy Settings:
+Run command should start the API from the right dir (monorepo!):
+bash -lc "cd apps/api && npm ci && npm run build && node dist/index.js"
+If the UI asks for a port, set it to the same internal port your app binds to (prefer $PORT → see below). If there’s a toggle for “Use platform port” → enable it so $PORT is injected.
+If your logs still show 8080 but the platform probes 80, either:
+change your code to use process.env.PORT only, or
+set the Deploy port to 8080.
+If the log still says LISTENING PORT: 8080 during deploy, PORT isn’t being injected into your process. Fix the run command or set the deployment port to 8080 explicitly.
+2) Don’t crash after the “listening” log
+A super common pattern: the server logs “listening”, then an async init throws (Prisma/storage), the process exits, and the health probe times out.
+Add this (temporarily) near the top so the process doesn’t die silently:
+process.on("unhandledRejection", (r) => {
+  console.error("UNHANDLED REJECTION:", r);
+});
+process.on("uncaughtException", (e) => {
+  console.error("UNCAUGHT EXCEPTION:", e);
+  // DO NOT process.exit here during deploy
+});
+Also, don’t process.exit(1) if DB connect fails. Log it and keep serving /.
+3) Make / return 200 fast (before any heavy middleware)
+Health check must be instant. Put it before CORS/JSON/etc.
+app.get("/", (_req, res) => res.status(200).send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+Avoid global cors({ credentials: true }) on / (it adds headers that can confuse some probes). Add CORS after health routes with credentials:false.
+4) Only one HTTP server and port (no dev servers in prod)
+Don’t run Vite/webpack dev servers during deploy.
+If you serve a built SPA: register /api/* routes first, then:
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(webDist, { index: false }));
+  app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(webDist, "index.html")));
+}
+5) Safer Node timeouts (prevents odd LB behavior)
+const server = app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT));
+server.keepAliveTimeout = 65000;
+server.headersTimeout   = 66000;
+server.requestTimeout   = 60000;
+6) If you’re set to 1 instance, try 2 once
+A max of 1 doesn’t cause failure, but it removes headroom. Temporarily bump to 2 and redeploy:
+If it promotes with 2, your startup is borderline. Keep 2 or make startup faster.
+7) Quick “did the platform give me a port?” probe
+Keep these logs at boot:
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("DEPLOY PORT ENV:", process.env.PORT); // should NOT be undefined in Autoscale
+If DEPLOY PORT ENV: undefined in deploy logs → your process didn’t get $PORT. Fix the run command or set the port explicitly in the Deploy UI to match 8080.
+Minimal diff you can apply now
+Bind to env port and log it.
+Add unhandled error handlers.
+Move health routes above everything.
+Ensure the deploy run command cds into apps/api.
+// at top
+process.on("unhandledRejection", r => console.error("UNHANDLED REJECTION:", r));
+process.on("uncaughtException", e => console.error("UNCAUGHT EXCEPTION:", e));
+
+app.get("/", (_req, res) => res.status(200).send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+const PORT = Number(process.env.PORT) || 8080;
+const server = app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT));
+server.keepAliveTimeout = 65000;
+server.headersTimeout   = 66000;
+server.requestTimeout   = 60000;
+Deploy command (monorepo):
+bash -lc "cd apps/api && npm ci && npm run build && node dist/index.js"
+If you apply those and the logs still show LISTENING PORT: 8080 (not the platform’s port) and promote fails, the platform is probing a different port. Set the deployment’s port to 8080 (or fix the run mode so $PORT is injected), and it’ll go gree
