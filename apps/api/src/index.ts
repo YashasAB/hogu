@@ -10,6 +10,7 @@ import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
 import multer from "multer"; // Import multer
 import { AuthenticatedRestaurantRequest } from "./middleware/auth";
+import getPort from "get-port"; // Import get-port
 
 // Set DATABASE_URL fallback BEFORE creating PrismaClient
 const dbDir = path.join(process.cwd(), "data");
@@ -35,8 +36,6 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
 app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
-const PORT = Number(process.env.PORT || 8080);
-
 // Add process error handlers to prevent silent crashes during deployment
 process.on("unhandledRejection", (reason, promise) => {
   console.error("UNHANDLED REJECTION at:", promise, "reason:", reason);
@@ -54,8 +53,6 @@ app.set("trust proxy", true);
 console.log("DEPLOY PORT ENV:", process.env.PORT);
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", PORT);
-console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
 console.log("REPL_ID set:", !!process.env.REPL_ID);
 if (process.env.REPL_ID) {
   console.log("REPL_ID:", process.env.REPL_ID);
@@ -405,30 +402,19 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Start the server
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log('Environment check:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('PORT:', PORT);
-  console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
-  console.log('REPL_ID set:', !!process.env.REPL_ID);
-  console.log('REPL_ID:', process.env.REPL_ID);
-  console.log(`LISTENING PORT: ${PORT}`);
-  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
-  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
+async function startServer() {
+  const defaultPort = Number(process.env.PORT || 8080);
+  const PORT = await getPort({ port: defaultPort }); // picks 8080 or next free
 
-  try {
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
+  console.log("Environment check:");
+  console.log("NODE_ENV:", process.env.NODE_ENV);
+  console.log("PORT:", PORT);
+  console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
+  console.log("REPL_ID set:", !!process.env.REPL_ID);
+  if (process.env.REPL_ID) {
+    console.log("REPL_ID:", process.env.REPL_ID);
   }
-});
 
-// prevent double-binding in dev if something imports twice
-if (!(globalThis as any).__apiServer) {
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log("[API] LISTENING PORT:", PORT, "PID:", process.pid, "NODE_ENV:", process.env.NODE_ENV);
     console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
@@ -448,3 +434,9 @@ if (!(globalThis as any).__apiServer) {
     process.exit(1);
   });
 }
+
+// Start the server
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});
