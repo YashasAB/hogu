@@ -1,3 +1,4 @@
+
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -352,6 +353,40 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// Check auth status
+app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: {
+        auth: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        username: user.auth?.username,
+        name: user.name,
+        email: user.email,
+      }
+    });
+  } catch (error) {
+    console.error("Auth check error:", error);
+    res.status(500).json({ error: "Failed to check auth status" });
+  }
+});
+
+// Logout endpoint
+app.post("/api/auth/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out successfully" });
+});
+
 // Restaurant endpoints
 app.get("/api/restaurants", async (req, res) => {
   try {
@@ -365,9 +400,114 @@ app.get("/api/restaurants", async (req, res) => {
   }
 });
 
+app.get("/api/restaurants/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { date } = req.query;
+
+    const targetDate = (date as string) || new Date().toISOString().split("T")[0];
+
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+      include: {
+        timeSlots: {
+          where: {
+            date: targetDate,
+            status: "AVAILABLE",
+          },
+          orderBy: [{ time: "asc" }, { partySize: "asc" }],
+        },
+      },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    const formattedSlots = restaurant.timeSlots.map((slot) => ({
+      slot_id: slot.id,
+      time: slot.time,
+      party_size: slot.partySize,
+      date: slot.date,
+    }));
+
+    res.json({
+      restaurant: {
+        id: restaurant.id,
+        name: restaurant.name,
+        slug: restaurant.slug,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        neighborhood: restaurant.neighborhood,
+        hero_image_url: restaurant.heroImageUrl,
+        emoji: restaurant.emoji,
+      },
+      slots: formattedSlots,
+    });
+  } catch (error) {
+    console.error("Error fetching restaurant:", error);
+    res.status(500).json({ error: "Failed to fetch restaurant" });
+  }
+});
+
+// Discovery endpoint
 app.get("/api/discover/available-today", async (req, res) => {
   try {
-    // Start server
+    const today = new Date().toISOString().split("T")[0];
+
+    const restaurants = await prisma.restaurant.findMany({
+      include: {
+        timeSlots: {
+          where: {
+            date: today,
+            status: "AVAILABLE",
+          },
+          orderBy: [{ time: "asc" }, { partySize: "asc" }],
+        },
+      },
+    });
+
+    const availableRestaurants = restaurants
+      .filter((restaurant) => restaurant.timeSlots.length > 0)
+      .map((restaurant) => ({
+        restaurant: {
+          id: restaurant.id,
+          name: restaurant.name,
+          slug: restaurant.slug,
+          neighborhood: restaurant.neighborhood,
+          hero_image_url: restaurant.heroImageUrl,
+          emoji: restaurant.emoji,
+        },
+        slots: restaurant.timeSlots.map((slot) => ({
+          slot_id: slot.id,
+          time: slot.time,
+          party_size: slot.partySize,
+          date: slot.date,
+        })),
+      }));
+
+    res.json({ restaurants: availableRestaurants });
+  } catch (error) {
+    console.error("Error fetching available restaurants:", error);
+    res.status(500).json({ error: "Failed to fetch restaurants" });
+  }
+});
+
+// Admin routes
+app.get("/api/admin/restaurants", authenticateToken, async (req: any, res) => {
+  try {
+    const restaurants = await prisma.restaurant.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    res.json({ restaurants });
+  } catch (error) {
+    console.error("Error fetching restaurants:", error);
+    res.status(500).json({ error: "Failed to fetch restaurants" });
+  }
+});
+
+// Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`[API] Server running on http://0.0.0.0:${PORT} at ${new Date().toISOString()}`);
   console.log(`[API] Health endpoint: http://0.0.0.0:${PORT}/`);
@@ -388,151 +528,3 @@ process.on('SIGINT', () => {
     console.log('[API] Process terminated');
   });
 });
-    
-    // Get restaurants with available slots for today
-    const restaurants = await prisma.restaurant.findMany({
-      include: {
-        timeSlots: {
-          where: {
-            date: today,
-            status: 'AVAILABLE'
-          }
-        }
-      }
-    });
-
-    // Format the response to match expected structure
-    const formattedRestaurants = restaurants
-      .filter(restaurant => restaurant.timeSlots.length > 0)
-      .map(restaurant => ({
-        restaurant: {
-          id: restaurant.id,
-          name: restaurant.name,
-          slug: restaurant.slug,
-          neighborhood: restaurant.neighborhood,
-          hero_image_url: restaurant.heroImageUrl,
-          emoji: restaurant.emoji
-        },
-        slots: restaurant.timeSlots.map(slot => ({
-          slot_id: slot.id,
-          time: slot.time,
-          party_size: slot.partySize,
-          date: slot.date
-        }))
-      }));
-
-    res.json({ restaurants: formattedRestaurants });
-  } catch (error) {
-    console.error("Discover available-today error:", error);
-    res.status(500).json({ error: "Failed to fetch available restaurants" });
-  }
-});
-
-    const slots = await prisma.timeSlot.findMany({
-      where: {
-        date: today,
-        status: 'AVAILABLE'
-      },
-      include: {
-        restaurant: true
-      }
-    });
-
-    const groupedByRestaurant = slots.reduce((acc: any, slot) => {
-      const restaurantId = slot.restaurantId;
-      if (!acc[restaurantId]) {
-        acc[restaurantId] = {
-          restaurant: slot.restaurant,
-          slots: []
-        };
-      }
-      acc[restaurantId].slots.push({
-        slot_id: slot.id,
-        time: slot.time,
-        party_size: slot.partySize,
-        date: slot.date
-      });
-      return acc;
-    }, {});
-
-    const restaurants = Object.values(groupedByRestaurant);
-    res.json({ restaurants });
-  } catch (error) {
-    console.error("Available today error:", error);
-    res.status(500).json({ error: "Failed to fetch available slots" });
-  }
-});
-
-// User profile endpoint
-app.get("/api/user/profile", authenticateToken, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.json(user);
-  } catch (error) {
-    console.error("Profile fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch profile" });
-  }
-});
-
-// Error handling middleware
-app.use((error: any, req: any, res: any, next: any) => {
-  console.error("Unhandled error:", error);
-  res.status(500).json({ error: "Internal server error" });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
-});
-
-// Start server
-async function startServer() {
-  try {
-    // Test database connection
-    await prisma.$connect();
-    console.log("✅ Database connected successfully");
-
-    const server = app.listen(PORT, "0.0.0.0", () => {
-      console.log(`[API] Server listening on http://0.0.0.0:${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-      console.log(`Database URL set: ${!!process.env.DATABASE_URL}`);
-      console.log(`Health check: http://0.0.0.0:${PORT}/`);
-    });
-
-    server.keepAliveTimeout = 65000;
-    server.headersTimeout = 66000;
-    server.requestTimeout = 60000;
-
-    // Graceful shutdown
-    process.on('SIGTERM', async () => {
-      console.log('SIGTERM received, shutting down gracefully');
-      server.close(() => {
-        prisma.$disconnect();
-        process.exit(0);
-      });
-    });
-
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-}
-
-// Only start if not in a test environment
-if (require.main === module) {
-  startServer();
-}
-
-export default app;
