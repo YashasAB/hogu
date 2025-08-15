@@ -1,0 +1,82 @@
+Replace your .replit with this minimal version:
+modules = ["nodejs-20"]
+
+# (Optional) IDE Run button for local dev only
+run = "bash -lc \"npm run dev\""
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+# Build: run npm from ROOT; then run npx Prisma + node from apps/api
+build = [
+  "bash","-lc",
+  # install deps at root and both apps (adjust if you use workspaces)
+  "npm ci && npm --prefix apps/web ci && npm --prefix apps/api ci && \
+   npm --prefix apps/web run build && \
+   npm --prefix apps/api run build && \
+   cd apps/api && npx prisma migrate deploy"
+]
+
+# Run: node from apps/api, bound to platform $PORT
+run = ["bash","-lc","cd apps/api && PORT=$PORT NODE_ENV=production node dist/index.js"]
+Remove every [[ports]] block you had before. Autoscale expects one service port and injects $PORT. Extra port mappings confuse the health checker.
+2) Root package.json (npm runs here)
+Make npm orchestration work from root; this keeps Deploy happy and matches your requirement.
+{
+  "name": "hogu-root",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"npm --prefix apps/web run dev\" \"npm --prefix apps/api run dev\"",
+    "build": "npm --prefix apps/web run build && npm --prefix apps/api run build",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "migrate": "cd apps/api && npx prisma migrate deploy"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
+Now all npm commands run from root (npm run build, npm run migrate), while any npx invoked by those scripts happens inside apps/api (because we cd or use --prefix).
+3) apps/api/package.json (node/npx run here)
+{
+  "name": "hogu-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "NODE_ENV=production node dist/index.js",
+    "migrate": "npx prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.0",
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.5.4",
+    "prisma": "^5.16.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.9",
+    "@types/multer": "^1.4.12"
+  }
+}
+This ensures that when Deploy runs:
+npm commands are orchestrated from root (install + build both apps),
+npx (prisma migrate deploy) runs in apps/api,
+node runs in apps/api.
+4) Your Vite (dev) config
+Your vite.config.ts is good for dev. It proxies /api → http://0.0.0.0:8080, which is perfect as long as your API listens on 8080 locally. This file is not used in production Autoscale runs (we serve the built files).
+5) API entry quick sanity (you’re almost there)
+Keep your health routes first, trivial, and before CORS:
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+Bind to $PORT and 0.0.0.0:
+const PORT = Number(process.env.PORT || 8080);
+app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT));
+Only one SIGTERM handler (delete the duplicate).
+Do not run Vite dev server in production (serve built files only, after /api routes).
