@@ -1,0 +1,62 @@
+Fix 1 — Local EADDRINUSE: 0.0.0.0:8080
+A) Make sure you only start dev once
+In .replit, remove the whole [workflows] block. Keep only one Run button:
+modules = ["nodejs-20"]
+run = "bash -lc \"pnpm dev\""
+
+[nix]
+channel = "stable-25_05"
+
+# keep your [[ports]] and [objectStorage] as-is for local
+If both run and a workflow run pnpm dev, your API tries to bind 8080 twice → EADDRINUSE.
+B) Guard against double listen() in your API
+At the top of apps/api/src/index.ts (right after you create app and define the / route), wrap the listen in a guard:
+// Fast health FIRST
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+
+const PORT = Number(process.env.PORT || 8080);
+
+// prevent double-binding in dev if something imports twice
+if (!(globalThis as any).__apiServer) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log("[API] LISTENING PORT:", PORT, "PID:", process.pid, "NODE_ENV:", process.env.NODE_ENV);
+  });
+  (globalThis as any).__apiServer = server;
+
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout   = 66000;
+  server.requestTimeout   = 60000;
+}
+Also keep only one SIGTERM handler in this file.
+C) If the port is already occupied, free it (one-time)
+From the shell:
+fuser -k 8080/tcp  2>/dev/null || true
+# or:
+lsof -i :8080 | awk 'NR>1 {print $2}' | xargs -r kill -9
+Fix 2 — Deployment “crash loop / EADDRINUSE”
+Root cause: two processes start in the container (e.g., API and a dev server), or the shell starts the API twice. Make Deploy start exactly one process (the API), on $PORT.
+A) Use this [deployment] (works with pnpm, keeps your local ports & bucket)
+.replit (only the deploy section shown; keep your [[ports]] and [objectStorage] intact):
+[deployment]
+build = [
+  "bash","-lc",
+  'set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push'
+]
+
+run = [
+  "bash","-lc",
+  'cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=${PORT:-8080} NODE_ENV=production node dist/index.js'
+]
+Notes:
+No pnpm dev, vite, vite preview, or concurrently in deploy.
+exec … node … replaces the shell, so only one process exists → no second binder.
+B) Ensure the API binds to $PORT
+You already do this; keep it exactly:
+const PORT = Number(process.env.PORT || 8080);
+C) Keep health route first and trivial
+You already have it; keep:
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+That’s it
+Local: Removing the duplicate dev runner + the listen() guard stops EADDRINUSE.
+Deploy: Single exec run command + API binding to $PORT ends the crash loop and makes health checks pass.
+Your [[ports]] and object storage config stay unchanged for local use; they don’t interfere with Autoscale.

@@ -5,20 +5,11 @@ run = "bash -lc \"pnpm dev\""
 
 [nix]
 channel = "stable-25_05"
+packages = ["psmisc", "lsof"]
 
 [deployment]
-# Build with pnpm (no -C / recursive flags), DB-safe for Prisma
-build = [
-  "bash",
-  "-lc",
-  'set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push',
-]
-
-run = [
-  "bash",
-  "-lc",
-  'cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js',
-]
+build = ["sh", "-c", "cd apps/api && pnpm build"]
+run = ["sh", "-c", "cd apps/api && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"]
 
 [workflows]
 runButton = "Development"
