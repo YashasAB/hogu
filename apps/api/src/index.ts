@@ -226,23 +226,46 @@ app.get("/api/images/storage/:replId/:filename", async (req, res) => {
 // Auth endpoints
 app.post("/api/auth/register", async (req, res) => {
   try {
-    const { email, password, fullName } = req.body;
+    const { email, password, fullName, phone } = req.body;
 
     if (!email || !password || !fullName) {
       return res.status(400).json({ error: "Email, password, and full name are required" });
     }
 
+    // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Create user
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
-        fullName,
+        phone: phone || null,
+        name: fullName,
+        verified: false,
+      },
+    });
+
+    // Create auth record
+    await prisma.userAuth.create({
+      data: {
+        userId: user.id,
+        username: email, // Use email as username
+        passwordHash: hashedPassword,
+      },
+    });
+
+    // Create user details
+    await prisma.userDetail.create({
+      data: {
+        userId: user.id,
+        name: fullName,
+        email: email,
+        phoneNumber: phone || null,
       },
     });
 
@@ -261,7 +284,8 @@ app.post("/api/auth/register", async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        fullName: user.fullName,
+        name: user.name,
+        phone: user.phone,
       },
       token,
     });
@@ -279,12 +303,16 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: { auth: true }
+    });
+    
+    if (!user || !user.auth) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.auth.passwordHash);
     if (!isValidPassword) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -304,7 +332,8 @@ app.post("/api/auth/login", async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        fullName: user.fullName,
+        name: user.name,
+        phone: user.phone,
       },
       token,
     });
