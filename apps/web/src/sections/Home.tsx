@@ -11,7 +11,6 @@ declare global {
 import DarkDatePicker from "../components/DarkDatePicker";
 import TonightNearYou from "../components/TonightNearYou"; // Import the new component
 import UserReservations from "../components/UserReservations"; // Import the UserReservations component
-import ImageModal from "../components/ImageModal";
 
 // Define types for better type safety
 type Slot = { slot_id: string; time: string; party_size: number };
@@ -341,9 +340,6 @@ export default function Home() {
           Temp Img
         </button>
       </section>
-
-      {/* IMAGE MODAL */}
-      <ImageModal isOpen={showImageModal} onClose={() => setShowImageModal(false)} />
 
       {/* HERO SECTION — what Hogu is */}
       <section className="relative overflow-hidden rounded-2xl text-white">
