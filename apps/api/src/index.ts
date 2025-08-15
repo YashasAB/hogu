@@ -8,7 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import mime from "mime-types";
-import { getObjectsFromBucket, uploadToReplit } from "@replit/object-storage";
+import { Client } from "@replit/object-storage";
 import getPort from "get-port";
 
 // --- Health FIRST & non-blocking ---
@@ -83,6 +83,9 @@ async function startServer() {
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   });
+
+  // Initialize Object Storage Client
+  const storage = new Client();
 
   // Auth middleware
   const authenticateToken = (req: any, res: any, next: any) => {
@@ -174,7 +177,8 @@ async function startServer() {
       console.log("📁 Uploading to object storage with key:", key);
 
       // Upload to object storage
-      await uploadToReplit(key, req.file.buffer, {
+      await storage.uploadFromBytes(key, req.file.buffer, {
+        compress: false,
         contentType: req.file.mimetype,
       });
 
@@ -212,21 +216,15 @@ async function startServer() {
 
       console.log("🖼️  Fetching image from storage:", key);
 
-      const objects = await getObjectsFromBucket([key]);
-      const object = objects[key];
+      const obj = await storage.downloadAsBytes(key);
 
-      if (!object || !object.content) {
+      if (!obj.ok || !obj.value) {
         console.log("❌ Image not found in storage:", key);
         return res.status(404).json({ error: "Image not found" });
       }
 
-      // Convert Buffer to proper format
-      let buffer: Buffer;
-      if (Buffer.isBuffer(object.content)) {
-        buffer = object.content;
-      } else {
-        buffer = Buffer.from(object.content);
-      }
+      const u8 = obj.value; // Uint8Array
+      const buffer = Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
 
       // Set content type
       const contentType = mime.lookup(filename) || "application/octet-stream";
