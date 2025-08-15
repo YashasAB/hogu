@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -14,37 +15,37 @@ type SlotSummary = {
   };
   slots: Slot[];
 };
-type TonightRes = { now: SlotSummary[]; later: SlotSummary[] };
+type TodayRes = { now: SlotSummary[]; later: SlotSummary[] };
 
-interface TonightNearYouProps {
+interface TodayNearYouProps {
   city: string;
 }
 
-export default function TonightNearYou({ city }: TonightNearYouProps) {
+export default function TodayNearYou({ city }: TodayNearYouProps) {
   const navigate = useNavigate();
-  const [tonightRestaurants, setTonightRestaurants] = useState<SlotSummary[]>(
+  const [todayRestaurants, setTodayRestaurants] = useState<SlotSummary[]>(
     [],
   );
-  const [tonightLoading, setTonightLoading] = useState(false);
+  const [todayLoading, setTodayLoading] = useState(false);
 
   useEffect(() => {
     const fetchAvailableRestaurants = async () => {
-      setTonightLoading(true);
+      setTodayLoading(true);
       try {
-        console.log("Fetching tonight restaurants from /api/discover/tonight");
+        console.log("Fetching today restaurants from /api/discover/tonight");
         const response = await fetch("/api/discover/tonight?party_size=2");
         console.log("Response status:", response.status);
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Tonight API response:", data);
+          console.log("Today API response:", data);
 
           // The /api/discover/tonight returns { now: [], later: [] }
           // Combine both now and later arrays
           const allRestaurants = [...(data.now || []), ...(data.later || [])];
           console.log("Combined restaurants:", allRestaurants);
 
-          setTonightRestaurants(allRestaurants);
+          setTodayRestaurants(allRestaurants);
         } else {
           console.error(
             "Failed to fetch available restaurants, status:",
@@ -52,13 +53,13 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
           );
           const errorText = await response.text();
           console.error("Error response:", errorText);
-          setTonightRestaurants([]);
+          setTodayRestaurants([]);
         }
       } catch (error) {
         console.error("Error fetching available restaurants:", error);
-        setTonightRestaurants([]);
+        setTodayRestaurants([]);
       } finally {
-        setTonightLoading(false);
+        setTodayLoading(false);
       }
     };
 
@@ -66,7 +67,7 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
   }, [city]);
 
   return (
-    <section id="tonight" className="space-y-3">
+    <section id="today" className="space-y-3">
       <h2 className="text-xl font-semibold flex items-center gap-2">
         <svg
           className="w-5 h-5 text-gray-600"
@@ -81,13 +82,13 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        Tonight Near You
+        Today Near You
       </h2>
       <div className="text-muted text-sm">
-        Grab something within the next 4 hours — perfect for spontaneous plans.
+        Grab something within the next 24 hours — perfect for spontaneous plans.
       </div>
 
-      {tonightLoading ? (
+      {todayLoading ? (
         <div className="overflow-x-auto">
           <div className="flex gap-2 pb-2" style={{ width: "max-content" }}>
             {[...Array(6)].map((_, i) => (
@@ -102,10 +103,10 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
             ))}
           </div>
         </div>
-      ) : tonightRestaurants.length > 0 ? (
+      ) : todayRestaurants.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="flex gap-2 pb-2" style={{ width: "max-content" }}>
-            {tonightRestaurants.map((restaurant) => (
+            {todayRestaurants.map((restaurant) => (
               <div
                 key={restaurant.restaurant.id}
                 className="w-[calc(26.67%-8px)] min-w-[112px] flex-shrink-0 border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
@@ -148,7 +149,7 @@ export default function TonightNearYou({ city }: TonightNearYouProps) {
           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <span className="text-xl">🕐</span>
           </div>
-          <p className="text-gray-500">No availability tonight</p>
+          <p className="text-gray-500">No availability today</p>
           <p className="text-gray-400 text-sm">
             Check back later or explore week planning above
           </p>

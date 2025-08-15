@@ -1,4 +1,4 @@
-// apps/web/src/sections/Home.tsx
+// apps/web/srcsrc/sections/Home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -9,7 +9,7 @@ declare global {
   }
 }
 import DarkDatePicker from "../components/DarkDatePicker";
-import TonightNearYou from "../components/TonightNearYou"; // Import the new component
+import TodayNearYou from "../components/TodayNearYou"; // Import the new component
 import UserReservations from "../components/UserReservations"; // Import the UserReservations component
 
 // Define types for better type safety
@@ -345,13 +345,13 @@ export default function Home() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {token ? (
+            {user ? (
               <Link to="/explore-tonight" className="btn btn-accent">
-                Find a table tonight
+                Find a table today
               </Link>
             ) : (
               <Link to="/login" className="btn btn-accent">
-                Find a table tonight
+                Find a table today
               </Link>
             )}
             <a href="#week" className="btn bg-white text-brand">
@@ -387,9 +387,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TONIGHT NEAR YOU */}
+      {/* TODAY NEAR YOU SECTION */}
       <section id="tonight" className="space-y-3">
-        <TonightNearYou city={city} />
+        <TodayNearYou city={city} />
       </section>
 
       {/* WHAT PROBLEMS WE SOLVE */}
@@ -423,8 +423,8 @@ export default function Home() {
                 "Last-minute plans? Forget it."
               </div>
               <div className="opacity-90 text-sm">
-                <strong>Tonight Near You</strong> shows live inventory for the
-                next few hours.
+                <strong>Today Near You</strong> shows live inventory for the
+                next 24 hours.
               </div>
             </div>
           </div>

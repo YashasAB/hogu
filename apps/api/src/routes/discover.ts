@@ -7,22 +7,40 @@ const prisma = new PrismaClient();
 // Get tonight availability
 router.get('/tonight', async (req, res) => {
   try {
-    const { city, party_size } = req.query;
+    const { party_size } = req.query;
     const partySize = parseInt(party_size as string) || 2;
 
-    // Get today's date
-    const today = new Date().toISOString().split('T')[0];
-    const currentHour = new Date().getHours();
+    const now = new Date();
+    const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const tomorrowDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Tomorrow's date
 
-    // Get available slots for today from current time onwards
+    // Get current time and 24 hours from now
+    const currentHour = now.getHours();
+
+    // Get all available slots for today and tomorrow within 24 hours
+    const timeSlots = [];
+
+    // Add remaining slots for today
+    for (let hour = currentHour; hour < 24; hour++) {
+      const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+      timeSlots.push({ date: todayDate, time: timeSlot });
+    }
+
+    // Add slots for tomorrow up to the same hour
+    for (let hour = 0; hour < currentHour; hour++) {
+      const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+      timeSlots.push({ date: tomorrowDate, time: timeSlot });
+    }
+
+    // Get available slots for today and tomorrow within the 24-hour range
     const availableSlots = await prisma.timeSlot.findMany({
       where: {
-        date: today,
+        OR: timeSlots.map(slot => ({
+          date: slot.date,
+          time: slot.time,
+        })),
         partySize: partySize,
-        status: 'AVAILABLE', // Only show truly available slots
-        time: {
-          gte: `${currentHour.toString().padStart(2, '0')}:00`,
-        },
+        status: 'AVAILABLE',
       },
       include: {
         restaurant: {
@@ -30,16 +48,20 @@ router.get('/tonight', async (req, res) => {
             id: true,
             name: true,
             slug: true,
+            emoji: true,
             neighborhood: true,
             heroImageUrl: true,
-            emoji: true,
           },
         },
       },
-      orderBy: {
-        time: 'asc',
-      },
-      take: 20, // Limit results
+      orderBy: [
+        {
+          date: 'asc',
+        },
+        {
+          time: 'asc',
+        },
+      ],
     });
 
     // Group slots by restaurant
