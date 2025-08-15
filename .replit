@@ -23,8 +23,12 @@ localPort = 5000
 externalPort = 3000
 
 [[ports]]
-localPort = 8080
+localPort = 5555
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 # ---- keep your object storage bucket exactly as-is ----
 [objectStorage]

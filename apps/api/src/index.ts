@@ -8,9 +8,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import mime from "mime-types";
-import { Client } from "@replit/object-storage";
+import { Client} from "@replit/object-storage";
 import getPort from "get-port";
-import { toNodeBuffer } from "@replit/object-storage/dist/node";
+
 
 // --- Health FIRST & non-blocking ---
 const app = express();
@@ -111,41 +111,6 @@ async function startServer() {
     return parts[parts.length - 1];
   }
 
-  // Test endpoint to check database image URLs
-  app.get("/test-db-images", async (req, res) => {
-    try {
-      const restaurants = await prisma.restaurant.findMany({
-        select: {
-          id: true,
-          name: true,
-          heroImageUrl: true,
-        },
-      });
-
-      const analysis = restaurants.map((restaurant) => ({
-        id: restaurant.id,
-        name: restaurant.name,
-        heroImageUrl: restaurant.heroImageUrl,
-        urlType: restaurant.heroImageUrl
-          ? restaurant.heroImageUrl.startsWith("/api/images/storage/")
-            ? "storage-api"
-            : restaurant.heroImageUrl.startsWith("https://")
-            ? "external"
-            : "unknown"
-          : "none",
-      }));
-
-      res.json({
-        total: restaurants.length,
-        withImages: analysis.filter((r) => r.heroImageUrl).length,
-        analysis,
-      });
-    } catch (error) {
-      console.error("Error checking database images:", error);
-      res.status(500).json({ error: "Failed to check database images" });
-    }
-  });
-
   // Upload endpoint with automatic database update
   app.post("/api/upload", upload.single("image"), async (req, res) => {
     try {
@@ -215,52 +180,91 @@ async function startServer() {
     }
   });
 
-  // Serve images from object storage
+  // tiny helper: normalize whatever the SDK returns to a Node Buffer
+  function toNodeBuffer(v: unknown): Buffer {
+    if (Buffer.isBuffer(v)) return v;
+    if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+    if (Array.isArray(v) && v.length) {
+      const first = (v as any)[0];
+      if (Buffer.isBuffer(first)) return first;
+      if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+    }
+    throw new Error("Unexpected storage value type from downloadAsBytes");
+  }
+
+  function detectContentType(buf: Buffer, filename: string): string {
+    const hex4 = buf.subarray(0, 4).toString("hex");
+    if (hex4.startsWith("ffd8")) return "image/jpeg";
+    if (hex4 === "89504e47") return "image/png";
+    if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+    if (hex4.startsWith("4749")) return "image/gif";
+    if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
+    const ext = filename.split(".").pop()?.toLowerCase();
+    if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+    if (ext === "png") return "image/png";
+    if (ext === "gif") return "image/gif";
+    if (ext === "webp") return "image/webp";
+    return "application/octet-stream";
+  }
+
+  // GET /api/images/storage/:replId/:filename
   app.get("/api/images/storage/:replId/:filename", async (req, res) => {
     try {
       const { replId, filename } = req.params;
       const key = `${replId}/${filename}`;
+      console.log("🖼️  Fetching image:", key);
 
-      console.log("🖼️  Fetching image from storage:", key);
+      const out = await storage.downloadAsBytes(key) as
+        | { ok: true; value: unknown }
+        | { ok: false; error: unknown };
 
-      const obj = await storage.downloadAsBytes(key);
-
-      if (!obj.ok || !obj.value) {
-        console.log("❌ Image not found in storage:", key);
-        return res.status(404).json({ 
-          error: "Image not found", 
-          key, 
-          details: obj?.error 
-        });
+      if (!out?.ok) {
+        console.warn("❌ Not found:", key, out?.error);
+        return res.status(404).json({ error: "Image not found", key, details: out?.error });
       }
 
-      const buffer = toNodeBuffer(obj.value);
+      const buf = toNodeBuffer(out.value);
+      const contentType = detectContentType(buf, filename);
 
-      // Detect content type by file signature and extension
-      const contentType = (() => {
-        const sig = buffer.subarray(0, 4).toString("hex");
-        if (sig.startsWith("ffd8")) return "image/jpeg";
-        if (sig === "89504e47") return "image/png";
-        if (buffer.subarray(0,4).toString("ascii")==="RIFF" && buffer.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
-        if (sig.startsWith("4749")) return "image/gif";
-        if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
-        const ext = filename.split(".").pop()?.toLowerCase();
-        if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
-        if (ext === "png") return "image/png";
-        if (ext === "gif") return "image/gif";
-        if (ext === "webp") return "image/webp";
-        return "application/octet-stream";
-      })();
+      res.set({
+        "Content-Type": contentType,                // no charset
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*",
+        "Content-Length": String(buf.length),
+        "Content-Disposition": `inline; filename="${filename}"`,
+      });
 
-      res.setHeader("Content-Type", contentType);
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      console.log(`✅ Serving ${key} (${contentType}, ${buf.length} bytes)`);
+      return res.end(buf); // send raw bytes
+    } catch (err) {
+      console.error("❌ Image proxy error:", err);
+      return res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
 
-      console.log("✅ Serving image:", key, "Size:", buffer.length, "bytes", "Type:", contentType);
-      return res.end(buffer);
-    } catch (error) {
-      console.error("❌ Error serving image:", error);
-      res.status(500).json({ error: "Failed to serve image" });
+  // (nice-to-have) HEAD for probes/CDNs
+  app.head("/api/images/storage/:replId/:filename", async (req, res) => {
+    try {
+      const { replId, filename } = req.params;
+      const key = `${replId}/${filename}`;
+      const out = await storage.downloadAsBytes(key) as
+        | { ok: true; value: unknown }
+        | { ok: false; error: unknown };
+
+      if (!out?.ok) return res.sendStatus(404);
+
+      const buf = toNodeBuffer(out.value);
+      const contentType = detectContentType(buf, filename);
+      res.set({
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*",
+        "Content-Length": String(buf.length),
+        "Content-Disposition": `inline; filename="${filename}"`,
+      });
+      return res.sendStatus(200);
+    } catch {
+      return res.sendStatus(500);
     }
   });
 
