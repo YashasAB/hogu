@@ -1,34 +1,35 @@
 
 modules = ["nodejs-20"]
 
-run = "npm run dev"
+# Optional: IDE Run button for local dev
+run = "bash -lc \"pnpm dev\""
 
 [nix]
 channel = "stable-25_05"
 
 [deployment]
-build = ["bash", "-lc", "npm ci && cd apps/api && npm ci && npm run build && npx prisma migrate deploy"]
-run = ["bash", "-lc", "cd apps/api && PORT=$PORT NODE_ENV=production node dist/index.js"]
+# Build from ROOT using pnpm; run prisma commands inside apps/api
+build = [
+  "bash","-lc",
+  "set -euo pipefail; \
+   corepack enable; pnpm -v; \
+   # install deps
+   pnpm i --frozen-lockfile; \
+   pnpm -C apps/api i --frozen-lockfile; \
+   pnpm -C apps/web i --frozen-lockfile || true; \
+   # build web (if present) and api
+   pnpm -C apps/web build || true; \
+   pnpm -C apps/api build; \
+   # ensure a writable SQLite path for Prisma if DATABASE_URL isn't set
+   mkdir -p apps/api/data; \
+   export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; \
+   # prisma generate + migrate (or push if no migrations)
+   pnpm -C apps/api prisma generate; \
+   pnpm -C apps/api prisma migrate deploy || pnpm -C apps/api prisma db push"
+]
 
-[workflows]
-runButton = "Development"
-
-[[workflows.workflow]]
-name = "Development"
-author = 45771689
-mode = "parallel"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
+# Run from apps/api, on the platform port, in production
+run = ["bash","-lc","cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db} && PORT=$PORT NODE_ENV=production node dist/index.js"]
 
 [objectStorage]
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
-
-[[ports]]
-localPort = 5000
-externalPort = 3000
-
-[[ports]]
-localPort = 8080
-externalPort = 8080
