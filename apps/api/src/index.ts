@@ -167,6 +167,59 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
     const ct = detectContentType(buf, filename);
 
     // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
+
+// Dynamic hero image endpoint - finds the latest hero image for a restaurant
+app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    
+    const { Client } = await import("@replit/object-storage");
+    const storage = new Client();
+
+    // List all files in the restaurant's folder
+    const listResult = await storage.list();
+    if (!listResult.ok || !listResult.value) {
+      return res.status(404).json({ error: "No images found" });
+    }
+
+    // Find hero images for this restaurant
+    const heroImages = listResult.value
+      .filter((item: any) => item.key.startsWith(`${restaurantId}/heroImage-`))
+      .sort((a: any, b: any) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+
+    if (heroImages.length === 0) {
+      return res.status(404).json({ error: "No hero image found for this restaurant" });
+    }
+
+    // Get the most recent hero image
+    const latestHeroImage = heroImages[0];
+    const imageData = await storage.downloadAsBytes(latestHeroImage.key);
+
+    if (!imageData.ok || !imageData.value) {
+      return res.status(404).json({ error: "Failed to retrieve image" });
+    }
+
+    // Ensure we have raw binary
+    const buf = toNodeBuffer(imageData.value);
+
+    // Detect content type
+    const filename = latestHeroImage.key.split('/').pop() || 'image.jpg';
+    const contentType = detectContentType(buf, filename);
+
+    // Set headers
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    // Send the image
+    return res.end(buf);
+  } catch (error) {
+    console.error("Error serving hero image:", error);
+    return res.status(500).json({ error: "Failed to serve hero image" });
+  }
+});
+
+
     res.setHeader("Content-Type", ct);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -237,8 +290,13 @@ app.post(
       if (!restaurantId)
         return res.status(400).json({ error: "restaurantId is required" });
 
+      // Validate file type
+      if (!file.mimetype.startsWith('image/')) {
+        return res.status(400).json({ error: "Only image files are allowed" });
+      }
+
       console.log(
-        `Uploading test image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
+        `Uploading hero image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`,
       );
 
       const ext = file.originalname.split(".").pop() || "jpg";
@@ -249,11 +307,30 @@ app.post(
       const { Client } = await import("@replit/object-storage");
       const storage = new Client();
 
+      // Clean up old hero images first
+      try {
+        const listResult = await storage.list();
+        if (listResult.ok && listResult.value) {
+          const oldHeroImages = listResult.value.filter((item: any) => 
+            item.key.startsWith(`${restaurantId}/heroImage-`) && item.key !== objectKey
+          );
+          
+          for (const oldImage of oldHeroImages) {
+            console.log(`Deleting old hero image: ${oldImage.key}`);
+            await storage.delete(oldImage.key);
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to clean up old images:", error);
+      }
+
       // Upload to storage
       const uploadResult = await storage.uploadFromBytes(
         objectKey,
         file.buffer,
-        {},
+        {
+          compress: false // Don't compress images
+        },
       );
 
       if (!uploadResult.ok) {
@@ -264,9 +341,23 @@ app.post(
         });
       }
 
-      // Return the proxy URL
+      // Update the restaurant's heroImageUrl in the database
       const imageUrl = `/api/images/storage/${objectKey}`;
-      console.log(`✅ Test image uploaded successfully: ${imageUrl}`);
+      try {
+        await prisma.restaurant.update({
+          where: { id: restaurantId },
+          data: { heroImageUrl: imageUrl }
+        });
+        console.log(`✅ Updated restaurant ${restaurantId} heroImageUrl in database`);
+      } catch (dbError) {
+        console.error("Failed to update database:", dbError);
+        return res.status(500).json({
+          error: "Image uploaded but failed to update database",
+          details: dbError
+        });
+      }
+
+      console.log(`✅ Hero image uploaded successfully: ${imageUrl}`);
 
       res.json({
         message: "Upload successful",

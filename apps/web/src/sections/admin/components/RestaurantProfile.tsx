@@ -61,6 +61,8 @@ export const RestaurantProfile: React.FC<RestaurantProfileProps> = ({
       setFreshUploadedImageUrl(newImageUrl);
       // Auto-update the heroImageUrl field so it gets saved
       onDataChange({ heroImageUrl: newImageUrl });
+      
+      console.log("✅ Image uploaded and database updated:", newImageUrl);
     } catch (error) {
       console.error("Error uploading photo:", error);
       alert(

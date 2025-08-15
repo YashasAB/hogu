@@ -266,7 +266,7 @@ export default function RestaurantDetail() {
         {/* Hero */}
         <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl">
           <img
-            src={"/api/images/storage/cme996hfm000bj4h1cu57rrca/heroImage.jpg"}
+            src={restaurant.heroImageUrl || `/api/restaurant/${restaurant.id}/hero-image`}
             alt={restaurant.name}
             className="w-full h-[38vh] sm:h-[42vh] md:h-[56vh] object-cover"
             style={{
@@ -281,17 +281,14 @@ export default function RestaurantDetail() {
               console.error("=== HERO IMAGE LOAD ERROR ===");
               console.error("Failed to load image URL:", e.currentTarget.src);
               console.error("heroImageUrl from data:", restaurant.heroImageUrl);
-              console.error("Image element state:", {
-                width: e.currentTarget.width,
-                height: e.currentTarget.height,
-                naturalWidth: e.currentTarget.naturalWidth,
-                naturalHeight: e.currentTarget.naturalHeight,
-                complete: e.currentTarget.complete,
-                currentSrc: e.currentTarget.currentSrc,
-              });
               console.error("==============================");
-              // Fallback to placeholder if hero image fails
-              if (e.currentTarget.src !== "/api/placeholder/400/300") {
+              
+              // Try dynamic endpoint if direct URL failed and we haven't already tried it
+              if (!e.currentTarget.src.includes('/hero-image') && !e.currentTarget.src.includes('placeholder')) {
+                console.log("Trying dynamic hero image endpoint...");
+                e.currentTarget.src = `/api/restaurant/${restaurant.id}/hero-image`;
+              } else if (e.currentTarget.src !== "/api/placeholder/400/300") {
+                // Fallback to placeholder if all attempts fail
                 e.currentTarget.src = "/api/placeholder/400/300";
               }
             }}
