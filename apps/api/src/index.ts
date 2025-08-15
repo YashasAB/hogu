@@ -29,17 +29,17 @@ app.set("trust proxy", true);
 
 // Health check endpoints for deployment - return immediately
 app.get("/", (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("OK");
 });
 
 app.get("/health", (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.writeHead(200, { "Content-Type": "application/json" });
   res.end('{"status":"healthy"}');
 });
 
 app.get("/ready", (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.writeHead(200, { "Content-Type": "application/json" });
   res.end('{"status":"ready"}');
 });
 
@@ -70,7 +70,10 @@ async function testDatabaseConnection() {
     await prisma.$connect();
     console.log("✅ Database connected successfully");
   } catch (error) {
-    console.error("❌ Database connection failed (continuing to serve):", error);
+    console.error(
+      "❌ Database connection failed (continuing to serve):",
+      error,
+    );
     // DO NOT process.exit(1) during deploy - keep serving health checks
   }
 }
@@ -135,9 +138,6 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
     const ct = detectContentType(buf, filename);
 
     // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
-
-
-
 
     res.setHeader("Content-Type", ct);
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
@@ -210,7 +210,7 @@ app.post(
         return res.status(400).json({ error: "restaurantId is required" });
 
       // Validate file type
-      if (!file.mimetype.startsWith('image/')) {
+      if (!file.mimetype.startsWith("image/")) {
         return res.status(400).json({ error: "Only image files are allowed" });
       }
 
@@ -230,8 +230,11 @@ app.post(
       try {
         const listResult = await storage.list();
         if (listResult.ok && listResult.value) {
-          const oldHeroImages = listResult.value.filter((item: any) =>
-            item.name && item.name.startsWith(`${restaurantId}/heroImage-`) && item.name !== objectKey
+          const oldHeroImages = listResult.value.filter(
+            (item: any) =>
+              item.name &&
+              item.name.startsWith(`${restaurantId}/heroImage-`) &&
+              item.name !== objectKey,
           );
 
           for (const oldImage of oldHeroImages) {
@@ -248,7 +251,7 @@ app.post(
         objectKey,
         file.buffer,
         {
-          compress: false // Don't compress images
+          compress: false, // Don't compress images
         },
       );
 
@@ -265,14 +268,16 @@ app.post(
       try {
         await prisma.restaurant.update({
           where: { id: restaurantId },
-          data: { heroImageUrl: imageUrl }
+          data: { heroImageUrl: imageUrl },
         });
-        console.log(`✅ Updated restaurant ${restaurantId} heroImageUrl in database`);
+        console.log(
+          `✅ Updated restaurant ${restaurantId} heroImageUrl in database`,
+        );
       } catch (dbError) {
         console.error("Failed to update database:", dbError);
         return res.status(500).json({
           error: "Image uploaded but failed to update database",
-          details: dbError
+          details: dbError,
         });
       }
 
@@ -325,11 +330,20 @@ app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
 
     // Find hero images for this restaurant
     const heroImages = listResult.value
-      .filter((item: any) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
-      .sort((a: any, b: any) => new Date(b.updated || b.timeCreated).getTime() - new Date(a.updated || a.timeCreated).getTime());
+      .filter(
+        (item: any) =>
+          item.name && item.name.startsWith(`${restaurantId}/heroImage-`),
+      )
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.updated || b.timeCreated).getTime() -
+          new Date(a.updated || a.timeCreated).getTime(),
+      );
 
     if (heroImages.length === 0) {
-      return res.status(404).json({ error: "No hero image found for this restaurant" });
+      return res
+        .status(404)
+        .json({ error: "No hero image found for this restaurant" });
     }
 
     // Get the most recent hero image
@@ -344,7 +358,7 @@ app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
     const buf = toNodeBuffer(imageData.value);
 
     // Detect content type
-    const filename = latestHeroImage.name.split('/').pop() || 'image.jpg';
+    const filename = latestHeroImage.name.split("/").pop() || "image.jpg";
     const contentType = detectContentType(buf, filename);
 
     // Set headers
@@ -404,13 +418,5 @@ process.on("SIGTERM", () => {
   server.close(() => {
     console.log("Process terminated");
     process.exit(0);
-  });
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully");
-  server.close(() => {
-    console.log("Process terminated");
   });
 });
