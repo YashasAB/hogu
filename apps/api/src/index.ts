@@ -10,6 +10,15 @@ import adminRoutes from "./routes/admin";
 import imagesRouter from "./routes/images";
 import multer from "multer"; // Import multer
 
+// Extend Express Request interface to include restaurantId
+declare global {
+  namespace Express {
+    interface Request {
+      restaurantId?: string;
+    }
+  }
+}
+
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
 });
@@ -226,7 +235,7 @@ app.get("/api/images/list", async (req, res) => {
 app.post("/api/upload", upload.single("image"), async (req, res) => {
   try {
     const file = req.file;
-    const restaurantId = req.restaurantId;
+    const restaurantId = req.body.restaurantId;
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
