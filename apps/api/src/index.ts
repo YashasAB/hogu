@@ -13,15 +13,36 @@ import getPort from "get-port";
 // --- Health FIRST & non-blocking ---
 const app = express();
 
+// health first
 app.get("/", (_req, res) => {
   console.log("[API] HEALTH HIT", new Date().toISOString());
   res.status(200).type("text/plain").send("ok");
 });
-app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
-app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+// IMPORTANT: bind exactly to the injected PORT
+const injected = process.env.PORT; // <-- no default
+if (!injected) {
+  console.error(
+    "PORT not set; exiting so the platform restarts with proper env",
+  );
+  process.exit(1);
+}
+const PORT = Number(injected);
+
+if (!(globalThis as any).__apiServer) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      "[API] LISTENING PORT:",
+      PORT,
+      "NODE_ENV:",
+      process.env.NODE_ENV,
+    );
+  });
+  (globalThis as any).__apiServer = server;
+}
 
 async function startServer() {
-  const defaultPort = Number(process.env.PORT || 8080);
+  const defaultPort = Number(process.env.PORT || 5555);
 
   // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
   const PORT =
