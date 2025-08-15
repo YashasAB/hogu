@@ -1,0 +1,36 @@
+your deploy is starting a process that’s binding to 5000 (very likely your Vite dev server), while Autoscale health-checks hit external port 80. If the only thing listening on the container is 5000, the probe on 80 never reaches your app → promote hangs and fails.
+Why this happens
+[[ports]] in .replit is for the Workspace/IDE. It doesn’t configure Autoscale health checks.
+In Deployments, the platform injects $PORT and expects your app to listen on that single port and return 200 on / quickly.
+If your deploy command starts any dev server (e.g., Vite on 5000) or multiple processes, the platform sees an app “running” but probing 80 doesn’t hit the real server → “listening on 5000, health checks to 80” mismatch.
+Fix: keep your local ports & bucket, but make deploy start only the API on $PORT
+Do these exactly:
+Deploy run command must start only the API, on $PORT:
+# .replit
+[deployment]
+run = ["bash","-lc","cd apps/api && PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"]
+Do not run pnpm dev, concurrently, Vite, or any web dev server here.
+Your server must bind to $PORT and 0.0.0.0, and reply 200 on / fast:
+// FIRST routes in apps/api/src/index.ts
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+const PORT = Number(process.env.PORT || 8080);
+app.listen(PORT, "0.0.0.0", () => console.log("LISTENING PORT:", PORT));
+(Keep only one SIGTERM handler. Avoid heavy work before app.listen.)
+Build step must not start any server. Build only:
+root installs/builds
+cd apps/api && pnpm build
+Prisma generate + migrate deploy | db push
+(No pnpm dev, no vite dev.)
+Leave your [[ports]] and [objectStorage] as-is for local. They won’t break deploy, as long as step 1 runs only the API and step 2 binds to $PORT.
+If you still see “listening on 5000” in deploy logs, something is still starting your Vite dev server:
+Remove any deploy-time script that calls dev/Vite/webpack.
+Ensure the Deploy UI Run Command isn’t overridden to pnpm dev.
+Remove “workflows” that run pnpm dev (they’re for the IDE; not needed in deploy).
+Quick sanity checks
+Add these logs right at startup:
+console.log("DEPLOY PORT ENV:", process.env.PORT);
+app.get("/", (_req, res) => { console.log("HEALTH HIT"); res.status(200).send("ok"); });
+Expected in deploy logs:
+DEPLOY PORT ENV: <number> (not empty)
+LISTENING PORT: <same number>
+A few HEALTH HIT lines during promote
