@@ -10,7 +10,7 @@ packages = ["psmisc", "lsof"]
 [deployment]
 build = [
   "bash","-lc",
-  "set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push"
+  "set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --no-frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --no-frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --no-frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push"
 ]
 
 run = [
