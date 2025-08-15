@@ -18,12 +18,13 @@ run = [
   "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=${PORT:-8080} NODE_ENV=production node dist/index.js"
 ]
 
-
-
-# ---- keep your local port mappings for Workspace (these do not affect Autoscale) ----
 [[ports]]
 localPort = 5000
 externalPort = 3000
+
+[[ports]]
+localPort = 5555
+externalPort = 80
 
 [[ports]]
 localPort = 8080
