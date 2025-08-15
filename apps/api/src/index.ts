@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -26,7 +26,13 @@ const prisma = new PrismaClient({
 });
 
 const app = express();
-const PORT = Number(process.env.PORT) || 8080;
+
+// Health check endpoint for Autoscale - must be at root and return 200 immediately
+app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+const PORT = Number(process.env.PORT || 8080);
 
 // Add process error handlers to prevent silent crashes during deployment
 process.on("unhandledRejection", (reason, promise) => {
@@ -42,20 +48,16 @@ process.on("uncaughtException", (error) => {
 // Trust proxy for proper request handling
 app.set("trust proxy", true);
 
-// Health check endpoints FIRST - trivial and fast responses for deployment
-app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
-app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
-app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
-
 console.log("Environment check:");
 console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", process.env.PORT);
+console.log("PORT:", PORT);
 console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
 console.log("REPL_ID set:", !!process.env.REPL_ID);
 if (process.env.REPL_ID) {
   console.log("REPL_ID:", process.env.REPL_ID);
 }
 
+// Middleware
 app.use(
   cors({
     origin: true,
@@ -386,21 +388,44 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// Check if running in production and serve static files
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
+// Serve built React app in production
+if (process.env.NODE_ENV === "production") {
   const webDistPath = path.join(__dirname, "../../web/dist");
   app.use(express.static(webDistPath, { index: false }));
-  console.log("Serving static files from:", webDistPath);
+}
 
-  // SPA fallback - only catch non-API routes that don't start with /api, /, /health, /ready
-  app.get(/^\/(?!api\/)(?!\/$)(?!health$)(?!ready$).*/, (req, res) => {
-    res.sendFile(path.join(webDistPath, "index.html"));
+// SPA routing fallback - must be after API routes
+if (process.env.NODE_ENV === "production") {
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(__dirname, "../../web/dist/index.html"));
   });
 }
 
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log("LISTENING PORT:", PORT);
+// Start the server
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log('Environment check:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('PORT:', PORT);
+  console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+  console.log('REPL_ID set:', !!process.env.REPL_ID);
+  console.log('REPL_ID:', process.env.REPL_ID);
+  console.log(`LISTENING PORT: ${PORT}`);
+  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
+  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
+
+  try {
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+  }
+});
+
+// Configure server timeouts to prevent odd load balancer behavior
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log('LISTENING PORT:', PORT);
   console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
