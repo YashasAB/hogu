@@ -152,7 +152,7 @@ app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
 app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    
+
     const { Client } = await import("@replit/object-storage");
     const storage = new Client();
 
@@ -294,7 +294,7 @@ app.post(
           const oldHeroImages = listResult.value.filter((item: any) => 
             item.name && item.name.startsWith(`${restaurantId}/heroImage-`) && item.name !== objectKey
           );
-          
+
           for (const oldImage of oldHeroImages) {
             console.log(`Deleting old hero image: ${oldImage.name}`);
             await storage.delete(oldImage.name);
@@ -378,15 +378,15 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imagesRouter);
 
-// In production, serve the React app for all non-API routes
+// Serve static files from React build in production
+const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
   const webDistPath = path.join(__dirname, "../../web/dist");
+  app.use(express.static(webDistPath, { index: false }));
   console.log("Serving static files from:", webDistPath);
 
-  app.use(express.static(webDistPath, { index: false }));
-
-  // Only catch non-API routes for SPA - this regex excludes any path starting with /api/
-  app.get(/^\/(?!api\/).*/, (req, res) => {
+  // SPA fallback - only catch non-API routes that don't start with /api, /, /health, /ready
+  app.get(/^\/(?!api\/)(?!\/$)(?!health$)(?!ready$).*/, (req, res) => {
     res.sendFile(path.join(webDistPath, "index.html"));
   });
 }
