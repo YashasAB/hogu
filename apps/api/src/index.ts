@@ -10,6 +10,15 @@ import cookieParser from "cookie-parser";
 import { Client } from "@replit/object-storage";
 import mime from "mime-types";
 
+// Extend Express Request interface to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { userId: string; email: string };
+    }
+  }
+}
+
 const app = express();
 
 // Health check endpoint FIRST
@@ -358,7 +367,66 @@ app.get("/api/restaurants", async (req, res) => {
 
 app.get("/api/discover/available-today", async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    // Start server
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[API] Server running on http://0.0.0.0:${PORT} at ${new Date().toISOString()}`);
+  console.log(`[API] Health endpoint: http://0.0.0.0:${PORT}/`);
+  console.log(`[API] Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('[API] SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('[API] Process terminated');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[API] SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('[API] Process terminated');
+  });
+});
+    
+    // Get restaurants with available slots for today
+    const restaurants = await prisma.restaurant.findMany({
+      include: {
+        timeSlots: {
+          where: {
+            date: today,
+            status: 'AVAILABLE'
+          }
+        }
+      }
+    });
+
+    // Format the response to match expected structure
+    const formattedRestaurants = restaurants
+      .filter(restaurant => restaurant.timeSlots.length > 0)
+      .map(restaurant => ({
+        restaurant: {
+          id: restaurant.id,
+          name: restaurant.name,
+          slug: restaurant.slug,
+          neighborhood: restaurant.neighborhood,
+          hero_image_url: restaurant.heroImageUrl,
+          emoji: restaurant.emoji
+        },
+        slots: restaurant.timeSlots.map(slot => ({
+          slot_id: slot.id,
+          time: slot.time,
+          party_size: slot.partySize,
+          date: slot.date
+        }))
+      }));
+
+    res.json({ restaurants: formattedRestaurants });
+  } catch (error) {
+    console.error("Discover available-today error:", error);
+    res.status(500).json({ error: "Failed to fetch available restaurants" });
+  }
+});
 
     const slots = await prisma.timeSlot.findMany({
       where: {
