@@ -4,6 +4,9 @@ run = "npm run dev"
 [nix]
 channel = "stable-25_05"
 
+[objectStorage]
+defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
+
 [deployment]
 run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
 deploymentTarget = "cloudrun"
