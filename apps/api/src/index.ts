@@ -100,6 +100,7 @@ async function startServer() {
     }
   };
   console.log("auth middleware setup complete");
+  console.log("about to start defining helper functions and routes ");
 
   // Helper function to normalize buffer data
   function toNodeBuffer(v: unknown): Buffer {
