@@ -38,6 +38,11 @@ if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = "file:./dev.db";
 }
 
+// ---- Health routes FIRST, before anything heavy ----
+app.get('/', (_req, res) => res.status(200).type('text/plain').send('ok'));
+app.get('/health', (_req, res) => res.status(200).json({ status: 'healthy' }));
+app.get('/ready', (_req, res) => res.status(200).json({ status: 'ready' }));
+
 app.use(cors({
   origin: true,
   credentials: true
@@ -52,18 +57,8 @@ if (isProduction) {
   console.log('Serving static files from:', webDistPath);
 }
 
-// Health check endpoint
-app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Hogu API is running',
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    port: PORT
-  });
-});
-
-// Additional health check endpoint
-app.get('/health', async (req, res) => {
+// Additional health check with database test (after server is listening)
+app.get('/health/db', async (req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
@@ -100,7 +95,19 @@ if (isProduction) {
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Hogu API listening on http://0.0.0.0:${PORT}`);
+  console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
+});
+
+// 🔑 Mount everything heavy AFTER we're listening
+server.on('listening', async () => {
+  try {
+    // Lazy-import the file that mounts image routes
+    const { mountImageRoutes } = await import('./mount-images');
+    mountImageRoutes(app, prisma);
+    console.log('✅ Image routes mounted');
+  } catch (e) {
+    console.error('⚠️ Failed to mount image routes (continuing):', e);
+  }
 });
 
 server.on('error', (error) => {
