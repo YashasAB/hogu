@@ -35,12 +35,15 @@ async function startServer() {
   console.log("Requested port:", defaultPort);
   console.log("Using port:", PORT);
 
+  console.log("Setting up middleware...");
   // Middleware setup
   app.set("trust proxy", true);
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json());
   app.use(cookieParser());
+  console.log("Middleware setup complete");
 
+  console.log("DB setup start");
   // Database setup
   const dbDir = path.join(process.cwd(), "data");
   fs.mkdirSync(dbDir, { recursive: true });
@@ -58,7 +61,9 @@ async function startServer() {
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   });
+  console.log("DB setup complete");
 
+  console.log("storage client setup start");
   // Initialize Object Storage Client
   let storageClient: Client | null = null;
 
@@ -74,7 +79,8 @@ async function startServer() {
     }
     return storageClient;
   }
-
+  console.log("storage client setup complete");
+  console.log("auth middleware setup start");
   // Auth middleware
   const authenticateToken = (req: any, res: any, next: any) => {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
@@ -91,6 +97,7 @@ async function startServer() {
       return res.status(403).json({ error: "Invalid or expired token" });
     }
   };
+  console.log("auth middleware setup complete");
 
   // Helper function to normalize buffer data
   function toNodeBuffer(v: unknown): Buffer {
