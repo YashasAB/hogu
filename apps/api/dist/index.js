@@ -13,7 +13,6 @@ const multer_1 = __importDefault(require("multer"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
-const object_storage_1 = require("@replit/object-storage");
 const BOOT_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const app = (0, express_1.default)();
 // 1) Health endpoints FIRST
@@ -62,15 +61,15 @@ server.on("error", (err) => {
             storage: multer_1.default.memoryStorage(),
             limits: { fileSize: 10 * 1024 * 1024 },
         });
-        // Object storage (lazy)
-        let storageClient = null;
-        async function getStorageClient() {
-            if (!storageClient) {
-                storageClient = new object_storage_1.Client();
-                console.log("✅ Object Storage client initialized");
-            }
-            return storageClient;
-        }
+        // Object storage (lazy) - COMMENTED OUT FOR TESTING
+        // let storageClient: Client | null = null;
+        // async function getStorageClient(): Promise<Client> {
+        //   if (!storageClient) {
+        //     storageClient = new Client();
+        //     console.log("✅ Object Storage client initialized");
+        //   }
+        //   return storageClient;
+        // }
         // Helpers
         function toNodeBuffer(v) {
             if (Buffer.isBuffer(v))
@@ -127,108 +126,108 @@ server.on("error", (err) => {
         // =========================
         // YOUR ROUTES (UNCHANGED)
         // =========================
-        // Upload image: multipart field "image" and body "restaurantId"
-        app.post("/api/upload", upload.single("image"), async (req, res) => {
-            try {
-                if (!req.file)
-                    return res.status(400).json({ error: "No file uploaded" });
-                const { restaurantId } = req.body;
-                if (!restaurantId)
-                    return res.status(400).json({ error: "Restaurant ID is required" });
-                const restaurant = await prisma.restaurant.findUnique({
-                    where: { id: restaurantId },
-                });
-                if (!restaurant)
-                    return res.status(404).json({ error: "Restaurant not found" });
-                const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-                const ext = req.file.originalname.split(".").pop() || "jpg";
-                const filename = `heroImage-${timestamp}.${ext}`;
-                const key = `${restaurantId}/${filename}`;
-                const storage = await getStorageClient();
-                const up = await storage.uploadFromBytes(key, req.file.buffer, {
-                    compress: false,
-                });
-                if (!up.ok)
-                    return res
-                        .status(500)
-                        .json({ error: "Upload failed", details: up.error });
-                const imageUrl = `/api/images/storage/${key}`;
-                const updatedRestaurant = await prisma.restaurant.update({
-                    where: { id: restaurantId },
-                    data: { heroImageUrl: imageUrl },
-                });
-                res.json({
-                    success: true,
-                    url: imageUrl,
-                    filename,
-                    restaurant: updatedRestaurant,
-                });
-            }
-            catch (e) {
-                console.error("❌ Upload error:", e);
-                res
-                    .status(500)
-                    .json({
-                    error: "Upload failed",
-                    details: e instanceof Error ? e.message : String(e),
-                });
-            }
-        });
-        // Serve stored image
-        app.get("/api/images/storage/:replId/:filename", async (req, res) => {
-            try {
-                const { replId, filename } = req.params;
-                const key = `${replId}/${filename}`;
-                const storage = await getStorageClient();
-                const out = (await storage.downloadAsBytes(key));
-                if (!out.ok)
-                    return res
-                        .status(404)
-                        .json({
-                        error: "Image not found",
-                        key,
-                        details: out.error,
-                    });
-                const buf = toNodeBuffer(out.value);
-                const ct = detectContentType(buf, filename);
-                res.set({
-                    "Content-Type": ct,
-                    "Cache-Control": "public, max-age=31536000, immutable",
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Length": String(buf.length),
-                    "Content-Disposition": `inline; filename="${filename}"`,
-                });
-                return res.end(buf);
-            }
-            catch (e) {
-                console.error("❌ Image proxy error:", e);
-                return res.status(500).json({ error: "Failed to serve image" });
-            }
-        });
-        // HEAD for image
-        app.head("/api/images/storage/:replId/:filename", async (req, res) => {
-            try {
-                const { replId, filename } = req.params;
-                const key = `${replId}/${filename}`;
-                const storage = await getStorageClient();
-                const out = (await storage.downloadAsBytes(key));
-                if (!out.ok)
-                    return res.sendStatus(404);
-                const buf = toNodeBuffer(out.value);
-                const ct = detectContentType(buf, filename);
-                res.set({
-                    "Content-Type": ct,
-                    "Cache-Control": "public, max-age=31536000, immutable",
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Length": String(buf.length),
-                    "Content-Disposition": `inline; filename="${filename}"`,
-                });
-                return res.sendStatus(200);
-            }
-            catch {
-                return res.sendStatus(500);
-            }
-        });
+        // Upload image: multipart field "image" and body "restaurantId" - COMMENTED OUT FOR TESTING
+        // app.post("/api/upload", upload.single("image"), async (req, res) => {
+        //   try {
+        //     if (!req.file)
+        //       return res.status(400).json({ error: "No file uploaded" });
+        //     const { restaurantId } = req.body;
+        //     if (!restaurantId)
+        //       return res.status(400).json({ error: "Restaurant ID is required" });
+        //     const restaurant = await prisma.restaurant.findUnique({
+        //       where: { id: restaurantId },
+        //     });
+        //     if (!restaurant)
+        //       return res.status(404).json({ error: "Restaurant not found" });
+        //     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        //     const ext = req.file.originalname.split(".").pop() || "jpg";
+        //     const filename = `heroImage-${timestamp}.${ext}`;
+        //     const key = `${restaurantId}/${filename}`;
+        //     const storage = await getStorageClient();
+        //     const up = await storage.uploadFromBytes(key, req.file.buffer, {
+        //       compress: false,
+        //     });
+        //     if (!up.ok)
+        //       return res
+        //         .status(500)
+        //         .json({ error: "Upload failed", details: up.error });
+        //     const imageUrl = `/api/images/storage/${key}`;
+        //     const updatedRestaurant = await prisma.restaurant.update({
+        //       where: { id: restaurantId },
+        //       data: { heroImageUrl: imageUrl },
+        //     });
+        //     res.json({
+        //       success: true,
+        //       url: imageUrl,
+        //       filename,
+        //       restaurant: updatedRestaurant,
+        //     });
+        //   } catch (e) {
+        //     console.error("❌ Upload error:", e);
+        //     res
+        //       .status(500)
+        //       .json({
+        //         error: "Upload failed",
+        //         details: e instanceof Error ? e.message : String(e),
+        //       });
+        //   }
+        // });
+        // Serve stored image - COMMENTED OUT FOR TESTING
+        // app.get("/api/images/storage/:replId/:filename", async (req, res) => {
+        //   try {
+        //     const { replId, filename } = req.params;
+        //     const key = `${replId}/${filename}`;
+        //     const storage = await getStorageClient();
+        //     const out = (await storage.downloadAsBytes(key)) as
+        //       | { ok: true; value: unknown }
+        //       | { ok: false; error: unknown };
+        //     if (!out.ok)
+        //       return res
+        //         .status(404)
+        //         .json({
+        //           error: "Image not found",
+        //           key,
+        //           details: (out as any).error,
+        //         });
+        //     const buf = toNodeBuffer(out.value);
+        //     const ct = detectContentType(buf, filename);
+        //     res.set({
+        //       "Content-Type": ct,
+        //       "Cache-Control": "public, max-age=31536000, immutable",
+        //       "Access-Control-Allow-Origin": "*",
+        //       "Content-Length": String(buf.length),
+        //       "Content-Disposition": `inline; filename="${filename}"`,
+        //     });
+        //     return res.end(buf);
+        //   } catch (e) {
+        //     console.error("❌ Image proxy error:", e);
+        //     return res.status(500).json({ error: "Failed to serve image" });
+        //   }
+        // });
+        // HEAD for image - COMMENTED OUT FOR TESTING
+        // app.head("/api/images/storage/:replId/:filename", async (req, res) => {
+        //   try {
+        //     const { replId, filename } = req.params;
+        //     const key = `${replId}/${filename}`;
+        //     const storage = await getStorageClient();
+        //     const out = (await storage.downloadAsBytes(key)) as
+        //       | { ok: true; value: unknown }
+        //       | { ok: false; error: unknown };
+        //     if (!out.ok) return res.sendStatus(404);
+        //     const buf = toNodeBuffer(out.value);
+        //     const ct = detectContentType(buf, filename);
+        //     res.set({
+        //       "Content-Type": ct,
+        //       "Cache-Control": "public, max-age=31536000, immutable",
+        //       "Access-Control-Allow-Origin": "*",
+        //       "Content-Length": String(buf.length),
+        //       "Content-Disposition": `inline; filename="${filename}"`,
+        //     });
+        //     return res.sendStatus(200);
+        //   } catch {
+        //     return res.sendStatus(500);
+        //   }
+        // });
         // Auth
         app.post("/api/auth/login", async (req, res) => {
             try {

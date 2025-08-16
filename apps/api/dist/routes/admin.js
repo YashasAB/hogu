@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -39,28 +6,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
-const mime_types_1 = __importDefault(require("mime-types"));
-const object_storage_1 = require("@replit/object-storage");
-const client_s3_1 = require("@aws-sdk/client-s3");
 const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 // Initialize Replit Object Storage client
-const storageClient = new object_storage_1.Client();
+// const storageClient = new Client();
 // Initialize S3 client only if AWS credentials are available
-let s3Client = null;
-const hasAWSCredentials = process.env.AWS_ACCESS_KEY_ID &&
-    process.env.AWS_SECRET_ACCESS_KEY &&
-    process.env.S3_BUCKET_NAME;
-if (hasAWSCredentials) {
-    s3Client = new client_s3_1.S3Client({
-        region: process.env.AWS_REGION || "us-east-1",
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        },
-    });
-}
+// let s3Client: S3Client | null = null;
+// const hasAWSCredentials =
+//   process.env.AWS_ACCESS_KEY_ID &&
+//   process.env.AWS_SECRET_ACCESS_KEY &&
+//   process.env.S3_BUCKET_NAME;
+// if (hasAWSCredentials) {
+//   s3Client = new S3Client({
+//     region: process.env.AWS_REGION || "us-east-1",
+//     credentials: {
+//       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+//       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+//     },
+//   });
+// }
 // Multer configuration for file uploads (use memory storage for buffer access)
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 // Get restaurant profile
@@ -478,38 +443,39 @@ router.post("/bookings/:id/reject", auth_1.authenticateRestaurant, async (req, r
         res.status(500).json({ error: "Failed to reject booking" });
     }
 });
-router.post("/api/images/storage/:restaurantId/hero-image", upload.single("image"), //multer memory storage
-async (req, res) => {
-    try {
-        const { restaurantId } = req.params;
-        const file = req.file;
-        if (!file)
-            return res.status(400).json({ error: "No image file provided" });
-        if (!file.mimetype.startsWith("image/"))
-            return res.status(400).json({ error: "Only image uploads are allowed" });
-        const extMime = (mime_types_1.default.extension(file.mimetype) || "").toLowerCase();
-        const extName = (file.originalname.split(".").pop() || "").toLowerCase();
-        const ext = (extMime || extName || "jpg").replace("jpeg", "jpg");
-        const objectKey = `${restaurantId}/heroImage.${ext}`;
-        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-        const storage = new Client();
-        // Multer gives a Node Buffer already (binary)
-        const buf = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from(file.buffer);
-        // Upload as BYTES (never as text)
-        const uploadRes = await storage.uploadFromBytes(objectKey, buf /*, {
-          contentType: file.mimetype,
-          cacheControl: "public, max-age=31536000, immutable",
-        }*/);
-        if (!uploadRes?.ok) {
-            const msg = uploadRes?.error?.message || JSON.stringify(uploadRes?.error) || "Unknown storage error";
-            return res.status(500).json({ error: `Storage upload failed: ${msg}` });
-        }
-        const imageUrl = `/api/images/storage/${objectKey}`;
-        return res.json({ message: "Hero image uploaded successfully", imageUrl });
-    }
-    catch (err) {
-        console.error("Error uploading hero image:", err);
-        return res.status(500).json({ error: "Failed to upload hero image" });
-    }
-});
+// Hero image upload endpoint - COMMENTED OUT FOR TESTING
+// router.post(
+//   "/api/images/storage/:restaurantId/hero-image",
+//   upload.single("image"), //multer memory storage
+//   async (req, res) => {
+//     try {
+//       const { restaurantId } = req.params;
+//       const file = req.file;
+//       if (!file) return res.status(400).json({ error: "No image file provided" });
+//       if (!file.mimetype.startsWith("image/")) return res.status(400).json({ error: "Only image uploads are allowed" });
+//       const extMime = (mime.extension(file.mimetype) || "").toLowerCase();
+//       const extName = (file.originalname.split(".").pop() || "").toLowerCase();
+//       const ext = (extMime || extName || "jpg").replace("jpeg", "jpg");
+//       const objectKey = `${restaurantId}/heroImage.${ext}`;
+//       const { Client } = await import("@replit/object-storage");
+//       const storage = new Client();
+//       // Multer gives a Node Buffer already (binary)
+//       const buf: Buffer = Buffer.isBuffer(file.buffer) ? file.buffer : Buffer.from(file.buffer as ArrayBufferLike);
+//       // Upload as BYTES (never as text)
+//       const uploadRes = await (storage as any).uploadFromBytes(objectKey, buf /*, {
+//         contentType: file.mimetype,
+//         cacheControl: "public, max-age=31536000, immutable",
+//       }*/);
+//       if (!uploadRes?.ok) {
+//         const msg = uploadRes?.error?.message || JSON.stringify(uploadRes?.error) || "Unknown storage error";
+//         return res.status(500).json({ error: `Storage upload failed: ${msg}` });
+//       }
+//       const imageUrl = `/api/images/storage/${objectKey}`;
+//       return res.json({ message: "Hero image uploaded successfully", imageUrl });
+//     } catch (err) {
+//       console.error("Error uploading hero image:", err);
+//       return res.status(500).json({ error: "Failed to upload hero image" });
+//     }
+//   }
+// );
 exports.default = router;

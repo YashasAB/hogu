@@ -1,40 +1,41 @@
-
-modules = ["nodejs-20"]
-
-# IDE Run button (local dev)
-run = "bash -lc \"pnpm dev\""
+modules = ["nodejs-18", "web"]
+run = "npm run dev"
 
 [nix]
 channel = "stable-25_05"
-packages = ["psmisc", "lsof"]
 
 [deployment]
+run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
+deploymentTarget = "cloudrun"
 build = [
-  "bash",
-  "-lc",
-  "set -e; (corepack enable || true); (corepack prepare pnpm@8.15.6 --activate || npm i -g pnpm@8.15.6); pnpm -v; rm -rf apps/api/dist; cd apps/api; pnpm install --no-frozen-lockfile; pnpm prisma generate; pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma migrate deploy || pnpm prisma db push",
-]
-run = [
-  "bash",
-  "-lc",
-  "cd apps/api && exec env NODE_ENV=production node dist/index.js",
+  "sh",
+  "-c",
+  "cd apps/api && npx prisma generate && npx prisma migrate deploy && cd ../.. && pnpm -C apps/web build && pnpm -C apps/api build",
 ]
 
+[workflows]
+runButton = "Development"
 
-[objectStorage]
-defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
+[[workflows.workflow]]
+name = "Development"
+author = 45771689
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/api && npm run dev"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/web && npm run dev"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
 externalPort = 5000
-
-[[ports]]
-localPort = 5001
-externalPort = 3001
-
-[[ports]]
-localPort = 5555
-externalPort = 3000
 
 [[ports]]
 localPort = 8080
