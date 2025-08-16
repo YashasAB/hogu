@@ -70,6 +70,7 @@ async function startServer() {
   let storageClient: Client | null = null;
 
   async function getStorageClient(): Promise<Client> {
+    console.log("storage client setup start");
     if (!storageClient) {
       try {
         console.log("Attempting to initialize Object Storage...");
@@ -81,12 +82,14 @@ async function startServer() {
         throw new Error("Object Storage not available");
       }
     }
+    console.log("storage client setup complete");
     return storageClient;
   }
   console.log("storage client setup complete");
   console.log("auth middleware setup start");
   // Auth middleware
   const authenticateToken = (req: any, res: any, next: any) => {
+    console.log("auth middleware setup start");
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -97,6 +100,7 @@ async function startServer() {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       req.user = decoded;
       next();
+      console.log("auth middleware setup complete");
     } catch (error) {
       return res.status(403).json({ error: "Invalid or expired token" });
     }
@@ -106,6 +110,7 @@ async function startServer() {
 
   // Helper function to normalize buffer data
   function toNodeBuffer(v: unknown): Buffer {
+    console.log("about to start defining helper functions and routes ");
     if (Buffer.isBuffer(v)) return v;
     if (v instanceof Uint8Array) {
       return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
