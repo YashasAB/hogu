@@ -85,6 +85,15 @@ export default function UserReservations({
 
   // Function to handle cancellation
   const handleCancelReservation = async (reservationId: string) => {
+    // Show confirmation dialog
+    const isConfirmed = window.confirm(
+      "Are you sure you want to cancel this reservation? This action cannot be undone."
+    );
+    
+    if (!isConfirmed) {
+      return; // User clicked "Cancel" in the confirmation dialog
+    }
+
     const token = localStorage.getItem("hogu_token");
     if (!token) return;
 
