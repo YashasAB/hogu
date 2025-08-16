@@ -1,14 +1,28 @@
-
 import express from "express";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
 import cookieParser from "cookie-parser";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+import { Client } from "@replit/object-storage";
+
+// ---- Express Request augmentation (for req.user) ----
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { userId: string; username: string; role?: string };
+    }
+  }
+}
 
 const app = express();
 
-// === HEALTH FIRST (fast, no deps) ===
+// ======================
+// 1) HEALTH FIRST
+// ======================
 app.get("/", (_req, res) => {
   console.log("[API] HEALTH HIT", new Date().toISOString());
   res.status(200).type("text/plain").send("ok");
@@ -16,64 +30,103 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
 app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
-// === BIND IMMEDIATELY ===
-// In production (Autoscale), ALWAYS use injected PORT. Fail fast if missing.
-const isProd = process.env.NODE_ENV === "production" || process.env.REPLIT_ENVIRONMENT === "production";
+// ======================
+// 2) BIND IMMEDIATELY
+// ======================
+const isProd =
+  process.env.NODE_ENV === "production" ||
+  process.env.REPLIT_ENVIRONMENT === "production";
 const injected = process.env.PORT;
 const PORT = isProd ? Number(injected) : Number(injected || 8080);
 
 if (isProd && !injected) {
-  console.error("[API] FATAL: PORT was not injected by platform. Exiting.");
+  console.error(
+    "[API] FATAL: PORT not injected by platform. Exiting so deploy retries.",
+  );
   process.exit(1);
 }
 
-// Prevent double-binding during hot reload
+// avoid double-binding on hot reloads
 if (!(globalThis as any).__apiServerPrimary) {
-  const primary = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`);
+  const s = app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      `[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`,
+    );
+    console.log(`[API] Health: http://0.0.0.0:${PORT}/`);
   });
-  (globalThis as any).__apiServerPrimary = primary;
-
-  // Optional "belt & suspenders": also open 5555 in prod to satisfy any stale mapping
-  // Remove this once promote works and the mapping is clean.
-  if (isProd && PORT !== 5555 && !(globalThis as any).__apiServerCompat) {
-    try {
-      const compat = app.listen(5555, "0.0.0.0", () => {
-        console.log("[API] ALSO LISTENING on 5555 (compat for stale port mapping)");
-      });
-      (globalThis as any).__apiServerCompat = compat;
-    } catch (e) {
-      console.log("[API] Compat 5555 bind not used (ok).");
-    }
-  }
+  (globalThis as any).__apiServerPrimary = s;
 }
 
-// === DEFER HEAVY SETUP UNTIL AFTER LISTEN ===
+// ======================
+// 3) DEFER SETUP UNTIL AFTER LISTEN
+// ======================
 setImmediate(async () => {
   try {
-    console.log("[API] Bootstrapping middleware & routes…");
+    console.log("[API] Bootstrapping app…");
 
+    // ---------- Middleware ----------
     app.set("trust proxy", true);
     app.use(cors({ origin: true, credentials: true }));
     app.use(express.json());
     app.use(cookieParser());
 
-    // Light, safe helpers for images
+    // ---------- DB (non-blocking) ----------
+    const dbDir = path.join(process.cwd(), "data");
+    fs.mkdirSync(dbDir, { recursive: true });
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
+    }
+    const prisma = new PrismaClient({
+      log: ["query", "info", "warn", "error"],
+    });
+    prisma
+      .$connect()
+      .then(() => console.log("✅ Database connected successfully"))
+      .catch((e) =>
+        console.error("❌ Database connection failed (continuing):", e),
+      );
+
+    // ---------- JWT secret ----------
+    const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev";
+
+    // ---------- Multer ----------
+    const upload = multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    });
+
+    // ---------- Object Storage (lazy) ----------
+    let storageClient: Client | null = null;
+    async function getStorageClient(): Promise<Client> {
+      if (!storageClient) {
+        storageClient = new Client();
+        console.log("✅ Object Storage client initialized");
+      }
+      return storageClient;
+    }
+
+    // ---------- Helpers ----------
     function toNodeBuffer(v: unknown): Buffer {
       if (Buffer.isBuffer(v)) return v;
-      if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+      if (v instanceof Uint8Array)
+        return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
       if (Array.isArray(v) && v.length) {
         const first = (v as any)[0];
         if (Buffer.isBuffer(first)) return first;
-        if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+        if (first instanceof Uint8Array)
+          return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
       }
-      throw new Error("Unexpected storage value type");
+      throw new Error("Unexpected storage value type from downloadAsBytes");
     }
     function detectContentType(buf: Buffer, filename: string): string {
       const hex4 = buf.subarray(0, 4).toString("hex");
       if (hex4.startsWith("ffd8")) return "image/jpeg";
       if (hex4 === "89504e47") return "image/png";
-      if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+      if (
+        buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+        buf.subarray(8, 12).toString("ascii") === "WEBP"
+      )
+        return "image/webp";
       if (hex4.startsWith("4749")) return "image/gif";
       if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
       const ext = filename.split(".").pop()?.toLowerCase();
@@ -84,50 +137,25 @@ setImmediate(async () => {
       return "application/octet-stream";
     }
 
-    // --- DB (don't block startup / health) ---
-    const dbDir = path.join(process.cwd(), "data");
-    fs.mkdirSync(dbDir, { recursive: true });
-    if (!process.env.DATABASE_URL) {
-      process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
-    }
-    const { PrismaClient } = await import("@prisma/client");
-    const prisma = new PrismaClient();
-    prisma.$connect().then(() => console.log("✅ Database connected")).catch(e => {
-      console.error("❌ DB connect failed (continuing to serve):", e);
-    });
-
-    // --- JWT secret ---
-    const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev";
-
-    // --- Object Storage (lazy) ---
-    const { Client } = await import("@replit/object-storage");
-    let storageClient: InstanceType<typeof Client> | null = null;
-    async function getStorageClient() {
-      return storageClient ?? (storageClient = new Client());
-    }
-
-    // --- Multer setup ---
-    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
-    // --- Auth middleware ---
+    // ---------- AUTH MIDDLEWARE (your original) ----------
     const authenticateToken = (req: any, res: any, next: any) => {
-      const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-
-      if (!token) {
+      const token =
+        req.cookies?.token || req.headers.authorization?.split(" ")[1];
+      if (!token)
         return res.status(401).json({ error: "Access token required" });
-      }
-
       try {
-        const jwt = require("jsonwebtoken");
         const decoded = jwt.verify(token, JWT_SECRET) as any;
         req.user = decoded;
         next();
-      } catch (error) {
+      } catch {
         return res.status(403).json({ error: "Invalid or expired token" });
       }
     };
 
-    // === YOUR EXISTING ROUTES ===
+    // ======================
+    // 4) YOUR ORIGINAL ROUTES
+    // (UNCHANGED)
+    // ======================
 
     // Upload endpoint with automatic database update
     app.post("/api/upload", upload.single("image"), async (req, res) => {
@@ -135,54 +163,40 @@ setImmediate(async () => {
         if (!req.file) {
           return res.status(400).json({ error: "No file uploaded" });
         }
-
         const { restaurantId } = req.body;
         if (!restaurantId) {
           return res.status(400).json({ error: "Restaurant ID is required" });
         }
+        console.log("📤 Starting upload for restaurant:", restaurantId);
 
-        console.log("📤 Starting upload process for restaurant:", restaurantId);
-
-        // Get restaurant first to make sure it exists
         const restaurant = await prisma.restaurant.findUnique({
           where: { id: restaurantId },
         });
-
-        if (!restaurant) {
+        if (!restaurant)
           return res.status(404).json({ error: "Restaurant not found" });
-        }
 
-        // Create unique filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const extension = req.file.originalname.split(".").pop() || "jpg";
         const filename = `heroImage-${timestamp}.${extension}`;
         const key = `${restaurantId}/${filename}`;
 
-        console.log("📁 Uploading to object storage with key:", key);
-
-        // Upload to object storage
         const storage = await getStorageClient();
-        const uploadResult = await storage.uploadFromBytes(key, req.file.buffer, {
-          compress: false,
-        });
-
+        const uploadResult = await storage.uploadFromBytes(
+          key,
+          req.file.buffer,
+          { compress: false },
+        );
         if (!uploadResult.ok) {
-          return res.status(500).json({
-            error: "Upload failed",
-            details: uploadResult.error,
-          });
+          return res
+            .status(500)
+            .json({ error: "Upload failed", details: uploadResult.error });
         }
 
-        console.log("✅ Upload successful, updating database...");
-
-        // Update restaurant with new image URL
         const imageUrl = `/api/images/storage/${key}`;
         const updatedRestaurant = await prisma.restaurant.update({
           where: { id: restaurantId },
           data: { heroImageUrl: imageUrl },
         });
-
-        console.log("✅ Database updated with new image URL:", imageUrl);
 
         res.json({
           success: true,
@@ -229,7 +243,6 @@ setImmediate(async () => {
           "Content-Disposition": `inline; filename="${filename}"`,
         });
 
-        console.log(`✅ Serving ${key} (${contentType}, ${buf.length} bytes)`);
         return res.end(buf);
       } catch (err) {
         console.error("❌ Image proxy error:", err);
@@ -242,14 +255,11 @@ setImmediate(async () => {
       try {
         const { replId, filename } = req.params;
         const key = `${replId}/${filename}`;
-
         const storage = await getStorageClient();
         const out = (await storage.downloadAsBytes(key)) as
           | { ok: true; value: unknown }
           | { ok: false; error: unknown };
-
         if (!out?.ok) return res.sendStatus(404);
-
         const buf = toNodeBuffer(out.value);
         const contentType = detectContentType(buf, filename);
         res.set({
@@ -269,21 +279,15 @@ setImmediate(async () => {
     app.post("/api/auth/login", async (req, res) => {
       try {
         const { username, password } = req.body;
-
         if (!username || !password) {
           return res
             .status(400)
             .json({ error: "Username and password required" });
         }
 
-        const bcrypt = require("bcrypt");
-        const jwt = require("jsonwebtoken");
-
         const userAuth = await prisma.userAuth.findUnique({
           where: { username },
-          include: {
-            user: true,
-          },
+          include: { user: true },
         });
 
         if (
@@ -294,107 +298,54 @@ setImmediate(async () => {
         }
 
         const token = jwt.sign(
-          { userId: userAuth.user.id, username: userAuth.username },
+          {
+            userId: userAuth.user.id,
+            username: userAuth.username,
+          },
           JWT_SECRET,
           { expiresIn: "7d" },
         );
 
         res.cookie("token", token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: isProd,
           sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.json({
           user: {
             id: userAuth.user.id,
             username: userAuth.username,
+            name: userAuth.user.name,
+            email: userAuth.user.email,
           },
         });
       } catch (error) {
-        console.error("❌ Login error:", error);
+        console.error("Login error:", error);
         res.status(500).json({ error: "Login failed" });
       }
     });
 
-    // Registration endpoint
-    app.post("/api/auth/register", async (req, res) => {
+    // Check auth status
+    app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
       try {
-        const { username, password, email, fullName } = req.body;
-
-        if (!username || !password) {
-          return res
-            .status(400)
-            .json({ error: "Username and password required" });
-        }
-
-        const bcrypt = require("bcrypt");
-        const jwt = require("jsonwebtoken");
-
-        // Check if username exists
-        const existingAuth = await prisma.userAuth.findUnique({
-          where: { username },
+        const user = await prisma.user.findUnique({
+          where: { id: req.user.userId },
+          include: { auth: true },
         });
-
-        if (existingAuth) {
-          return res.status(409).json({ error: "Username already exists" });
-        }
-
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, 10);
-
-        // Create user and auth in transaction
-        const result = await prisma.$transaction(async (tx) => {
-          const user = await tx.user.create({
-            data: {
-              externalId: `user_${Date.now()}`,
-            },
-          });
-
-          const userAuth = await tx.userAuth.create({
-            data: {
-              userId: user.id,
-              username,
-              passwordHash,
-            },
-          });
-
-          if (email || fullName) {
-            await tx.userDetails.create({
-              data: {
-                userId: user.id,
-                email,
-                name: fullName,
-              },
-            });
-          }
-
-          return { user, userAuth };
-        });
-
-        const token = jwt.sign(
-          { userId: result.user.id, username: result.userAuth.username },
-          JWT_SECRET,
-          { expiresIn: "7d" },
-        );
-
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-
-        res.status(201).json({
+        if (!user) return res.status(404).json({ error: "User not found" });
+        res.json({
           user: {
-            id: result.user.id,
-            username: result.userAuth.username,
+            id: user.id,
+            username: user.auth?.username,
+            name: user.name,
+            email: user.email,
           },
         });
       } catch (error) {
-        console.error("❌ Registration error:", error);
-        res.status(500).json({ error: "Registration failed" });
+        console.error("Auth check error:", error);
+        res.status(500).json({ error: "Failed to check auth status" });
       }
     });
 
@@ -404,247 +355,113 @@ setImmediate(async () => {
       res.json({ message: "Logged out successfully" });
     });
 
-    // Current user endpoint
-    app.get("/api/auth/me", authenticateToken, async (req, res) => {
-      try {
-        const userAuth = await prisma.userAuth.findUnique({
-          where: { userId: req.user.userId },
-          include: {
-            user: {
-              include: {
-                details: true,
-              },
-            },
-          },
-        });
-
-        if (!userAuth) {
-          return res.status(404).json({ error: "User not found" });
-        }
-
-        res.json({
-          user: {
-            id: userAuth.user.id,
-            username: userAuth.username,
-            details: userAuth.user.details,
-          },
-        });
-      } catch (error) {
-        console.error("❌ Get current user error:", error);
-        res.status(500).json({ error: "Failed to get user info" });
-      }
-    });
-
-    // Get all restaurants
-    app.get("/api/restaurants", async (req, res) => {
-      try {
-        const restaurants = await prisma.restaurant.findMany({
-          include: {
-            _count: {
-              select: { reservations: true },
-            },
-          },
-        });
-        res.json(restaurants);
-      } catch (error) {
-        console.error("❌ Get restaurants error:", error);
-        res.status(500).json({ error: "Failed to fetch restaurants" });
-      }
-    });
-
-    // Get restaurant by ID or slug
-    app.get("/api/restaurants/:identifier", async (req, res) => {
-      try {
-        const { identifier } = req.params;
-
-        const restaurant = await prisma.restaurant.findFirst({
-          where: {
-            OR: [{ id: identifier }, { slug: identifier }],
-          },
-          include: {
-            inventory: {
-              include: {
-                timeSlot: true,
-              },
-            },
-          },
-        });
-
-        if (!restaurant) {
-          return res.status(404).json({ error: "Restaurant not found" });
-        }
-
-        res.json(restaurant);
-      } catch (error) {
-        console.error("❌ Get restaurant error:", error);
-        res.status(500).json({ error: "Failed to fetch restaurant" });
-      }
-    });
-
-    // Get available restaurants for today
+    // Get all restaurants with availability
     app.get("/api/discover/available-today", async (req, res) => {
       try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = new Date().toISOString().split("T")[0];
 
         const restaurants = await prisma.restaurant.findMany({
           include: {
-            inventory: {
-              where: {
-                date: {
-                  gte: today,
-                  lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
-                },
-                availableCount: {
-                  gt: 0,
-                },
-              },
-              include: {
-                timeSlot: true,
-              },
+            timeSlots: {
+              where: { date: today, status: "AVAILABLE" },
+              orderBy: [{ time: "asc" }, { partySize: "asc" }],
             },
           },
         });
 
         const availableRestaurants = restaurants
-          .filter((restaurant) => restaurant.inventory.length > 0)
-          .map((restaurant) => ({
+          .filter((r) => r.timeSlots.length > 0)
+          .map((r) => ({
             restaurant: {
-              id: restaurant.id,
-              name: restaurant.name,
-              slug: restaurant.slug,
-              neighborhood: restaurant.neighborhood,
-              hero_image_url: restaurant.heroImageUrl,
-              emoji: restaurant.emoji,
+              id: r.id,
+              name: r.name,
+              slug: r.slug,
+              neighborhood: r.neighborhood,
+              hero_image_url: r.heroImageUrl,
+              emoji: r.emoji,
             },
-            slots: restaurant.inventory.map((inv) => ({
-              slot_id: inv.id,
-              time: inv.timeSlot.time,
-              party_size: inv.partySize,
-              date: inv.date.toISOString().split("T")[0],
+            slots: r.timeSlots.map((slot) => ({
+              slot_id: slot.id,
+              time: slot.time,
+              party_size: slot.partySize,
+              date: slot.date,
             })),
           }));
 
         res.json({ restaurants: availableRestaurants });
       } catch (error) {
-        console.error("❌ Get available restaurants error:", error);
-        res.status(500).json({ error: "Failed to fetch available restaurants" });
+        console.error("Error fetching available restaurants:", error);
+        res.status(500).json({ error: "Failed to fetch restaurants" });
       }
     });
 
-    // Make a reservation
-    app.post("/api/reservations", authenticateToken, async (req, res) => {
+    // Get restaurant by slug with available time slots
+    app.get("/api/restaurants/:slug", async (req, res) => {
       try {
-        const { inventorySlotId, partySize, customerName, customerPhone } = req.body;
-        const userId = req.user.userId;
+        const { slug } = req.params;
+        const { date } = req.query;
+        const targetDate =
+          (date as string) || new Date().toISOString().split("T")[0];
 
-        if (!inventorySlotId || !partySize) {
-          return res.status(400).json({ error: "Missing required fields" });
-        }
-
-        const result = await prisma.$transaction(async (tx) => {
-          // Get the inventory slot
-          const inventorySlot = await tx.inventorySlot.findUnique({
-            where: { id: inventorySlotId },
-            include: {
-              restaurant: true,
-              timeSlot: true,
-            },
-          });
-
-          if (!inventorySlot) {
-            throw new Error("Inventory slot not found");
-          }
-
-          if (inventorySlot.availableCount <= 0) {
-            throw new Error("No availability for this slot");
-          }
-
-          // Create reservation
-          const reservation = await tx.reservation.create({
-            data: {
-              userId,
-              restaurantId: inventorySlot.restaurantId,
-              inventorySlotId,
-              partySize,
-              customerName: customerName || null,
-              customerPhone: customerPhone || null,
-              status: "confirmed",
-            },
-          });
-
-          // Decrease available count
-          await tx.inventorySlot.update({
-            where: { id: inventorySlotId },
-            data: {
-              availableCount: {
-                decrement: 1,
-              },
-            },
-          });
-
-          return {
-            reservation,
-            restaurant: inventorySlot.restaurant,
-            timeSlot: inventorySlot.timeSlot,
-            date: inventorySlot.date,
-          };
-        });
-
-        res.status(201).json(result);
-      } catch (error) {
-        console.error("❌ Create reservation error:", error);
-        res.status(500).json({
-          error: "Failed to create reservation",
-          details: error instanceof Error ? error.message : String(error),
-        });
-      }
-    });
-
-    // Get user's reservations
-    app.get("/api/reservations", authenticateToken, async (req, res) => {
-      try {
-        const userId = req.user.userId;
-
-        const reservations = await prisma.reservation.findMany({
-          where: { userId },
+        const restaurant = await prisma.restaurant.findUnique({
+          where: { slug },
           include: {
-            restaurant: true,
-            inventorySlot: {
-              include: {
-                timeSlot: true,
-              },
+            timeSlots: {
+              where: { date: targetDate, status: "AVAILABLE" },
+              orderBy: [{ time: "asc" }, { partySize: "asc" }],
             },
-          },
-          orderBy: {
-            createdAt: "desc",
           },
         });
 
-        res.json(reservations);
+        if (!restaurant)
+          return res.status(404).json({ error: "Restaurant not found" });
+
+        res.json({
+          restaurant: {
+            id: restaurant.id,
+            name: restaurant.name,
+            slug: restaurant.slug,
+            latitude: restaurant.latitude,
+            longitude: restaurant.longitude,
+            neighborhood: restaurant.neighborhood,
+            hero_image_url: restaurant.heroImageUrl,
+            emoji: restaurant.emoji,
+          },
+          slots: restaurant.timeSlots.map((slot) => ({
+            slot_id: slot.id,
+            time: slot.time,
+            party_size: slot.partySize,
+            date: slot.date,
+          })),
+        });
       } catch (error) {
-        console.error("❌ Get reservations error:", error);
-        res.status(500).json({ error: "Failed to fetch reservations" });
+        console.error("Error fetching restaurant:", error);
+        res.status(500).json({ error: "Failed to fetch restaurant" });
       }
     });
 
-    // Import admin routes
-    try {
-      const { default: adminRoutes } = await import("./routes/admin");
-      app.use("/api/admin", adminRoutes);
-    } catch (error) {
-      console.error("❌ Failed to load admin routes:", error);
-    }
+    // Admin routes
+    app.get(
+      "/api/admin/restaurants",
+      authenticateToken,
+      async (req: any, res) => {
+        try {
+          const isAdmin = req.user && req.user.role === "ADMIN";
+          if (!isAdmin)
+            return res.status(403).json({ error: "Admin access required" });
 
-    // Import auth routes
-    try {
-      const { default: authRoutes } = await import("./routes/auth");
-      app.use("/api/auth", authRoutes);
-    } catch (error) {
-      console.error("❌ Failed to load auth routes:", error);
-    }
+          const restaurants = await prisma.restaurant.findMany({
+            orderBy: { name: "asc" },
+          });
+          res.json({ restaurants });
+        } catch (error) {
+          console.error("Error fetching restaurants:", error);
+          res.status(500).json({ error: "Failed to fetch restaurants" });
+        }
+      },
+    );
 
-    // (Optional SPA fallback – make sure it doesn't shadow "/")
+    // ---------- Optional static (prod) ----------
     if (isProd) {
       const webDistPath = path.join(process.cwd(), "../..", "web", "dist");
       app.use(express.static(webDistPath, { index: false }));
@@ -653,13 +470,16 @@ setImmediate(async () => {
       });
     }
 
-    // Global error logging (don't exit in prod)
-    process.on("unhandledRejection", (r) => console.error("[API] UNHANDLED REJECTION:", r));
-    process.on("uncaughtException", (e) => console.error("[API] UNCAUGHT EXCEPTION:", e));
+    // ---------- Global error logs ----------
+    process.on("unhandledRejection", (r) =>
+      console.error("[API] UNHANDLED REJECTION:", r),
+    );
+    process.on("uncaughtException", (e) =>
+      console.error("[API] UNCAUGHT EXCEPTION:", e),
+    );
 
     console.log("[API] Bootstrap complete.");
   } catch (e) {
-    console.error("[API] Bootstrap failed:", e);
-    // DO NOT exit here; keep serving health checks
+    console.error("[API] Bootstrap failed (continuing to serve health):", e);
   }
 });
