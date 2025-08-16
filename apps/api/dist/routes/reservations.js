@@ -12,7 +12,7 @@ const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // Authentication middleware
 function authenticateToken(req, res, next) {
-    const authHeader = req.header('Authorization');
+    const authHeader = req.get('Authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
