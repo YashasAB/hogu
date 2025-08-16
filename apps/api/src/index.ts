@@ -60,7 +60,20 @@ async function startServer() {
   });
 
   // Initialize Object Storage Client
-  const storage = new Client();
+  let storageClient: Client | null = null;
+
+  async function getStorageClient(): Promise<Client> {
+    if (!storageClient) {
+      try {
+        storageClient = new Client();
+        console.log("✅ Object Storage client initialized");
+      } catch (error) {
+        console.error("❌ Failed to initialize Object Storage:", error);
+        throw error;
+      }
+    }
+    return storageClient;
+  }
 
   // Auth middleware
   const authenticateToken = (req: any, res: any, next: any) => {
@@ -147,6 +160,7 @@ async function startServer() {
       console.log("📁 Uploading to object storage with key:", key);
 
       // Upload to object storage
+      const storage = await getStorageClient();
       const uploadResult = await storage.uploadFromBytes(key, req.file.buffer, {
         compress: false,
       });
@@ -191,6 +205,7 @@ async function startServer() {
       const key = `${replId}/${filename}`;
       console.log("🖼️  Fetching image:", key);
 
+      const storage = await getStorageClient();
       const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
@@ -226,6 +241,8 @@ async function startServer() {
     try {
       const { replId, filename } = req.params;
       const key = `${replId}/${filename}`;
+
+      const storage = await getStorageClient();
       const out = (await storage.downloadAsBytes(key)) as
         | { ok: true; value: unknown }
         | { ok: false; error: unknown };
@@ -457,9 +474,7 @@ async function startServer() {
     console.log("[API] HEALTH HIT", new Date().toISOString());
     res.status(200).type("text/plain").send("ok");
   });
-  app.get("/health", (_req, res) =>
-    res.status(200).json({ status: "healthy" }),
-  );
+  app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
   app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
   // Start server
