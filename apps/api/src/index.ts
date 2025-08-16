@@ -39,7 +39,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 // ---- Health routes FIRST, before anything heavy ----
-app.get('/', (_req, res) => res.status(200).type('text/plain').send('ok'));
 app.get('/health', (_req, res) => res.status(200).json({ status: 'healthy' }));
 app.get('/ready', (_req, res) => res.status(200).json({ status: 'ready' }));
 
@@ -88,7 +87,7 @@ app.use('/api/admin', adminRoutes);
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {
-  app.get('*', (req, res) => {
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
     const webDistPath = path.join(__dirname, '../../web/dist');
     res.sendFile(path.join(webDistPath, 'index.html'));
   });
