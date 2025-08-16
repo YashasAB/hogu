@@ -72,11 +72,13 @@ async function startServer() {
   async function getStorageClient(): Promise<Client> {
     if (!storageClient) {
       try {
+        console.log("Attempting to initialize Object Storage...");
         storageClient = new Client();
         console.log("✅ Object Storage client initialized");
       } catch (error) {
         console.error("❌ Failed to initialize Object Storage:", error);
-        throw error;
+        console.log("Continuing without Object Storage...");
+        throw new Error("Object Storage not available");
       }
     }
     return storageClient;
