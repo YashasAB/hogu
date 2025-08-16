@@ -255,7 +255,7 @@ router.post('/', authenticateToken, async (req: Express.Request, res) => {
 });
 
 // Get specific reservation
-router.get('/:id', authenticateToken, async (req: Express.Request, res) => {
+router.get('/:id', authenticateToken, async (req: Express.Request & { params: { id: string } }, res) => {
   try {
     const userId = req.user!.userId;
     const reservationId = req.params.id;
@@ -294,7 +294,7 @@ router.get('/:id', authenticateToken, async (req: Express.Request, res) => {
 });
 
 // Cancel a reservation
-router.post('/:id/cancel', authenticateToken, async (req: Express.Request, res) => {
+router.post('/:id/cancel', authenticateToken, async (req: Express.Request & { params: { id: string } }, res) => {
   try {
     const userId = req.user!.userId;
     const reservationId = req.params.id;
