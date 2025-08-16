@@ -1,0 +1,176 @@
+import express from "express";
+import cors from "cors";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+import cookieParser from "cookie-parser";
+// import other deps *after* we bind if you want, but it’s fine either way
+
+const app = express();
+
+// === HEALTH FIRST (fast, no deps) ===
+app.get("/", (_req, res) => {
+  console.log("[API] HEALTH HIT", new Date().toISOString());
+  res.status(200).type("text/plain").send("ok");
+});
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+
+// === BIND IMMEDIATELY ===
+// In production (Autoscale), ALWAYS use injected PORT. Fail fast if missing.
+const isProd = process.env.NODE_ENV === "production" || process.env.REPLIT_ENVIRONMENT === "production";
+const injected = process.env.PORT;
+const PORT = isProd ? Number(injected) : Number(injected || 8080);
+
+if (isProd && !injected) {
+  console.error("[API] FATAL: PORT was not injected by platform. Exiting.");
+  process.exit(1);
+}
+
+// Prevent double-binding during hot reload
+if (!(globalThis as any).__apiServerPrimary) {
+  const primary = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`);
+  });
+  (globalThis as any).__apiServerPrimary = primary;
+
+  // Optional “belt & suspenders”: also open 5555 in prod to satisfy any stale mapping
+  // Remove this once promote works and the mapping is clean.
+  if (isProd && PORT !== 5555 && !(globalThis as any).__apiServerCompat) {
+    try {
+      const compat = app.listen(5555, "0.0.0.0", () => {
+        console.log("[API] ALSO LISTENING on 5555 (compat for stale port mapping)");
+      });
+      (globalThis as any).__apiServerCompat = compat;
+    } catch (e) {
+      console.log("[API] Compat 5555 bind not used (ok).");
+    }
+  }
+}
+
+// === DEFER HEAVY SETUP UNTIL AFTER LISTEN ===
+setImmediate(async () => {
+  try {
+    console.log("[API] Bootstrapping middleware & routes…");
+
+    app.set("trust proxy", true);
+    app.use(cors({ origin: true, credentials: true }));
+    app.use(express.json());
+    app.use(cookieParser());
+
+    // Light, safe helpers for images
+    function toNodeBuffer(v: unknown): Buffer {
+      if (Buffer.isBuffer(v)) return v;
+      if (v instanceof Uint8Array) return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+      if (Array.isArray(v) && v.length) {
+        const first = (v as any)[0];
+        if (Buffer.isBuffer(first)) return first;
+        if (first instanceof Uint8Array) return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+      }
+      throw new Error("Unexpected storage value type");
+    }
+    function detectContentType(buf: Buffer, filename: string): string {
+      const hex4 = buf.subarray(0, 4).toString("hex");
+      if (hex4.startsWith("ffd8")) return "image/jpeg";
+      if (hex4 === "89504e47") return "image/png";
+      if (buf.subarray(0,4).toString("ascii")==="RIFF" && buf.subarray(8,12).toString("ascii")==="WEBP") return "image/webp";
+      if (hex4.startsWith("4749")) return "image/gif";
+      if (filename.toLowerCase().endsWith(".svg")) return "image/svg+xml";
+      const ext = filename.split(".").pop()?.toLowerCase();
+      if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+      if (ext === "png") return "image/png";
+      if (ext === "gif") return "image/gif";
+      if (ext === "webp") return "image/webp";
+      return "application/octet-stream";
+    }
+
+    // --- DB (don’t block startup / health) ---
+    const dbDir = path.join(process.cwd(), "data");
+    fs.mkdirSync(dbDir, { recursive: true });
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
+    }
+    const { PrismaClient } = await import("@prisma/client");
+    const prisma = new PrismaClient();
+    prisma.$connect().then(() => console.log("✅ Database connected")).catch(e => {
+      console.error("❌ DB connect failed (continuing to serve):", e);
+    });
+
+    // --- Object Storage (lazy) ---
+    const { Client } = await import("@replit/object-storage");
+    let storageClient: InstanceType<typeof Client> | null = null;
+    async function getStorageClient() {
+      return storageClient ?? (storageClient = new Client());
+    }
+
+    // --- Upload (example) ---
+    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+    app.post("/api/upload", upload.single("image"), async (req, res) => {
+      try {
+        if (!req.file) return res.status(400).json({ error: "No file" });
+        const restaurantId = req.body.restaurantId;
+        if (!restaurantId) return res.status(400).json({ error: "restaurantId required" });
+
+        const ts = new Date().toISOString().replace(/[:.]/g, "-");
+        const ext = req.file.originalname.split(".").pop() || "jpg";
+        const key = `${restaurantId}/heroImage-${ts}.${ext}`;
+
+        const storage = await getStorageClient();
+        const put = await storage.uploadFromBytes(key, req.file.buffer, { compress: false });
+        if (!put.ok) return res.status(500).json({ error: "upload failed", details: put.error });
+
+        const url = `/api/images/storage/${key}`;
+        await prisma.restaurant.update({ where: { id: restaurantId }, data: { heroImageUrl: url } }).catch(() => {});
+        res.json({ success: true, url, key });
+      } catch (e) {
+        console.error("Upload error:", e);
+        res.status(500).json({ error: "upload failed" });
+      }
+    });
+
+    // --- Image proxy ---
+    app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
+      try {
+        const { tenantId, filename } = req.params;
+        const key = `${tenantId}/${filename}`;
+        const storage = await getStorageClient();
+        const out: any = await storage.downloadAsBytes(key);
+        if (!out?.ok || !out?.value) return res.status(404).json({ error: "Image not found", key, details: out?.error });
+
+        const buf = toNodeBuffer(out.value);
+        const ct  = detectContentType(buf, filename);
+        res.set({
+          "Content-Type": ct,
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Length": String(buf.length),
+          "Content-Disposition": `inline; filename="${filename}"`,
+        });
+        return res.end(buf);
+      } catch (e) {
+        console.error("Image proxy error:", e);
+        res.status(500).json({ error: "Failed to serve image" });
+      }
+    });
+
+    // … add the rest of your routes here …
+
+    // (Optional SPA fallback – make sure it doesn’t shadow "/")
+    if (isProd) {
+      const webDistPath = path.join(process.cwd(), "../..", "web", "dist");
+      app.use(express.static(webDistPath, { index: false }));
+      app.get(/^\/(?!api\/)(?!$)(?!health$)(?!ready$).*/, (_req, res) => {
+        res.sendFile(path.join(webDistPath, "index.html"));
+      });
+    }
+
+    // Global error logging (don’t exit in prod)
+    process.on("unhandledRejection", (r) => console.error("[API] UNHANDLED REJECTION:", r));
+    process.on("uncaughtException", (e) => console.error("[API] UNCAUGHT EXCEPTION:", e));
+
+    console.log("[API] Bootstrap complete.");
+  } catch (e) {
+    console.error("[API] Bootstrap failed:", e);
+    // DO NOT exit here; keep serving health checks
+  }
+});
