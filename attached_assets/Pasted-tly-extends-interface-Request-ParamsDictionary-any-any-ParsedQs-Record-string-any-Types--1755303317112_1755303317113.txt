@@ -1,0 +1,49 @@
+tly extends interface 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of property 'user' are incompatible.
+    Type '{ userId: string; } | undefined' is not assignable to type '{ userId: string; username: string; role?: string | undefined; } | undefined'.
+      Property 'username' is missing in type '{ userId: string; }' but required in type '{ userId: string; username: string; role?: string | undefined; }'.
+
+6 export interface AuthenticatedRequest extends Request {
+                   ~~~~~~~~~~~~~~~~~~~~
+
+  src/index.ts:17:32
+    17       user?: { userId: string; username: string; role?: string };
+                                      ~~~~~~~~
+    'username' is declared here.
+
+src/routes/reservations.ts:14:33 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+14 function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+                                   ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/reservations.ts:87:48 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+87 router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
+                                                  ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/reservations.ts:139:49 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+139 router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
+                                                    ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/reservations.ts:245:51 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+245 router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
+                                                      ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/reservations.ts:284:59 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+284 router.post('/:id/cancel', authenticateToken, async (req: AuthenticatedRequest, res) => {
+                                                              ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/reservations.ts:343:54 - error TS2304: Cannot find name 'AuthenticatedRequest'.
+
+343 router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res) => {
+                                                         ~~~~~~~~~~~~~~~~~~~~
+
+
+Found 7 errors in 2 files.
+
+Errors  Files
+     1  src/middleware/auth.ts:6
+     6  src/routes/reservations.ts:14
