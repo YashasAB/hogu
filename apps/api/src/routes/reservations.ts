@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { z } from 'zod';
 import express from 'express';
@@ -11,11 +10,7 @@ const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Authentication middleware
-interface AuthenticatedRequest extends Request {
-  user?: { userId: string };
-}
-
+// Authentication middleware - using global interface from index.ts
 function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.header('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
@@ -92,7 +87,7 @@ router.post('/:id/confirm', async (req, res) => {
 router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user!.userId;
-    
+
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
     console.log('Today date for filtering:', today);
@@ -169,13 +164,13 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
         let hours = parseInt(timeMatch[1]);
         const minutes = timeMatch[2];
         const period = timeMatch[3].toUpperCase();
-        
+
         if (period === 'PM' && hours !== 12) {
           hours += 12;
         } else if (period === 'AM' && hours === 12) {
           hours = 0;
         }
-        
+
         normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
       }
     }
