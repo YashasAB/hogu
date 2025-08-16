@@ -21,7 +21,9 @@ declare global {
 
 const app = express();
 
+console.log("📞 About to call startServer()");
 async function startServer() {
+  console.log("🚀 startServer function called");
   const defaultPort = Number(process.env.PORT || 8080);
 
   // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
@@ -481,7 +483,9 @@ async function startServer() {
     console.log("[API] HEALTH HIT", new Date().toISOString());
     res.status(200).type("text/plain").send("ok");
   });
-  app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+  app.get("/health", (_req, res) =>
+    res.status(200).json({ status: "healthy" }),
+  );
   app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
   // Start server
