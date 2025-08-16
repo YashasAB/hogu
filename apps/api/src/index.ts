@@ -31,13 +31,25 @@ async function startServer() {
 
   serverStarted = true;
   console.log("🚀 startServer function called");
+  
+  // Add timeout helper
+  const timeout = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  
   const defaultPort = Number(process.env.PORT || 8080);
 
-  // In production, use exact PORT env var. In dev, use get-port to avoid conflicts
-  const PORT =
-    process.env.NODE_ENV === "production"
-      ? defaultPort
-      : await getPort({ port: defaultPort });
+  // Fix port setup with timeout
+  let PORT = defaultPort;
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      PORT = await Promise.race([
+        getPort({ port: defaultPort }),
+        timeout(3000).then(() => { throw new Error('Port detection timeout'); })
+      ]);
+    } catch (error) {
+      console.log("Port detection timed out, using default port");
+      PORT = defaultPort;
+    }
+  }
 
   console.log("Environment check:");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -60,7 +72,18 @@ async function startServer() {
     process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
   }
 
-  const prisma = new PrismaClient();
+  // Fix Prisma with timeout
+  let prisma;
+  try {
+    prisma = await Promise.race([
+      Promise.resolve(new PrismaClient()),
+      timeout(5000).then(() => { throw new Error('Prisma client creation timeout'); })
+    ]);
+    console.log("Prisma client created successfully");
+  } catch (error) {
+    console.log("Prisma client creation timed out, using fallback");
+    prisma = new PrismaClient(); // Fallback without timeout
+  }
 
   // JWT secret
   const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev";
@@ -77,11 +100,14 @@ async function startServer() {
   let storageClient: Client | null = null;
 
   async function getStorageClient(): Promise<Client> {
-    console.log("storage client setup start");
     if (!storageClient) {
       try {
         console.log("Attempting to initialize Object Storage...");
-        storageClient = new Client();
+        // Fix storage client with timeout
+        storageClient = await Promise.race([
+          Promise.resolve(new Client()),
+          timeout(5000).then(() => { throw new Error('Storage client timeout'); })
+        ]);
         console.log("✅ Object Storage client initialized");
       } catch (error) {
         console.error("❌ Failed to initialize Object Storage:", error);
@@ -89,14 +115,12 @@ async function startServer() {
         throw new Error("Object Storage not available");
       }
     }
-    console.log("storage client setup complete");
     return storageClient;
   }
   console.log("storage client setup complete");
   console.log("auth middleware setup start");
   // Auth middleware
   const authenticateToken = (req: any, res: any, next: any) => {
-    console.log("auth middleware setup start");
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -107,7 +131,6 @@ async function startServer() {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       req.user = decoded;
       next();
-      console.log("auth middleware setup complete");
     } catch (error) {
       return res.status(403).json({ error: "Invalid or expired token" });
     }
