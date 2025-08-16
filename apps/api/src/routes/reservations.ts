@@ -25,7 +25,7 @@ type AuthenticatedRequest = Express.Request & {
 
 // Authentication middleware
 function authenticateToken(req: Express.Request, res: Response, next: NextFunction) {
-  const authHeader = req.header('Authorization');
+  const authHeader = req.get('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
   if (!token) {
