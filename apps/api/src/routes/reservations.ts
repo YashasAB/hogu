@@ -25,7 +25,7 @@ type AuthenticatedRequest = Express.Request & {
 
 // Authentication middleware
 function authenticateToken(req: Express.Request, res: Response, next: NextFunction) {
-  const authHeader = req.header('Authorization');
+  const authHeader = req.get('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
   if (!token) {
@@ -33,7 +33,7 @@ function authenticateToken(req: Express.Request, res: Response, next: NextFuncti
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; username: string; role?: string };
     req.user = decoded;
     next();
   } catch (error) {

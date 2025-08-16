@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export interface AuthenticatedRequest extends Request {
   restaurantId?: string;
-  user?: { userId: string };
+  user?: { userId: string; username: string; role?: string };
 }
 
 export interface AuthenticatedRestaurantRequest extends Request {
