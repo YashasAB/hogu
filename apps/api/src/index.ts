@@ -1,15 +1,16 @@
+// apps/api/src/index.ts
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
-import cookieParser from "cookie-parser";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { Client } from "@replit/object-storage";
 
-// ---- Express Request augmentation (for req.user) ----
+// ---- types for req.user ----
 declare global {
   namespace Express {
     interface Request {
@@ -18,64 +19,54 @@ declare global {
   }
 }
 
+const BOOT_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const app = express();
 
-// ======================
-// 1) HEALTH FIRST
-// ======================
+// 1) Health endpoints FIRST
 app.get("/", (_req, res) => {
-  console.log("[API] HEALTH HIT", new Date().toISOString());
+  console.log(
+    `[HEALTH] ok BOOT_ID=${BOOT_ID} time=${new Date().toISOString()}`,
+  );
   res.status(200).type("text/plain").send("ok");
 });
-app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
-app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+app.get("/health", (_req, res) =>
+  res.status(200).json({ status: "healthy", boot: BOOT_ID }),
+);
+app.get("/ready", (_req, res) =>
+  res.status(200).json({ status: "ready", boot: BOOT_ID }),
+);
 
-// ======================
-// 2) BIND IMMEDIATELY
-// ======================
+// 2) Bind immediately on platform PORT (or 8080 locally)
 const isProd =
   process.env.NODE_ENV === "production" ||
   process.env.REPLIT_ENVIRONMENT === "production";
-const injected = process.env.PORT;
-const PORT = isProd ? Number(injected) : Number(injected || 8080);
+const PORT = Number(process.env.PORT || 8080);
 
-if (isProd && !injected) {
-  console.error(
-    "[API] FATAL: PORT not injected by platform. Exiting so deploy retries.",
+const server = app.listen(PORT, "0.0.0.0");
+server.on("listening", () => {
+  console.log(
+    `[BOOT] BOOT_ID=${BOOT_ID} NODE_ENV=${process.env.NODE_ENV} PORT=${PORT}`,
   );
-  process.exit(1);
-}
+  console.log(`[BOOT] Health: http://0.0.0.0:${PORT}/`);
+});
+server.on("error", (err) => {
+  console.error("[BOOT] listen error:", err);
+});
 
-// avoid double-binding on hot reloads
-if (!(globalThis as any).__apiServerPrimary) {
-  const s = app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-      `[API] LISTENING PORT: ${PORT} PID: ${process.pid} NODE_ENV: ${process.env.NODE_ENV}`,
-    );
-    console.log(`[API] Health: http://0.0.0.0:${PORT}/`);
-  });
-  (globalThis as any).__apiServerPrimary = s;
-}
-
-// ======================
-// 3) DEFER SETUP UNTIL AFTER LISTEN
-// ======================
-setImmediate(async () => {
+// 3) Now wire the rest, after we are listening
+(async () => {
   try {
-    console.log("[API] Bootstrapping app…");
-
-    // ---------- Middleware ----------
+    // Middleware
     app.set("trust proxy", true);
     app.use(cors({ origin: true, credentials: true }));
     app.use(express.json());
     app.use(cookieParser());
 
-    // ---------- DB (non-blocking) ----------
+    // DB setup (non-blocking)
     const dbDir = path.join(process.cwd(), "data");
     fs.mkdirSync(dbDir, { recursive: true });
-    if (!process.env.DATABASE_URL) {
+    if (!process.env.DATABASE_URL)
       process.env.DATABASE_URL = `file:${path.join(dbDir, "prod.db")}`;
-    }
     const prisma = new PrismaClient({
       log: ["query", "info", "warn", "error"],
     });
@@ -86,16 +77,16 @@ setImmediate(async () => {
         console.error("❌ Database connection failed (continuing):", e),
       );
 
-    // ---------- JWT secret ----------
+    // JWT secret
     const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev";
 
-    // ---------- Multer ----------
+    // Multer
     const upload = multer({
       storage: multer.memoryStorage(),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      limits: { fileSize: 10 * 1024 * 1024 },
     });
 
-    // ---------- Object Storage (lazy) ----------
+    // Object storage (lazy)
     let storageClient: Client | null = null;
     async function getStorageClient(): Promise<Client> {
       if (!storageClient) {
@@ -105,7 +96,7 @@ setImmediate(async () => {
       return storageClient;
     }
 
-    // ---------- Helpers ----------
+    // Helpers
     function toNodeBuffer(v: unknown): Buffer {
       if (Buffer.isBuffer(v)) return v;
       if (v instanceof Uint8Array)
@@ -137,7 +128,7 @@ setImmediate(async () => {
       return "application/octet-stream";
     }
 
-    // ---------- AUTH MIDDLEWARE (your original) ----------
+    // ---- AUTH MIDDLEWARE (yours) ----
     const authenticateToken = (req: any, res: any, next: any) => {
       const token =
         req.cookies?.token || req.headers.authorization?.split(" ")[1];
@@ -152,22 +143,18 @@ setImmediate(async () => {
       }
     };
 
-    // ======================
-    // 4) YOUR ORIGINAL ROUTES
-    // (UNCHANGED)
-    // ======================
+    // =========================
+    // YOUR ROUTES (UNCHANGED)
+    // =========================
 
-    // Upload endpoint with automatic database update
+    // Upload image: multipart field "image" and body "restaurantId"
     app.post("/api/upload", upload.single("image"), async (req, res) => {
       try {
-        if (!req.file) {
+        if (!req.file)
           return res.status(400).json({ error: "No file uploaded" });
-        }
         const { restaurantId } = req.body;
-        if (!restaurantId) {
+        if (!restaurantId)
           return res.status(400).json({ error: "Restaurant ID is required" });
-        }
-        console.log("📤 Starting upload for restaurant:", restaurantId);
 
         const restaurant = await prisma.restaurant.findUnique({
           where: { id: restaurantId },
@@ -176,21 +163,18 @@ setImmediate(async () => {
           return res.status(404).json({ error: "Restaurant not found" });
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const extension = req.file.originalname.split(".").pop() || "jpg";
-        const filename = `heroImage-${timestamp}.${extension}`;
+        const ext = req.file.originalname.split(".").pop() || "jpg";
+        const filename = `heroImage-${timestamp}.${ext}`;
         const key = `${restaurantId}/${filename}`;
 
         const storage = await getStorageClient();
-        const uploadResult = await storage.uploadFromBytes(
-          key,
-          req.file.buffer,
-          { compress: false },
-        );
-        if (!uploadResult.ok) {
+        const up = await storage.uploadFromBytes(key, req.file.buffer, {
+          compress: false,
+        });
+        if (!up.ok)
           return res
             .status(500)
-            .json({ error: "Upload failed", details: uploadResult.error });
-        }
+            .json({ error: "Upload failed", details: up.error });
 
         const imageUrl = `/api/images/storage/${key}`;
         const updatedRestaurant = await prisma.restaurant.update({
@@ -204,53 +188,53 @@ setImmediate(async () => {
           filename,
           restaurant: updatedRestaurant,
         });
-      } catch (error) {
-        console.error("❌ Upload error:", error);
-        res.status(500).json({
-          error: "Upload failed",
-          details: error instanceof Error ? error.message : String(error),
-        });
+      } catch (e) {
+        console.error("❌ Upload error:", e);
+        res
+          .status(500)
+          .json({
+            error: "Upload failed",
+            details: e instanceof Error ? e.message : String(e),
+          });
       }
     });
 
-    // GET /api/images/storage/:replId/:filename
+    // Serve stored image
     app.get("/api/images/storage/:replId/:filename", async (req, res) => {
       try {
         const { replId, filename } = req.params;
         const key = `${replId}/${filename}`;
-        console.log("🖼️  Fetching image:", key);
-
         const storage = await getStorageClient();
         const out = (await storage.downloadAsBytes(key)) as
           | { ok: true; value: unknown }
           | { ok: false; error: unknown };
-
-        if (!out?.ok) {
-          console.warn("❌ Not found:", key, out?.error);
+        if (!out.ok)
           return res
             .status(404)
-            .json({ error: "Image not found", key, details: out?.error });
-        }
+            .json({
+              error: "Image not found",
+              key,
+              details: (out as any).error,
+            });
 
         const buf = toNodeBuffer(out.value);
-        const contentType = detectContentType(buf, filename);
+        const ct = detectContentType(buf, filename);
 
         res.set({
-          "Content-Type": contentType,
+          "Content-Type": ct,
           "Cache-Control": "public, max-age=31536000, immutable",
           "Access-Control-Allow-Origin": "*",
           "Content-Length": String(buf.length),
           "Content-Disposition": `inline; filename="${filename}"`,
         });
-
         return res.end(buf);
-      } catch (err) {
-        console.error("❌ Image proxy error:", err);
+      } catch (e) {
+        console.error("❌ Image proxy error:", e);
         return res.status(500).json({ error: "Failed to serve image" });
       }
     });
 
-    // HEAD for probes/CDNs
+    // HEAD for image
     app.head("/api/images/storage/:replId/:filename", async (req, res) => {
       try {
         const { replId, filename } = req.params;
@@ -259,11 +243,11 @@ setImmediate(async () => {
         const out = (await storage.downloadAsBytes(key)) as
           | { ok: true; value: unknown }
           | { ok: false; error: unknown };
-        if (!out?.ok) return res.sendStatus(404);
+        if (!out.ok) return res.sendStatus(404);
         const buf = toNodeBuffer(out.value);
-        const contentType = detectContentType(buf, filename);
+        const ct = detectContentType(buf, filename);
         res.set({
-          "Content-Type": contentType,
+          "Content-Type": ct,
           "Cache-Control": "public, max-age=31536000, immutable",
           "Access-Control-Allow-Origin": "*",
           "Content-Length": String(buf.length),
@@ -275,21 +259,19 @@ setImmediate(async () => {
       }
     });
 
-    // Login endpoint
+    // Auth
     app.post("/api/auth/login", async (req, res) => {
       try {
         const { username, password } = req.body;
-        if (!username || !password) {
+        if (!username || !password)
           return res
             .status(400)
             .json({ error: "Username and password required" });
-        }
 
         const userAuth = await prisma.userAuth.findUnique({
           where: { username },
           include: { user: true },
         });
-
         if (
           !userAuth ||
           !(await bcrypt.compare(password, userAuth.passwordHash))
@@ -298,10 +280,7 @@ setImmediate(async () => {
         }
 
         const token = jwt.sign(
-          {
-            userId: userAuth.user.id,
-            username: userAuth.username,
-          },
+          { userId: userAuth.user.id, username: userAuth.username },
           JWT_SECRET,
           { expiresIn: "7d" },
         );
@@ -321,13 +300,12 @@ setImmediate(async () => {
             email: userAuth.user.email,
           },
         });
-      } catch (error) {
-        console.error("Login error:", error);
+      } catch (e) {
+        console.error("Login error:", e);
         res.status(500).json({ error: "Login failed" });
       }
     });
 
-    // Check auth status
     app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
       try {
         const user = await prisma.user.findUnique({
@@ -343,23 +321,22 @@ setImmediate(async () => {
             email: user.email,
           },
         });
-      } catch (error) {
-        console.error("Auth check error:", error);
+      } catch (e) {
+        console.error("Auth check error:", e);
         res.status(500).json({ error: "Failed to check auth status" });
       }
     });
 
-    // Logout endpoint
-    app.post("/api/auth/logout", (req, res) => {
+    app.post("/api/auth/logout", (_req, res) => {
       res.clearCookie("token");
       res.json({ message: "Logged out successfully" });
     });
 
-    // Get all restaurants with availability
-    app.get("/api/discover/available-today", async (req, res) => {
+    // Discover
+    app.get("/api/discover/available-today", async (_req, res) => {
       try {
         const today = new Date().toISOString().split("T")[0];
-
+        const prisma = new PrismaClient();
         const restaurants = await prisma.restaurant.findMany({
           include: {
             timeSlots: {
@@ -369,7 +346,7 @@ setImmediate(async () => {
           },
         });
 
-        const availableRestaurants = restaurants
+        const out = restaurants
           .filter((r) => r.timeSlots.length > 0)
           .map((r) => ({
             restaurant: {
@@ -388,14 +365,14 @@ setImmediate(async () => {
             })),
           }));
 
-        res.json({ restaurants: availableRestaurants });
-      } catch (error) {
-        console.error("Error fetching available restaurants:", error);
+        res.json({ restaurants: out });
+      } catch (e) {
+        console.error("Error fetching available restaurants:", e);
         res.status(500).json({ error: "Failed to fetch restaurants" });
       }
     });
 
-    // Get restaurant by slug with available time slots
+    // Restaurant by slug
     app.get("/api/restaurants/:slug", async (req, res) => {
       try {
         const { slug } = req.params;
@@ -403,6 +380,7 @@ setImmediate(async () => {
         const targetDate =
           (date as string) || new Date().toISOString().split("T")[0];
 
+        const prisma = new PrismaClient();
         const restaurant = await prisma.restaurant.findUnique({
           where: { slug },
           include: {
@@ -412,7 +390,6 @@ setImmediate(async () => {
             },
           },
         });
-
         if (!restaurant)
           return res.status(404).json({ error: "Restaurant not found" });
 
@@ -434,13 +411,13 @@ setImmediate(async () => {
             date: slot.date,
           })),
         });
-      } catch (error) {
-        console.error("Error fetching restaurant:", error);
+      } catch (e) {
+        console.error("Error fetching restaurant:", e);
         res.status(500).json({ error: "Failed to fetch restaurant" });
       }
     });
 
-    // Admin routes
+    // Admin
     app.get(
       "/api/admin/restaurants",
       authenticateToken,
@@ -450,36 +427,28 @@ setImmediate(async () => {
           if (!isAdmin)
             return res.status(403).json({ error: "Admin access required" });
 
+          const prisma = new PrismaClient();
           const restaurants = await prisma.restaurant.findMany({
             orderBy: { name: "asc" },
           });
           res.json({ restaurants });
-        } catch (error) {
-          console.error("Error fetching restaurants:", error);
+        } catch (e) {
+          console.error("Error fetching restaurants:", e);
           res.status(500).json({ error: "Failed to fetch restaurants" });
         }
       },
     );
 
-    // ---------- Optional static (prod) ----------
-    if (isProd) {
-      const webDistPath = path.join(process.cwd(), "../..", "web", "dist");
-      app.use(express.static(webDistPath, { index: false }));
-      app.get(/^\/(?!api\/)(?!$)(?!health$)(?!ready$).*/, (_req, res) => {
-        res.sendFile(path.join(webDistPath, "index.html"));
-      });
-    }
-
-    // ---------- Global error logs ----------
-    process.on("unhandledRejection", (r) =>
-      console.error("[API] UNHANDLED REJECTION:", r),
-    );
-    process.on("uncaughtException", (e) =>
-      console.error("[API] UNCAUGHT EXCEPTION:", e),
-    );
-
-    console.log("[API] Bootstrap complete.");
+    console.log("[BOOT] Routes and middleware are live. BOOT_ID=", BOOT_ID);
   } catch (e) {
-    console.error("[API] Bootstrap failed (continuing to serve health):", e);
+    console.error("[BOOT] Post-bind bootstrap failed (health still live):", e);
   }
-});
+})();
+
+// Global error logs
+process.on("unhandledRejection", (r) =>
+  console.error("[API] UNHANDLED REJECTION:", r),
+);
+process.on("uncaughtException", (e) =>
+  console.error("[API] UNCAUGHT EXCEPTION:", e),
+);

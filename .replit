@@ -9,17 +9,8 @@ channel = "stable-25_05"
 packages = ["psmisc", "lsof"]
 
 [deployment]
-build = [
-  "bash",
-  "-lc",
-  "set -euo pipefail; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -f package-lock.json apps/api/package-lock.json apps/web/package-lock.json || true; pnpm install --no-frozen-lockfile || true; if [ -d apps/web ]; then (cd apps/web && pnpm install --no-frozen-lockfile && pnpm build); fi; cd apps/api && pnpm install --no-frozen-lockfile && pnpm build; mkdir -p data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm prisma generate; pnpm prisma migrate deploy || pnpm prisma db push",
-]
-
-run = [
-  "bash",
-  "-lc",
-  "cd apps/api && export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; exec env PORT=${PORT:-8080} NODE_ENV=production node dist/index.js",
-]
+build = ["bash","-lc","set -e; corepack enable; corepack prepare pnpm@8.15.6 --activate; pnpm -v; rm -rf apps/api/dist; pnpm install --no-frozen-lockfile; pnpm -C apps/api install --no-frozen-lockfile; pnpm -C apps/api prisma generate; pnpm -C apps/api build; mkdir -p apps/api/data; export DATABASE_URL=${DATABASE_URL:-file:./data/prod.db}; pnpm -C apps/api prisma migrate deploy || pnpm -C apps/api prisma db push"]
+run = ["bash","-lc","cd apps/api && exec env NODE_ENV=production node dist/index.js"]
 
 [objectStorage]
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
