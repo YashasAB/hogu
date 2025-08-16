@@ -79,16 +79,6 @@ async function startServer() {
     }
   };
 
-  // Health check endpoint FIRST and non-blocking
-  app.get("/", (_req, res) => {
-    console.log("[API] HEALTH HIT", new Date().toISOString());
-    res.status(200).type("text/plain").send("ok");
-  });
-  app.get("/health", (_req, res) =>
-    res.status(200).json({ status: "healthy" }),
-  );
-  app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
-
   // Helper function to normalize buffer data
   function toNodeBuffer(v: unknown): Buffer {
     if (Buffer.isBuffer(v)) return v;
@@ -461,6 +451,16 @@ async function startServer() {
       }
     },
   );
+
+  // Health check endpoint FIRST and non-blocking
+  app.get("/", (_req, res) => {
+    console.log("[API] HEALTH HIT", new Date().toISOString());
+    res.status(200).type("text/plain").send("ok");
+  });
+  app.get("/health", (_req, res) =>
+    res.status(200).json({ status: "healthy" }),
+  );
+  app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 
   // Start server
   app.listen(PORT, "0.0.0.0", () => {
