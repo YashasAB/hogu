@@ -1,9 +1,8 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-import { Response, NextFunction } from 'express';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -24,7 +23,7 @@ type AuthenticatedRequest = Express.Request & {
 };
 
 // Authentication middleware
-function authenticateToken(req: Express.Request, res: Response, next: NextFunction) {
+function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.get('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
@@ -97,7 +96,7 @@ router.post('/:id/confirm', async (req, res) => {
 });
 
 // Get user's reservations
-router.get('/', authenticateToken, async (req: Express.Request, res) => {
+router.get('/', authenticateToken, async (req: Request, res) => {
   try {
     const userId = req.user!.userId;
 
@@ -149,7 +148,7 @@ router.get('/', authenticateToken, async (req: Express.Request, res) => {
 });
 
 // Create a reservation
-router.post('/', authenticateToken, async (req: Express.Request & { body: any }, res) => {
+router.post('/', authenticateToken, async (req: Request & { body: any }, res) => {
   try {
     const userId = req.user!.userId;
     const { restaurantSlug, date, time, partySize } = req.body;
@@ -255,7 +254,7 @@ router.post('/', authenticateToken, async (req: Express.Request & { body: any },
 });
 
 // Get specific reservation
-router.get('/:id', authenticateToken, async (req: Express.Request & { params: { id: string } }, res) => {
+router.get('/:id', authenticateToken, async (req: Request & { params: { id: string } }, res) => {
   try {
     const userId = req.user!.userId;
     const reservationId = req.params.id;
@@ -294,7 +293,7 @@ router.get('/:id', authenticateToken, async (req: Express.Request & { params: { 
 });
 
 // Cancel a reservation
-router.post('/:id/cancel', authenticateToken, async (req: Express.Request & { params: { id: string } }, res) => {
+router.post('/:id/cancel', authenticateToken, async (req: Request & { params: { id: string } }, res) => {
   try {
     const userId = req.user!.userId;
     const reservationId = req.params.id;
@@ -353,7 +352,7 @@ router.post('/:id/cancel', authenticateToken, async (req: Express.Request & { pa
 });
 
 // Get user's live reservation status
-router.get('/status', authenticateToken, async (req: Express.Request, res) => {
+router.get('/status', authenticateToken, async (req: Request, res) => {
   try {
     const userId = req.user!.userId;
 
