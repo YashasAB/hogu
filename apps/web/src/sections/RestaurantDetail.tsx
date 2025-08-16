@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -23,24 +24,9 @@ type TimeSlot = {
   available: boolean;
 };
 
-// Generate demo time slots
-const generateTimeSlots = (): TimeSlot[] => {
-  const times = [
-    "6:00 PM",
-    "6:30 PM",
-    "7:00 PM",
-    "7:30 PM",
-    "8:00 PM",
-    "8:30 PM",
-    "9:00 PM",
-    "9:30 PM",
-    "10:00 PM",
-  ];
-  return times.map((t, i) => ({
-    id: `slot-${i}`,
-    time: t,
-    available: Math.random() > 0.3,
-  }));
+type AvailabilityData = {
+  date: string;
+  partySizes: number[];
 };
 
 const Badge: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -82,6 +68,16 @@ export default function RestaurantDetail() {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [availabilityData, setAvailabilityData] = useState<AvailabilityData[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
+
+  // State for booking form
+  const [date, setDate] = useState("");
+  const [partySize, setPartySize] = useState(2);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  const bookingRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch restaurant data
   useEffect(() => {
@@ -110,18 +106,86 @@ export default function RestaurantDetail() {
     fetchRestaurant();
   }, [slug]);
 
-  const [date, setDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0];
-  });
-  const [partySize, setPartySize] = useState(2);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(generateTimeSlots());
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  // Fetch availability data for the next 30 days
+  useEffect(() => {
+    const fetchAvailabilityData = async () => {
+      if (!restaurant) return;
+      
+      setAvailabilityLoading(true);
+      try {
+        const today = new Date();
+        const availabilityPromises = [];
+        
+        // Check next 30 days
+        for (let i = 0; i < 30; i++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() + i);
+          const dateStr = checkDate.toISOString().split("T")[0];
+          
+          // Check for each possible party size (2, 4, 6, 8)
+          const partySizePromises = [2, 4, 6, 8].map(async (size) => {
+            try {
+              const response = await fetch(
+                `/api/restaurants/${restaurant.slug}/availability?date=${dateStr}&partySize=${size}`
+              );
+              if (response.ok) {
+                const slots = await response.json();
+                const hasAvailable = slots.some((slot: TimeSlot) => slot.available);
+                return hasAvailable ? size : null;
+              }
+              return null;
+            } catch (error) {
+              console.error(`Error checking availability for ${dateStr}, party size ${size}:`, error);
+              return null;
+            }
+          });
+          
+          const availablePartySizes = (await Promise.all(partySizePromises)).filter(size => size !== null);
+          
+          if (availablePartySizes.length > 0) {
+            availabilityPromises.push({
+              date: dateStr,
+              partySizes: availablePartySizes
+            });
+          }
+        }
+        
+        const availability = await Promise.all(availabilityPromises);
+        setAvailabilityData(availability.filter(item => item.partySizes.length > 0));
+      } catch (error) {
+        console.error("Error fetching availability data:", error);
+      } finally {
+        setAvailabilityLoading(false);
+      }
+    };
 
-  const bookingRef = useRef<HTMLDivElement | null>(null);
+    fetchAvailabilityData();
+  }, [restaurant]);
 
-  // Fetch availability when date, party size, or restaurant changes
+  // Set default date and party size based on availability
+  useEffect(() => {
+    if (availabilityData.length > 0 && !date) {
+      // Set the closest available date
+      const closestDate = availabilityData[0].date;
+      setDate(closestDate);
+      
+      // Set the smallest available party size for that date
+      const smallestPartySize = Math.min(...availabilityData[0].partySizes);
+      setPartySize(smallestPartySize);
+    }
+  }, [availabilityData, date]);
+
+  // Available dates and party sizes
+  const availableDates = useMemo(() => {
+    return availabilityData.map(item => item.date);
+  }, [availabilityData]);
+
+  const availablePartySizes = useMemo(() => {
+    const currentDateData = availabilityData.find(item => item.date === date);
+    return currentDateData ? currentDateData.partySizes : [];
+  }, [availabilityData, date]);
+
+  // Fetch time slots when date or party size changes
   useEffect(() => {
     const fetchAvailability = async () => {
       if (!restaurant || !date || !partySize) return;
@@ -134,13 +198,11 @@ export default function RestaurantDetail() {
           const data = await response.json();
           setTimeSlots(data);
         } else {
-          // Fallback to generated time slots
-          setTimeSlots(generateTimeSlots());
+          setTimeSlots([]);
         }
       } catch (error) {
         console.error("Failed to fetch availability:", error);
-        // Fallback to generated time slots
-        setTimeSlots(generateTimeSlots());
+        setTimeSlots([]);
       }
       setSelectedSlot(null);
     };
@@ -215,11 +277,12 @@ export default function RestaurantDetail() {
     }
   };
 
-  if (loading) {
+  if (loading || availabilityLoading) {
     return (
       <div className="min-h-dvh bg-slate-950 text-slate-100 flex items-center justify-center">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-semibold">Loading...</h1>
+          <p className="text-slate-400">Finding available dates and times...</p>
         </div>
       </div>
     );
@@ -232,6 +295,22 @@ export default function RestaurantDetail() {
           <h1 className="text-2xl font-semibold">Restaurant not found</h1>
           <p className="text-slate-400">
             The restaurant you're looking for doesn't exist.
+          </p>
+          <Link to="/explore-tonight" className="btn btn-primary">
+            ← Back to Explore
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (availableDates.length === 0) {
+    return (
+      <div className="min-h-dvh bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-semibold">No availability</h1>
+          <p className="text-slate-400">
+            Unfortunately, {restaurant.name} has no available time slots in the next 30 days.
           </p>
           <Link to="/explore-tonight" className="btn btn-primary">
             ← Back to Explore
@@ -325,198 +404,167 @@ export default function RestaurantDetail() {
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
                   {restaurant.name}
                 </h1>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {restaurant.cuisineTags?.map((t) => (
-                    <Badge key={t}>{t}</Badge>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {restaurant.cuisineTags?.map((tag) => (
+                    <Chip key={tag}>{tag}</Chip>
                   ))}
                 </div>
               </div>
-              <div className="hidden sm:flex gap-2">
-                {restaurant.instagramUrl && (
-                  <a
-                    href={restaurant.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-sm font-medium"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <span aria-hidden>📸</span>
-                      <span>Instagram</span>
-                    </span>
-                  </a>
-                )}
-                {restaurant.website && (
-                  <a
-                    href={restaurant.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-sm font-medium"
-                  >
-                    Website
-                  </a>
-                )}
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* About / details */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            <section className="rounded-2xl p-4 sm:p-5 ring-1 ring-white/10 bg-slate-900/70">
-              <h2 className="text-lg sm:text-xl font-semibold mb-3">About</h2>
-              <div className="divide-y divide-white/10">
-                <Row label="Neighborhood">{restaurant.neighborhood}</Row>
-                <Row label="Category" last>
-                  <span className="capitalize">{restaurant.category}</span>
-                </Row>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {restaurant.instagramUrl && (
-                  <a
-                    href={restaurant.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-sm font-medium hover:bg-slate-800/80"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <span aria-hidden>📸</span>
-                      <span>Instagram</span>
-                    </span>
-                  </a>
-                )}
-                {restaurant.website && (
-                  <a
-                    href={restaurant.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-sm font-medium hover:bg-slate-800/80"
-                  >
-                    Website
-                  </a>
-                )}
-                <a
-                  className="px-3 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 text-sm font-semibold shadow hover:opacity-95"
-                  href={`https://www.openstreetmap.org/?mlat=${restaurant.position.lat}&mlon=${restaurant.position.lng}#map=17/${restaurant.position.lat}/${restaurant.position.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+        {/* Booking Section */}
+        <div ref={bookingRef} className="mt-8 lg:mt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Booking Form */}
+            <div className="lg:col-span-2 space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold">Make a Reservation</h2>
+
+              {/* Date Selection */}
+              <div className="space-y-3">
+                <label className="block text-lg font-semibold">Date</label>
+                <select
+                  value={date}
+                  onChange={(e) => {
+                    setDate(e.target.value);
+                    // Reset party size to smallest available for new date
+                    const newDateData = availabilityData.find(item => item.date === e.target.value);
+                    if (newDateData) {
+                      const smallestPartySize = Math.min(...newDateData.partySizes);
+                      setPartySize(smallestPartySize);
+                    }
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-slate-100 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                 >
-                  View on map
-                </a>
-              </div>
-            </section>
-
-            <section className="rounded-2xl p-4 sm:p-5 ring-1 ring-white/10 bg-slate-900/70">
-              <h2 className="text-lg sm:text-xl font-semibold mb-3">
-                Coordinates
-              </h2>
-              <div className="text-sm opacity-80">
-                {restaurant.position.lat.toFixed(6)},{" "}
-                {restaurant.position.lng.toFixed(6)}
-              </div>
-            </section>
-          </div>
-
-          {/* Booking card */}
-          <aside className="lg:col-span-1" ref={bookingRef}>
-            <div className="rounded-2xl p-4 sm:p-5 ring-1 ring-white/10 bg-slate-900/80 shadow-xl lg:sticky lg:top-20">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <h2 className="text-base sm:text-lg font-semibold">
-                  Make a reservation
-                </h2>
-              </div>
-
-              <label className="block text-sm mb-1">Date</label>
-              <input
-                type="date"
-                className="h-12 w-full rounded-xl bg-slate-800 border border-white/10 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
-                value={date}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setDate(e.target.value)}
-              />
-
-              <label className="block text-sm mb-1">Party size</label>
-              <select
-                className="w-full mb-4 px-3 py-2 h-12 rounded-xl bg-slate-800 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
-                value={partySize}
-                onChange={(e) => setPartySize(parseInt(e.target.value))}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                  <option key={n} value={n}>
-                    {n} {n === 1 ? "person" : "people"}
-                  </option>
-                ))}
-              </select>
-
-              <h3 className="text-sm font-medium mb-2">Available times</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {timeSlots.map((slot) => {
-                  const selected = selectedSlot === slot.id;
-                  const base =
-                    "px-3 h-12 rounded-xl text-sm font-semibold border transition";
-                  return (
-                    <button
-                      key={slot.id}
-                      disabled={!slot.available}
-                      onClick={() => slot.available && setSelectedSlot(slot.id)}
-                      className={[
-                        base,
-                        selected &&
-                          "bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 border-transparent",
-                        !selected &&
-                          slot.available &&
-                          "bg-slate-800 border-white/10 hover:border-rose-500/30",
-                        !slot.available &&
-                          "bg-slate-800/40 border-white/5 text-slate-500 cursor-not-allowed",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {slot.time}
-                    </button>
-                  );
-                })}
+                  {availableDates.map((availableDate) => {
+                    const dateObj = new Date(availableDate + 'T00:00:00');
+                    const today = new Date();
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(today.getDate() + 1);
+                    
+                    let displayText = dateObj.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    });
+                    
+                    if (availableDate === today.toISOString().split('T')[0]) {
+                      displayText += ' (Today)';
+                    } else if (availableDate === tomorrow.toISOString().split('T')[0]) {
+                      displayText += ' (Tomorrow)';
+                    }
+                    
+                    return (
+                      <option key={availableDate} value={availableDate}>
+                        {displayText}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
-              {/* Desktop/Tablet CTA (mobile has bottom bar) */}
-              <div className="hidden md:block">
+              {/* Party Size Selection */}
+              <div className="space-y-3">
+                <label className="block text-lg font-semibold">Party Size</label>
+                <select
+                  value={partySize}
+                  onChange={(e) => setPartySize(parseInt(e.target.value))}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-slate-100 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                >
+                  {availablePartySizes.map((size) => (
+                    <option key={size} value={size}>
+                      {size} {size === 1 ? 'Person' : 'People'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Time Slots */}
+              {timeSlots.length > 0 && (
+                <div className="space-y-3">
+                  <label className="block text-lg font-semibold">Available Times</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {timeSlots
+                      .filter((slot) => slot.available)
+                      .map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelectedSlot(slot.id)}
+                          className={`px-4 py-3 rounded-xl text-center font-medium transition ${
+                            selectedSlot === slot.id
+                              ? "bg-gradient-to-r from-rose-700 to-amber-600 text-white shadow-lg"
+                              : "bg-slate-800 border border-slate-600 text-slate-200 hover:border-rose-500/40"
+                          }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))}
+                  </div>
+                  {timeSlots.filter((slot) => slot.available).length === 0 && (
+                    <p className="text-slate-400 text-center py-4">
+                      No available times for this date and party size.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Reserve Button */}
+              {selectedSlot && (
                 <button
                   onClick={handleReserveNow}
-                  disabled={!selectedSlot}
-                  className={`w-full py-3 rounded-2xl font-bold shadow-lg transition ${
-                    selectedSlot
-                      ? "bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95"
-                      : "bg-slate-800/60 text-slate-500 cursor-not-allowed border border-white/5"
-                  }`}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-rose-700 to-amber-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
                 >
-                  {selectedSlot ? "Reserve now" : "Select a time slot"}
+                  Reserve Now
                 </button>
-                <p className="mt-3 text-xs opacity-70">
-                  You won't be charged yet. Confirmation depends on restaurant
-                  availability.
-                </p>
+              )}
+            </div>
+
+            {/* Restaurant Details */}
+            <div className="space-y-6">
+              <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/10">
+                <h3 className="text-xl font-bold mb-4">Details</h3>
+                <div className="space-y-0">
+                  <Row label="Category">{restaurant.category}</Row>
+                  <Row label="Neighborhood">{restaurant.neighborhood}</Row>
+                  {restaurant.website && (
+                    <Row label="Website">
+                      <a
+                        href={restaurant.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-rose-400 hover:text-rose-300 underline"
+                      >
+                        Visit
+                      </a>
+                    </Row>
+                  )}
+                  {restaurant.instagramUrl && (
+                    <Row label="Instagram" last>
+                      <a
+                        href={restaurant.instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-rose-400 hover:text-rose-300 underline"
+                      >
+                        Follow
+                      </a>
+                    </Row>
+                  )}
+                </div>
               </div>
             </div>
-          </aside>
+          </div>
         </div>
       </div>
 
-      {/* Mobile bottom bar CTA */}
-      <div
-        className="fixed inset-x-0 bottom-0 md:hidden bg-slate-950/85 backdrop-blur border-t border-white/10 p-3"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
-      >
+      {/* Mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/90 backdrop-blur border-t border-white/10 md:hidden">
         <button
           onClick={handleMobileCTA}
-          className={`w-full h-12 rounded-2xl font-bold shadow-lg transition ${
-            selectedSlot
-              ? "bg-gradient-to-r from-rose-600 to-amber-500 text-slate-900 hover:opacity-95"
-              : "bg-slate-800/60 text-slate-300 border border-white/5"
-          }`}
+          className="w-full py-4 px-6 bg-gradient-to-r from-rose-700 to-amber-600 text-white font-bold text-lg rounded-xl shadow-lg"
         >
-          {selectedSlot ? "Reserve now" : "Select a time slot"}
+          {selectedSlot ? "Reserve Now" : "Select Time"}
         </button>
       </div>
     </div>
