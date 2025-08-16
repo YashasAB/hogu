@@ -1,391 +1,400 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// apps/api/src/index.ts
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-const auth_1 = __importDefault(require("./routes/auth"));
-const discover_1 = __importDefault(require("./routes/discover"));
-const restaurants_1 = __importDefault(require("./routes/restaurants"));
-const reservations_1 = __importDefault(require("./routes/reservations"));
-const admin_1 = __importDefault(require("./routes/admin"));
-const images_1 = __importDefault(require("./routes/images"));
-const multer_1 = __importDefault(require("multer")); // Import multer
-// Set DATABASE_URL fallback BEFORE creating PrismaClient
-const dbDir = path_1.default.join(process.cwd(), "data");
-fs_1.default.mkdirSync(dbDir, { recursive: true });
-if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = `file:${path_1.default.join(dbDir, "prod.db")}`;
-}
+const multer_1 = __importDefault(require("multer"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient({
-    log: ["query", "info", "warn", "error"],
-});
+const object_storage_1 = require("@replit/object-storage");
+const BOOT_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const app = (0, express_1.default)();
-const PORT = Number(process.env.PORT) || 8080;
-// Add process error handlers to prevent silent crashes during deployment
-process.on("unhandledRejection", (reason, promise) => {
-    console.error("UNHANDLED REJECTION at:", promise, "reason:", reason);
-    // DO NOT process.exit here during deploy
+// 1) Health endpoints FIRST
+app.get("/", (_req, res) => {
+    console.log(`[HEALTH] ok BOOT_ID=${BOOT_ID} time=${new Date().toISOString()}`);
+    res.status(200).type("text/plain").send("ok");
 });
-process.on("uncaughtException", (error) => {
-    console.error("UNCAUGHT EXCEPTION:", error);
-    // DO NOT process.exit here during deploy
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy", boot: BOOT_ID }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready", boot: BOOT_ID }));
+// 2) Bind immediately on platform PORT (or 8080 locally)
+const isProd = process.env.NODE_ENV === "production" ||
+    process.env.REPLIT_ENVIRONMENT === "production";
+const PORT = Number(process.env.PORT || 8080);
+const server = app.listen(PORT, "0.0.0.0");
+server.on("listening", () => {
+    console.log(`[BOOT] BOOT_ID=${BOOT_ID} NODE_ENV=${process.env.NODE_ENV} PORT=${PORT}`);
+    console.log(`[BOOT] Health: http://0.0.0.0:${PORT}/`);
 });
-// Trust proxy for proper request handling
-app.set("trust proxy", true);
-// Health check endpoints FIRST - trivial and fast responses for deployment
-app.get("/", (_req, res) => res.status(200).type("text/plain").send("ok"));
-app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
-app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
-console.log("Environment check:");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", process.env.PORT);
-console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
-console.log("REPL_ID set:", !!process.env.REPL_ID);
-if (process.env.REPL_ID) {
-    console.log("REPL_ID:", process.env.REPL_ID);
-}
-app.use((0, cors_1.default)({
-    origin: true,
-    credentials: true,
-}));
-app.use(express_1.default.json());
-// Multer configuration for handling file uploads
-const storage = multer_1.default.memoryStorage(); // Store file in memory
-const upload = (0, multer_1.default)({ storage: storage });
-// Test database connection on startup - don't exit on failure during deploy
-async function testDatabaseConnection() {
+server.on("error", (err) => {
+    console.error("[BOOT] listen error:", err);
+});
+// 3) Now wire the rest, after we are listening
+(async () => {
     try {
-        await prisma.$connect();
-        console.log("✅ Database connected successfully");
-    }
-    catch (error) {
-        console.error("❌ Database connection failed (continuing to serve):", error);
-        // DO NOT process.exit(1) during deploy - keep serving health checks
-    }
-}
-// Initialize database connection asynchronously after health checks are set up
-testDatabaseConnection();
-// Small helper: whatever comes back -> Node Buffer
-function toNodeBuffer(v) {
-    if (Buffer.isBuffer(v))
-        return v;
-    if (v instanceof Uint8Array)
-        return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
-    if (Array.isArray(v) && v[0]) {
-        const first = v[0];
-        if (Buffer.isBuffer(first))
-            return first;
-        if (first instanceof Uint8Array)
-            return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
-    }
-    throw new Error("Unexpected storage value type");
-}
-// Minimal signature sniff (fallback to extension)
-function detectContentType(buf, filename) {
-    const hex4 = buf.subarray(0, 4).toString("hex");
-    if (hex4.startsWith("ffd8"))
-        return "image/jpeg";
-    if (hex4 === "89504e47")
-        return "image/png";
-    if (buf.subarray(0, 4).toString("ascii") === "RIFF" &&
-        buf.subarray(8, 12).toString("ascii") === "WEBP")
-        return "image/webp";
-    if (hex4.startsWith("4749"))
-        return "image/gif";
-    if (filename.toLowerCase().endsWith(".svg"))
-        return "image/svg+xml";
-    const ext = filename.split(".").pop()?.toLowerCase();
-    if (ext === "jpg" || ext === "jpeg")
-        return "image/jpeg";
-    if (ext === "png")
-        return "image/png";
-    if (ext === "gif")
-        return "image/gif";
-    if (ext === "webp")
-        return "image/webp";
-    return "application/octet-stream";
-}
-// Image proxy route
-app.get("/api/images/storage/:tenantId/:filename", async (req, res) => {
-    try {
-        const { tenantId, filename } = req.params;
-        const key = `${tenantId}/${filename}`;
-        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-        const storage = new Client();
-        const out = await storage.downloadAsBytes(key);
-        if (!out?.ok || !out?.value) {
-            return res
-                .status(404)
-                .json({ error: "Image not found", key, details: out?.error });
-        }
-        // Ensure we have raw binary
-        const buf = toNodeBuffer(out.value);
-        // Pick the correct image/* (NO charset)
-        const ct = detectContentType(buf, filename);
-        // Set headers explicitly. Do NOT use res.type()/res.contentType() (they can append charset).
-        res.setHeader("Content-Type", ct);
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        // Ensure no conflicting header sneaks in from global CORS middleware:
-        res.removeHeader?.("Access-Control-Allow-Credentials");
-        // Let Express compute Content-Length; just send bytes
-        return res.end(buf);
-    }
-    catch (err) {
-        console.error("image proxy error:", err);
-        return res.status(500).json({ error: "Error loading image" });
-    }
-});
-// (Optional) HEAD – nice for CDNs/proxies
-app.head("/api/images/storage/:tenantId/:filename", async (req, res) => {
-    // You can reuse logic above to set headers without sending the body,
-    // or simply 200 with cache headers if you don't need exact length.
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.sendStatus(200);
-});
-// Image list route
-app.get("/api/images/list", async (req, res) => {
-    try {
-        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-        const storage = new Client();
-        // List all objects in the bucket
-        const { ok, value, error } = await storage.list();
-        if (!ok) {
-            return res
-                .status(500)
-                .json({ error: "Failed to list images", details: error });
-        }
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        const images = value.map((item) => ({
-            key: item.name,
-            size: item.size,
-            lastModified: item.updated || item.timeCreated,
-            publicUrl: `${baseUrl}/api/images/storage/${item.name}`,
-        }));
-        res.json({
-            totalImages: images.length,
-            images: images,
+        // Middleware
+        app.set("trust proxy", true);
+        app.use((0, cors_1.default)({ origin: true, credentials: true }));
+        app.use(express_1.default.json());
+        app.use((0, cookie_parser_1.default)());
+        // DB setup (non-blocking)
+        const dbDir = path_1.default.join(process.cwd(), "data");
+        fs_1.default.mkdirSync(dbDir, { recursive: true });
+        if (!process.env.DATABASE_URL)
+            process.env.DATABASE_URL = `file:${path_1.default.join(dbDir, "prod.db")}`;
+        const prisma = new client_1.PrismaClient({
+            log: ["query", "info", "warn", "error"],
         });
-    }
-    catch (error) {
-        console.error("Error listing images:", error);
-        res.status(500).json({ error: "Failed to list images" });
-    }
-});
-// Upload endpoint for testing
-app.post("/api/upload", upload.single("image"), async (req, res) => {
-    try {
-        const file = req.file;
-        const restaurantId = req.body.restaurantId; // Get from form data instead
-        if (!file) {
-            return res.status(400).json({ error: "No file uploaded" });
-        }
-        if (!restaurantId)
-            return res.status(400).json({ error: "restaurantId is required" });
-        // Validate file type
-        if (!file.mimetype.startsWith("image/")) {
-            return res.status(400).json({ error: "Only image files are allowed" });
-        }
-        console.log(`Uploading hero image: ${file.originalname}, size: ${file.size}, type: ${file.mimetype}`);
-        const ext = file.originalname.split(".").pop() || "jpg";
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const filename = `heroImage-${timestamp}.${ext}`;
-        const objectKey = `${restaurantId}/${filename}`;
-        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-        const storage = new Client();
-        // Clean up old hero images first
-        try {
-            const listResult = await storage.list();
-            if (listResult.ok && listResult.value) {
-                const oldHeroImages = listResult.value.filter((item) => item.name &&
-                    item.name.startsWith(`${restaurantId}/heroImage-`) &&
-                    item.name !== objectKey);
-                for (const oldImage of oldHeroImages) {
-                    console.log(`Deleting old hero image: ${oldImage.name}`);
-                    await storage.delete(oldImage.name);
-                }
+        prisma
+            .$connect()
+            .then(() => console.log("✅ Database connected successfully"))
+            .catch((e) => console.error("❌ Database connection failed (continuing):", e));
+        // JWT secret
+        const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev";
+        // Multer
+        const upload = (0, multer_1.default)({
+            storage: multer_1.default.memoryStorage(),
+            limits: { fileSize: 10 * 1024 * 1024 },
+        });
+        // Object storage (lazy)
+        let storageClient = null;
+        async function getStorageClient() {
+            if (!storageClient) {
+                storageClient = new object_storage_1.Client();
+                console.log("✅ Object Storage client initialized");
             }
+            return storageClient;
         }
-        catch (error) {
-            console.warn("Failed to clean up old images:", error);
+        // Helpers
+        function toNodeBuffer(v) {
+            if (Buffer.isBuffer(v))
+                return v;
+            if (v instanceof Uint8Array)
+                return Buffer.from(v.buffer, v.byteOffset, v.byteLength);
+            if (Array.isArray(v) && v.length) {
+                const first = v[0];
+                if (Buffer.isBuffer(first))
+                    return first;
+                if (first instanceof Uint8Array)
+                    return Buffer.from(first.buffer, first.byteOffset, first.byteLength);
+            }
+            throw new Error("Unexpected storage value type from downloadAsBytes");
         }
-        // Upload to storage
-        const uploadResult = await storage.uploadFromBytes(objectKey, file.buffer, {
-            compress: false, // Don't compress images
+        function detectContentType(buf, filename) {
+            const hex4 = buf.subarray(0, 4).toString("hex");
+            if (hex4.startsWith("ffd8"))
+                return "image/jpeg";
+            if (hex4 === "89504e47")
+                return "image/png";
+            if (buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+                buf.subarray(8, 12).toString("ascii") === "WEBP")
+                return "image/webp";
+            if (hex4.startsWith("4749"))
+                return "image/gif";
+            if (filename.toLowerCase().endsWith(".svg"))
+                return "image/svg+xml";
+            const ext = filename.split(".").pop()?.toLowerCase();
+            if (ext === "jpg" || ext === "jpeg")
+                return "image/jpeg";
+            if (ext === "png")
+                return "image/png";
+            if (ext === "gif")
+                return "image/gif";
+            if (ext === "webp")
+                return "image/webp";
+            return "application/octet-stream";
+        }
+        // ---- AUTH MIDDLEWARE (yours) ----
+        const authenticateToken = (req, res, next) => {
+            const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+            if (!token)
+                return res.status(401).json({ error: "Access token required" });
+            try {
+                const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+                req.user = decoded;
+                next();
+            }
+            catch {
+                return res.status(403).json({ error: "Invalid or expired token" });
+            }
+        };
+        // =========================
+        // YOUR ROUTES (UNCHANGED)
+        // =========================
+        // Upload image: multipart field "image" and body "restaurantId"
+        app.post("/api/upload", upload.single("image"), async (req, res) => {
+            try {
+                if (!req.file)
+                    return res.status(400).json({ error: "No file uploaded" });
+                const { restaurantId } = req.body;
+                if (!restaurantId)
+                    return res.status(400).json({ error: "Restaurant ID is required" });
+                const restaurant = await prisma.restaurant.findUnique({
+                    where: { id: restaurantId },
+                });
+                if (!restaurant)
+                    return res.status(404).json({ error: "Restaurant not found" });
+                const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+                const ext = req.file.originalname.split(".").pop() || "jpg";
+                const filename = `heroImage-${timestamp}.${ext}`;
+                const key = `${restaurantId}/${filename}`;
+                const storage = await getStorageClient();
+                const up = await storage.uploadFromBytes(key, req.file.buffer, {
+                    compress: false,
+                });
+                if (!up.ok)
+                    return res
+                        .status(500)
+                        .json({ error: "Upload failed", details: up.error });
+                const imageUrl = `/api/images/storage/${key}`;
+                const updatedRestaurant = await prisma.restaurant.update({
+                    where: { id: restaurantId },
+                    data: { heroImageUrl: imageUrl },
+                });
+                res.json({
+                    success: true,
+                    url: imageUrl,
+                    filename,
+                    restaurant: updatedRestaurant,
+                });
+            }
+            catch (e) {
+                console.error("❌ Upload error:", e);
+                res
+                    .status(500)
+                    .json({
+                    error: "Upload failed",
+                    details: e instanceof Error ? e.message : String(e),
+                });
+            }
         });
-        if (!uploadResult.ok) {
-            console.error("Storage upload failed:", uploadResult.error);
-            return res.status(500).json({
-                error: "Storage upload failed",
-                details: uploadResult.error,
-            });
-        }
-        // Update the restaurant's heroImageUrl in the database
-        const imageUrl = `/api/images/storage/${objectKey}`;
-        try {
-            await prisma.restaurant.update({
-                where: { id: restaurantId },
-                data: { heroImageUrl: imageUrl },
-            });
-            console.log(`✅ Updated restaurant ${restaurantId} heroImageUrl in database`);
-        }
-        catch (dbError) {
-            console.error("Failed to update database:", dbError);
-            return res.status(500).json({
-                error: "Image uploaded but failed to update database",
-                details: dbError,
-            });
-        }
-        console.log(`✅ Hero image uploaded successfully: ${imageUrl}`);
-        res.json({
-            message: "Upload successful",
-            url: imageUrl,
-            filename: filename,
-            size: file.size,
-            mimetype: file.mimetype,
+        // Serve stored image
+        app.get("/api/images/storage/:replId/:filename", async (req, res) => {
+            try {
+                const { replId, filename } = req.params;
+                const key = `${replId}/${filename}`;
+                const storage = await getStorageClient();
+                const out = (await storage.downloadAsBytes(key));
+                if (!out.ok)
+                    return res
+                        .status(404)
+                        .json({
+                        error: "Image not found",
+                        key,
+                        details: out.error,
+                    });
+                const buf = toNodeBuffer(out.value);
+                const ct = detectContentType(buf, filename);
+                res.set({
+                    "Content-Type": ct,
+                    "Cache-Control": "public, max-age=31536000, immutable",
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Length": String(buf.length),
+                    "Content-Disposition": `inline; filename="${filename}"`,
+                });
+                return res.end(buf);
+            }
+            catch (e) {
+                console.error("❌ Image proxy error:", e);
+                return res.status(500).json({ error: "Failed to serve image" });
+            }
         });
+        // HEAD for image
+        app.head("/api/images/storage/:replId/:filename", async (req, res) => {
+            try {
+                const { replId, filename } = req.params;
+                const key = `${replId}/${filename}`;
+                const storage = await getStorageClient();
+                const out = (await storage.downloadAsBytes(key));
+                if (!out.ok)
+                    return res.sendStatus(404);
+                const buf = toNodeBuffer(out.value);
+                const ct = detectContentType(buf, filename);
+                res.set({
+                    "Content-Type": ct,
+                    "Cache-Control": "public, max-age=31536000, immutable",
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Length": String(buf.length),
+                    "Content-Disposition": `inline; filename="${filename}"`,
+                });
+                return res.sendStatus(200);
+            }
+            catch {
+                return res.sendStatus(500);
+            }
+        });
+        // Auth
+        app.post("/api/auth/login", async (req, res) => {
+            try {
+                const { username, password } = req.body;
+                if (!username || !password)
+                    return res
+                        .status(400)
+                        .json({ error: "Username and password required" });
+                const userAuth = await prisma.userAuth.findUnique({
+                    where: { username },
+                    include: { user: true },
+                });
+                if (!userAuth ||
+                    !(await bcrypt_1.default.compare(password, userAuth.passwordHash))) {
+                    return res.status(401).json({ error: "Invalid credentials" });
+                }
+                const token = jsonwebtoken_1.default.sign({ userId: userAuth.user.id, username: userAuth.username }, JWT_SECRET, { expiresIn: "7d" });
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: isProd,
+                    sameSite: "lax",
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
+                res.json({
+                    user: {
+                        id: userAuth.user.id,
+                        username: userAuth.username,
+                        name: userAuth.user.name,
+                        email: userAuth.user.email,
+                    },
+                });
+            }
+            catch (e) {
+                console.error("Login error:", e);
+                res.status(500).json({ error: "Login failed" });
+            }
+        });
+        app.get("/api/auth/me", authenticateToken, async (req, res) => {
+            try {
+                const user = await prisma.user.findUnique({
+                    where: { id: req.user.userId },
+                    include: { auth: true },
+                });
+                if (!user)
+                    return res.status(404).json({ error: "User not found" });
+                res.json({
+                    user: {
+                        id: user.id,
+                        username: user.auth?.username,
+                        name: user.name,
+                        email: user.email,
+                    },
+                });
+            }
+            catch (e) {
+                console.error("Auth check error:", e);
+                res.status(500).json({ error: "Failed to check auth status" });
+            }
+        });
+        app.post("/api/auth/logout", (_req, res) => {
+            res.clearCookie("token");
+            res.json({ message: "Logged out successfully" });
+        });
+        // Discover
+        app.get("/api/discover/available-today", async (_req, res) => {
+            try {
+                const today = new Date().toISOString().split("T")[0];
+                const prisma = new client_1.PrismaClient();
+                const restaurants = await prisma.restaurant.findMany({
+                    include: {
+                        timeSlots: {
+                            where: { date: today, status: "AVAILABLE" },
+                            orderBy: [{ time: "asc" }, { partySize: "asc" }],
+                        },
+                    },
+                });
+                const out = restaurants
+                    .filter((r) => r.timeSlots.length > 0)
+                    .map((r) => ({
+                    restaurant: {
+                        id: r.id,
+                        name: r.name,
+                        slug: r.slug,
+                        neighborhood: r.neighborhood,
+                        hero_image_url: r.heroImageUrl,
+                        emoji: r.emoji,
+                    },
+                    slots: r.timeSlots.map((slot) => ({
+                        slot_id: slot.id,
+                        time: slot.time,
+                        party_size: slot.partySize,
+                        date: slot.date,
+                    })),
+                }));
+                res.json({ restaurants: out });
+            }
+            catch (e) {
+                console.error("Error fetching available restaurants:", e);
+                res.status(500).json({ error: "Failed to fetch restaurants" });
+            }
+        });
+        // Restaurant by slug
+        app.get("/api/restaurants/:slug", async (req, res) => {
+            try {
+                const { slug } = req.params;
+                const { date } = req.query;
+                const targetDate = date || new Date().toISOString().split("T")[0];
+                const prisma = new client_1.PrismaClient();
+                const restaurant = await prisma.restaurant.findUnique({
+                    where: { slug },
+                    include: {
+                        timeSlots: {
+                            where: { date: targetDate, status: "AVAILABLE" },
+                            orderBy: [{ time: "asc" }, { partySize: "asc" }],
+                        },
+                    },
+                });
+                if (!restaurant)
+                    return res.status(404).json({ error: "Restaurant not found" });
+                res.json({
+                    restaurant: {
+                        id: restaurant.id,
+                        name: restaurant.name,
+                        slug: restaurant.slug,
+                        latitude: restaurant.latitude,
+                        longitude: restaurant.longitude,
+                        neighborhood: restaurant.neighborhood,
+                        hero_image_url: restaurant.heroImageUrl,
+                        emoji: restaurant.emoji,
+                    },
+                    slots: restaurant.timeSlots.map((slot) => ({
+                        slot_id: slot.id,
+                        time: slot.time,
+                        party_size: slot.partySize,
+                        date: slot.date,
+                    })),
+                });
+            }
+            catch (e) {
+                console.error("Error fetching restaurant:", e);
+                res.status(500).json({ error: "Failed to fetch restaurant" });
+            }
+        });
+        // Admin
+        app.get("/api/admin/restaurants", authenticateToken, async (req, res) => {
+            try {
+                const isAdmin = req.user && req.user.role === "ADMIN";
+                if (!isAdmin)
+                    return res.status(403).json({ error: "Admin access required" });
+                const prisma = new client_1.PrismaClient();
+                const restaurants = await prisma.restaurant.findMany({
+                    orderBy: { name: "asc" },
+                });
+                res.json({ restaurants });
+            }
+            catch (e) {
+                console.error("Error fetching restaurants:", e);
+                res.status(500).json({ error: "Failed to fetch restaurants" });
+            }
+        });
+        console.log("[BOOT] Routes and middleware are live. BOOT_ID=", BOOT_ID);
     }
-    catch (error) {
-        console.error("Upload error:", error);
-        res.status(500).json({ error: "Upload failed" });
+    catch (e) {
+        console.error("[BOOT] Post-bind bootstrap failed (health still live):", e);
     }
-});
-// Placeholder image route
-app.get("/api/placeholder/:width/:height", (req, res) => {
-    const { width, height } = req.params;
-    const svg = `
-    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#374151"/>
-      <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9CA3AF" font-family="Arial, sans-serif" font-size="16">
-        ${width}×${height}
-      </text>
-    </svg>
-  `;
-    res.setHeader("Content-Type", "image/svg+xml");
-    res.setHeader("Cache-Control", "public, max-age=31536000");
-    res.send(svg);
-});
-// Dynamic hero image endpoint - standalone route (not nested)
-app.get("/api/restaurant/:restaurantId/hero-image", async (req, res) => {
-    try {
-        const { restaurantId } = req.params;
-        const { Client } = await Promise.resolve().then(() => __importStar(require("@replit/object-storage")));
-        const storage = new Client();
-        // List all files in the restaurant's folder
-        const listResult = await storage.list();
-        if (!listResult.ok || !listResult.value) {
-            return res.status(404).json({ error: "No images found" });
-        }
-        // Find hero images for this restaurant
-        const heroImages = listResult.value
-            .filter((item) => item.name && item.name.startsWith(`${restaurantId}/heroImage-`))
-            .sort((a, b) => new Date(b.updated || b.timeCreated).getTime() -
-            new Date(a.updated || a.timeCreated).getTime());
-        if (heroImages.length === 0) {
-            return res
-                .status(404)
-                .json({ error: "No hero image found for this restaurant" });
-        }
-        // Get the most recent hero image
-        const latestHeroImage = heroImages[0];
-        const imageData = await storage.downloadAsBytes(latestHeroImage.name);
-        if (!imageData.ok || !imageData.value) {
-            return res.status(404).json({ error: "Failed to retrieve image" });
-        }
-        // Ensure we have raw binary
-        const buf = toNodeBuffer(imageData.value);
-        // Detect content type
-        const filename = latestHeroImage.name.split("/").pop() || "image.jpg";
-        const contentType = detectContentType(buf, filename);
-        // Set headers
-        res.setHeader("Content-Type", contentType);
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        // Send the image
-        return res.end(buf);
-    }
-    catch (error) {
-        console.error("Error serving hero image:", error);
-        return res.status(500).json({ error: "Failed to serve hero image" });
-    }
-});
-// Mount API routes BEFORE static files
-app.use("/api/auth", auth_1.default);
-app.use("/api/restaurants", restaurants_1.default);
-app.use("/api/reservations", reservations_1.default);
-app.use("/api/discover", discover_1.default);
-app.use("/api/admin", admin_1.default);
-app.use("/api/images", images_1.default);
-// Check if running in production and serve static files
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
-    const webDistPath = path_1.default.join(__dirname, "../../web/dist");
-    app.use(express_1.default.static(webDistPath, { index: false }));
-    console.log("Serving static files from:", webDistPath);
-    // SPA fallback - only catch non-API routes that don't start with /api, /, /health, /ready
-    app.get(/^\/(?!api\/)(?!\/$)(?!health$)(?!ready$).*/, (req, res) => {
-        res.sendFile(path_1.default.join(webDistPath, "index.html"));
-    });
-}
-const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log("LISTENING PORT:", PORT);
-    console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`DATABASE_URL set: ${!!process.env.DATABASE_URL}`);
-    console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
-});
-// Configure server timeouts to prevent odd load balancer behavior
-server.keepAliveTimeout = 65000;
-server.headersTimeout = 66000;
-server.requestTimeout = 60000;
-server.on("error", (error) => {
-    console.error("❌ Server error:", error);
-    process.exit(1);
-});
-// Handle graceful shutdown
-process.on("SIGTERM", () => {
-    console.log("SIGTERM received, shutting down gracefully");
-    server.close(() => {
-        console.log("Process terminated");
-        process.exit(0);
-    });
-});
+})();
+// Global error logs
+process.on("unhandledRejection", (r) => console.error("[API] UNHANDLED REJECTION:", r));
+process.on("uncaughtException", (e) => console.error("[API] UNCAUGHT EXCEPTION:", e));

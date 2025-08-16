@@ -10,6 +10,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Authentication middleware
 function authenticateToken(req, res, next) {
     const authHeader = req.header('Authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
