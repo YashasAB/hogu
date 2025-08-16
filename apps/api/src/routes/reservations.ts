@@ -25,7 +25,7 @@ type AuthenticatedRequest = Express.Request & {
 
 // Authentication middleware
 function authenticateToken(req: Express.Request, res: Response, next: NextFunction) {
-  const authHeader = req.get('Authorization');
+  const authHeader = req.header('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
   if (!token) {
@@ -149,7 +149,7 @@ router.get('/', authenticateToken, async (req: Express.Request, res) => {
 });
 
 // Create a reservation
-router.post('/', authenticateToken, async (req: Express.Request, res) => {
+router.post('/', authenticateToken, async (req: Express.Request & { body: any }, res) => {
   try {
     const userId = req.user!.userId;
     const { restaurantSlug, date, time, partySize } = req.body;

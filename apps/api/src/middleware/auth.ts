@@ -40,7 +40,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; username: string; role?: string };
     req.user = decoded;
     next();
   } catch (error) {
