@@ -22,7 +22,14 @@ declare global {
 const app = express();
 
 console.log("📞 About to call startServer()");
+let serverStarted = false;
 async function startServer() {
+  if (serverStarted) {
+    console.log("Server already started, skipping...");
+    return;
+  }
+
+  serverStarted = true;
   console.log("🚀 startServer function called");
   const defaultPort = Number(process.env.PORT || 8080);
 
