@@ -33,22 +33,35 @@ async function updateHeroImagesFromStorage() {
     const objects = listResult.objects || [];
     console.log(`Found ${objects.length} objects in storage`);
 
-    // Group objects by restaurant ID and find latest hero image for each
+    // Group objects by restaurant ID folder and find latest hero image for each
     const restaurantImages = {};
 
     for (const obj of objects) {
-      // Object key format should be: restaurantId/heroImage-timestamp.ext
+      console.log(`Checking object: ${obj.key}`);
+      
+      // Object key should be: restaurantId/filename
       const keyParts = obj.key.split('/');
-      if (keyParts.length !== 2) continue;
+      if (keyParts.length !== 2) {
+        console.log(`Skipping ${obj.key} - not in restaurantId/filename format`);
+        continue;
+      }
 
       const [restaurantId, filename] = keyParts;
       
       // Check if this is a hero image
-      if (!filename.startsWith('heroImage-')) continue;
+      if (!filename.startsWith('heroImage-')) {
+        console.log(`Skipping ${obj.key} - not a hero image`);
+        continue;
+      }
+
+      console.log(`Found hero image for restaurant ${restaurantId}: ${filename}`);
 
       // Extract timestamp from filename (heroImage-YYYY-MM-DDTHH-mm-ss-sssZ.ext)
       const timestampMatch = filename.match(/heroImage-(.+)\.[^.]+$/);
-      if (!timestampMatch) continue;
+      if (!timestampMatch) {
+        console.log(`Could not parse timestamp from ${filename}`);
+        continue;
+      }
 
       const timestampStr = timestampMatch[1];
       let timestamp;
@@ -57,8 +70,9 @@ async function updateHeroImagesFromStorage() {
         // Parse the timestamp (replace hyphens with colons for time part)
         const dateStr = timestampStr.replace(/(\d{4}-\d{2}-\d{2}T\d{2})-(\d{2})-(\d{2})-(\d{3})Z/, '$1:$2:$3.$4Z');
         timestamp = new Date(dateStr);
+        console.log(`Parsed timestamp: ${timestamp.toISOString()}`);
       } catch (e) {
-        console.warn(`Could not parse timestamp from ${filename}`);
+        console.warn(`Could not parse timestamp from ${filename}:`, e);
         continue;
       }
 
@@ -69,6 +83,7 @@ async function updateHeroImagesFromStorage() {
           timestamp: timestamp,
           filename: filename
         };
+        console.log(`Updated latest image for ${restaurantId}: ${filename}`);
       }
     }
 
@@ -96,7 +111,7 @@ async function updateHeroImagesFromStorage() {
         
         updateCount++;
       } else {
-        console.log(`No hero image found in storage for ${restaurant.name}`);
+        console.log(`No hero image found in storage for ${restaurant.name} (ID: ${restaurant.id})`);
       }
     }
 
