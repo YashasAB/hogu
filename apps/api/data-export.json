@@ -1,0 +1,1682 @@
+{
+  "restaurants": [
+    {
+      "id": "cme8zim9m0019zuk6o60my4w8",
+      "name": "Soka",
+      "slug": "soka",
+      "emoji": "🍸",
+      "latitude": 12.965215,
+      "longitude": 77.638143,
+      "neighborhood": "Koramangala",
+      "category": "cocktails",
+      "isHot": false,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": "https://instagram.com/sokabangalore",
+      "website": "https://soka.in",
+      "email": "hello@soka.in",
+      "createdAt": "2025-08-12T20:19:07.450Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "cuisineTagId": "cme996haj0008j4h1nhkcal0k"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeairx003i12oodoyqg7my",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.798Z"
+        },
+        {
+          "id": "cmeeeaiss003k12oo5gjhcrnr",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.828Z"
+        },
+        {
+          "id": "cmeeeaita003m12oo6w44ftv3",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.847Z"
+        },
+        {
+          "id": "cmeeeaitu003o12oo53syxid0",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.866Z"
+        },
+        {
+          "id": "cmeeeaiv6003q12oo9v4iain3",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.914Z"
+        },
+        {
+          "id": "cmeeeaivo003s12ooyg768i51",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.932Z"
+        },
+        {
+          "id": "cmeeeaiw8003u12oolkb4lszt",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.953Z"
+        },
+        {
+          "id": "cmeeeaiws003w12oowmptnml9",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.972Z"
+        },
+        {
+          "id": "cmeeeaixb003y12ooxy43jhmw",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.991Z"
+        },
+        {
+          "id": "cmeeeaixt004012oo7rsrl6g0",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.009Z"
+        },
+        {
+          "id": "cmeeeaiye004212ookbrmd1vf",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.031Z"
+        },
+        {
+          "id": "cmeeeaj12004412oori36jr9d",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.126Z"
+        },
+        {
+          "id": "cmeeeaj1l004612ooaramj3go",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.146Z"
+        },
+        {
+          "id": "cmeeeaj23004812oo8l61g7jg",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.163Z"
+        },
+        {
+          "id": "cmeeeaj2n004a12oo53f2m1xv",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.183Z"
+        },
+        {
+          "id": "cmeeeaj32004c12oos6cq35iw",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.199Z"
+        },
+        {
+          "id": "cmeeeaj3m004e12ooiuz7bm8o",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.218Z"
+        },
+        {
+          "id": "cmeeeaj4k004g12oo5o83xrvj",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.252Z"
+        },
+        {
+          "id": "cmeeeai6m002i12ooztqpu3kf",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.030Z"
+        },
+        {
+          "id": "cmeeeai77002k12ooubj6va85",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.051Z"
+        },
+        {
+          "id": "cmeeeaie2002m12oo4ogvs0my",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.298Z"
+        },
+        {
+          "id": "cmeeeaifu002o12ooijst8zxf",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.362Z"
+        },
+        {
+          "id": "cmeeeaiga002q12oo4q7ioq1p",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.379Z"
+        },
+        {
+          "id": "cmeeeaihe002s12ooeq7e9pnw",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.418Z"
+        },
+        {
+          "id": "cmeeeaiiw002u12ooajbohuyp",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.472Z"
+        },
+        {
+          "id": "cmeeeaijf002w12ooqw8c72gu",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.491Z"
+        },
+        {
+          "id": "cmeeeaikc002y12ood9fl4w4y",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.524Z"
+        },
+        {
+          "id": "cmeeeaikr003012ooc6fvawlr",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.540Z"
+        },
+        {
+          "id": "cmeeeailm003212oof8koq5oe",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.570Z"
+        },
+        {
+          "id": "cmeeeaim8003412oo62bpxl1j",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.592Z"
+        },
+        {
+          "id": "cmeeeaimm003612oojpicx1ln",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.607Z"
+        },
+        {
+          "id": "cmeeeainr003812oouiqx5tg8",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.648Z"
+        },
+        {
+          "id": "cmeeeaipd003a12oouo34mag1",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.705Z"
+        },
+        {
+          "id": "cmeeeaipz003c12ood6dt692k",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.727Z"
+        },
+        {
+          "id": "cmeeeaiqv003e12ooo2zicg4d",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.759Z"
+        },
+        {
+          "id": "cmeeeaira003g12oo3v9opxxx",
+          "restaurantId": "cme8zim9m0019zuk6o60my4w8",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:34.774Z"
+        }
+      ],
+      "reservations": []
+    },
+    {
+      "id": "cme996hfm000bj4h1cu57rrca",
+      "name": "ZLB 23 (at The Leela Palace)",
+      "slug": "zlb-23-at-the-leela-palace",
+      "emoji": "🍸",
+      "latitude": 12.960695,
+      "longitude": 77.648663,
+      "neighborhood": "Old Airport Rd",
+      "category": "cocktails",
+      "isHot": true,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": "https://instagram.com/zlb23bangalore",
+      "website": "https://theleela.com/zlb23",
+      "email": "reservations@zlb23.com",
+      "createdAt": "2025-08-13T00:49:37.474Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "cuisineTagId": "cme996haj0008j4h1nhkcal0k"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeah3s001f12oox0s26hc2",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.632Z"
+        },
+        {
+          "id": "cmeeeah4a001h12oo5rt1jrv3",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.650Z"
+        },
+        {
+          "id": "cmeeeah4u001j12oogij9fz0v",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.671Z"
+        },
+        {
+          "id": "cmeeeah5d001l12ooiiptoq43",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.690Z"
+        },
+        {
+          "id": "cmeeeah5w001n12oob9uvh2cx",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.708Z"
+        },
+        {
+          "id": "cmeeeah6e001p12ool0nxqqzk",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.727Z"
+        },
+        {
+          "id": "cmeeeah6y001r12oomv60pm5s",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.746Z"
+        },
+        {
+          "id": "cmeeeah7k001t12oopyed3z3f",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.768Z"
+        },
+        {
+          "id": "cmeeeah84001v12ooi0vzzt6t",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.789Z"
+        },
+        {
+          "id": "cmeeeah8p001x12ool3mk1gf5",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.809Z"
+        },
+        {
+          "id": "cmeeeah96001z12ooenp0huzm",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.827Z"
+        },
+        {
+          "id": "cmeeeah9p002112oo4xrny5bp",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.845Z"
+        },
+        {
+          "id": "cmeeeahac002312ooynbhvbcs",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.868Z"
+        },
+        {
+          "id": "cmeeeahax002512ooms1gkxcs",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.889Z"
+        },
+        {
+          "id": "cmeeeahbh002712oope5bwajg",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.910Z"
+        },
+        {
+          "id": "cmeeeahd6002912oooigx4qwr",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.971Z"
+        },
+        {
+          "id": "cmeeeahdt002b12oo51tyqxqd",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.994Z"
+        },
+        {
+          "id": "cmeeeaheh002d12oogiz9am6h",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:33.017Z"
+        },
+        {
+          "id": "cmeeeago8000f12oo42lx5obw",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.072Z"
+        },
+        {
+          "id": "cmeeeagp8000h12oo8ae65ts1",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.108Z"
+        },
+        {
+          "id": "cmeeeagps000j12oofctijx1f",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.129Z"
+        },
+        {
+          "id": "cmeeeagr3000l12ooilbmv389",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.176Z"
+        },
+        {
+          "id": "cmeeeags5000n12oocbftkgl9",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.213Z"
+        },
+        {
+          "id": "cmeeeagtc000p12oo3x7k41s7",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.257Z"
+        },
+        {
+          "id": "cmeeeagtw000r12oosv39mxz4",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.277Z"
+        },
+        {
+          "id": "cmeeeagv5000t12oow67g88vb",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.321Z"
+        },
+        {
+          "id": "cmeeeagvs000v12ooms7mzopp",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.345Z"
+        },
+        {
+          "id": "cmeeeagwu000x12oo6l4mc83x",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.382Z"
+        },
+        {
+          "id": "cmeeeagyx000z12oozwdkxmdc",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.457Z"
+        },
+        {
+          "id": "cmeeeagzx001112oog0hhp48a",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.493Z"
+        },
+        {
+          "id": "cmeeeah0j001312ood2fnk6d0",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.515Z"
+        },
+        {
+          "id": "cmeeeah13001512oo4rw7ia0v",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.536Z"
+        },
+        {
+          "id": "cmeeeah1o001712oojpep3uqa",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.556Z"
+        },
+        {
+          "id": "cmeeeah26001912oojw2m6uem",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.574Z"
+        },
+        {
+          "id": "cmeeeah2o001b12ooa30c1mew",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.593Z"
+        },
+        {
+          "id": "cmeeeah37001d12oo7rivqhpy",
+          "restaurantId": "cme996hfm000bj4h1cu57rrca",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:32.611Z"
+        }
+      ],
+      "reservations": []
+    },
+    {
+      "id": "cme996i78004hj4h1nn8pyj13",
+      "name": "Bar Spirit Forward",
+      "slug": "bar-spirit-forward",
+      "emoji": "🥃",
+      "latitude": 12.975125,
+      "longitude": 77.60235,
+      "neighborhood": "CBD",
+      "category": "cocktails",
+      "isHot": true,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": "https://instagram.com/spiritforwardbangalore",
+      "website": "https://spiritforward.in",
+      "email": "reservations@spiritforward.in",
+      "createdAt": "2025-08-13T00:49:38.468Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "cuisineTagId": "cme996haj0008j4h1nhkcal0k"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeaj78004l12oodshs5soy",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.349Z"
+        },
+        {
+          "id": "cmeeeaj7t004n12oofo9y168x",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.370Z"
+        },
+        {
+          "id": "cmeeeaj8d004p12oojph7u751",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.390Z"
+        },
+        {
+          "id": "cmeeeaj8y004r12ooqcrzdaeg",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.410Z"
+        },
+        {
+          "id": "cmeeeaj9z004t12oo0pekyd5g",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.447Z"
+        },
+        {
+          "id": "cmeeeajan004v12oookvovneu",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.472Z"
+        },
+        {
+          "id": "cmeeeajbg004x12oo7z5g97i2",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.500Z"
+        },
+        {
+          "id": "cmeeeajby004z12oor1ool4de",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.519Z"
+        },
+        {
+          "id": "cmeeeajcu005112oomghqqnai",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.550Z"
+        },
+        {
+          "id": "cmeeeajdf005312oo4zlfsuf9",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.572Z"
+        },
+        {
+          "id": "cmeeeajec005512oov1wqvvum",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.604Z"
+        },
+        {
+          "id": "cmeeeajet005712oo0caqgx0o",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.622Z"
+        },
+        {
+          "id": "cmeeeajfe005912ooam1g2ko1",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.643Z"
+        },
+        {
+          "id": "cmeeeajfy005b12oo3wbhhfa7",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.662Z"
+        },
+        {
+          "id": "cmeeeajgm005d12oom0k081bv",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.686Z"
+        },
+        {
+          "id": "cmeeeajho005f12oo6cmvdzpu",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.725Z"
+        },
+        {
+          "id": "cmeeeaji7005h12oo3pv4jcd5",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.743Z"
+        },
+        {
+          "id": "cmeeeajiq005j12oobczgt3tk",
+          "restaurantId": "cme996i78004hj4h1nn8pyj13",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.762Z"
+        }
+      ],
+      "reservations": []
+    },
+    {
+      "id": "cme996ihl005kj4h1f93j4gh3",
+      "name": "Naru Noodle Bar",
+      "slug": "naru-noodle-bar",
+      "emoji": "🍱",
+      "latitude": 12.958431,
+      "longitude": 77.592895,
+      "neighborhood": "CBD",
+      "category": "dinner",
+      "isHot": false,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": "https://instagram.com/narunoodlebar",
+      "website": "https://naru.in",
+      "email": "reservations@naru.in",
+      "createdAt": "2025-08-13T00:49:38.842Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "cuisineTagId": "cme996hcc0009j4h13deyvfgj"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeakdw006o12oo529v0jv0",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.885Z"
+        },
+        {
+          "id": "cmeeeakfq006q12oonhq79yeu",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.950Z"
+        },
+        {
+          "id": "cmeeeakgm006s12oocqtqklv7",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.982Z"
+        },
+        {
+          "id": "cmeeeakhr006u12ooxgfou9na",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.023Z"
+        },
+        {
+          "id": "cmeeeakid006w12oo88yqdnsa",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.046Z"
+        },
+        {
+          "id": "cmeeeakj6006y12oosw504kdm",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.075Z"
+        },
+        {
+          "id": "cmeeeakjy007012ooxiqo7y3w",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.102Z"
+        },
+        {
+          "id": "cmeeeakkl007212oogjlis8ue",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.125Z"
+        },
+        {
+          "id": "cmeeeakl8007412oob5togder",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.148Z"
+        },
+        {
+          "id": "cmeeeakm4007612oo1ypziahc",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.180Z"
+        },
+        {
+          "id": "cmeeeakn3007812oojw31bzsn",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.215Z"
+        },
+        {
+          "id": "cmeeeakny007a12oo293ko1fp",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.247Z"
+        },
+        {
+          "id": "cmeeeakol007c12oot3f6m06s",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.269Z"
+        },
+        {
+          "id": "cmeeeakp3007e12ooqjfhyg40",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.287Z"
+        },
+        {
+          "id": "cmeeeakpu007g12oowsy254lt",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.315Z"
+        },
+        {
+          "id": "cmeeeakqt007i12ooukmtwd7k",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.349Z"
+        },
+        {
+          "id": "cmeeeakrg007k12ooafzjpnou",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.372Z"
+        },
+        {
+          "id": "cmeeeaks6007m12ookf19r3sd",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-16",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.399Z"
+        },
+        {
+          "id": "cmeeeajl7005o12oo61tmf3fk",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.852Z"
+        },
+        {
+          "id": "cmeeeajls005q12oobtjtvas5",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.872Z"
+        },
+        {
+          "id": "cmeeeajmb005s12oo9x0pwutf",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.891Z"
+        },
+        {
+          "id": "cmeeeajmy005u12oo2qerzbwd",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.914Z"
+        },
+        {
+          "id": "cmeeeajnr005w12ootmd1zmrc",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.943Z"
+        },
+        {
+          "id": "cmeeeajoc005y12oo5zdcgq9h",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.964Z"
+        },
+        {
+          "id": "cmeeeajp0006012ooor5l1vqx",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:35.988Z"
+        },
+        {
+          "id": "cmeeeajpt006212ooeycumxyd",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.016Z"
+        },
+        {
+          "id": "cmeeeajqg006412oo80vni2bp",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.041Z"
+        },
+        {
+          "id": "cmeeeajr5006612oom6f03txh",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.065Z"
+        },
+        {
+          "id": "cmeeeajru006812ooenh9hmnz",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.090Z"
+        },
+        {
+          "id": "cmeeeak8l006a12ooiuv82kjk",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.693Z"
+        },
+        {
+          "id": "cmeeeak9c006c12ooykwcahn9",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.721Z"
+        },
+        {
+          "id": "cmeeeaka6006e12ooq32cnum9",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.750Z"
+        },
+        {
+          "id": "cmeeeakat006g12ooe2w8s5yw",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.773Z"
+        },
+        {
+          "id": "cmeeeakbk006i12ooms9j8ttu",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.801Z"
+        },
+        {
+          "id": "cmeeeakcg006k12oo1ks2wodi",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.832Z"
+        },
+        {
+          "id": "cmeeeakdc006m12oohz8zqauq",
+          "restaurantId": "cme996ihl005kj4h1f93j4gh3",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:36.864Z"
+        }
+      ],
+      "reservations": []
+    },
+    {
+      "id": "cme996j1m007nj4h18gedyrfi",
+      "name": "Pizza 4P's (Indiranagar)",
+      "slug": "pizza-4ps-indiranagar",
+      "emoji": "🍕",
+      "latitude": 12.969968,
+      "longitude": 77.636089,
+      "neighborhood": "Indiranagar",
+      "category": "dinner",
+      "isHot": false,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": "https://instagram.com/pizza4ps",
+      "website": "https://pizza4ps.com",
+      "email": "indiranagar@pizza4ps.com",
+      "createdAt": "2025-08-13T00:49:39.563Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "cuisineTagId": "cme996hcc0009j4h13deyvfgj"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeakuh007r12oodihnd05k",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.481Z"
+        },
+        {
+          "id": "cmeeeakv6007t12ooq2da2zzn",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.507Z"
+        },
+        {
+          "id": "cmeeeakvz007v12oofddp3xob",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.535Z"
+        },
+        {
+          "id": "cmeeeakwl007x12oothujespp",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.558Z"
+        },
+        {
+          "id": "cmeeeakxf007z12oohi5wjqus",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.587Z"
+        },
+        {
+          "id": "cmeeeaky2008112oohtvwl2nk",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.610Z"
+        },
+        {
+          "id": "cmeeeakz2008312oogfavluzc",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.647Z"
+        },
+        {
+          "id": "cmeeeakzn008512ooph19t9uc",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.667Z"
+        },
+        {
+          "id": "cmeeeal0b008712oojugs27h9",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.691Z"
+        },
+        {
+          "id": "cmeeeal0x008912ooxc0hoawp",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.713Z"
+        },
+        {
+          "id": "cmeeeal1j008b12oo8imv3sf5",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.736Z"
+        },
+        {
+          "id": "cmeeeal2d008d12oocvqbuzu8",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.765Z"
+        },
+        {
+          "id": "cmeeeal31008f12ooamqrun42",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.789Z"
+        },
+        {
+          "id": "cmeeeal3k008h12ookhp17mz5",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.808Z"
+        },
+        {
+          "id": "cmeeeal45008j12ooqh9g69jv",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.830Z"
+        },
+        {
+          "id": "cmeeeal4t008l12ooxy4dmxw4",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.853Z"
+        },
+        {
+          "id": "cmeeeal5m008n12oob5d666sf",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.883Z"
+        },
+        {
+          "id": "cmeeeal6a008p12ookinxq90g",
+          "restaurantId": "cme996j1m007nj4h18gedyrfi",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.907Z"
+        }
+      ],
+      "reservations": []
+    },
+    {
+      "id": "cme996jnr008qj4h1f5hf0yd9",
+      "name": "Dali & Gala",
+      "slug": "dali-and-gala",
+      "emoji": "🍸",
+      "latitude": 12.975124,
+      "longitude": 77.602868,
+      "neighborhood": "CBD",
+      "category": "cocktails",
+      "isHot": false,
+      "heroImageUrl": "/api/placeholder/400/300",
+      "instagramUrl": null,
+      "website": null,
+      "email": "daligala@example.com",
+      "createdAt": "2025-08-13T00:49:40.359Z",
+      "cuisineTags": [
+        {
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "cuisineTagId": "cme996haj0008j4h1nhkcal0k"
+        }
+      ],
+      "timeSlots": [
+        {
+          "id": "cmeeeal8k008u12oo8k4tewzk",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:37.988Z"
+        },
+        {
+          "id": "cmeeeal93008w12oo4ga3vzb5",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.008Z"
+        },
+        {
+          "id": "cmeeeal9n008y12ootqa9ehyb",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "19:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.027Z"
+        },
+        {
+          "id": "cmeeeala7009012oozitdnhp8",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.048Z"
+        },
+        {
+          "id": "cmeeealar009212oob409nfn6",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.067Z"
+        },
+        {
+          "id": "cmeeealbg009412oohc9akl8t",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.093Z"
+        },
+        {
+          "id": "cmeeealbz009612ookw1pqwqr",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.112Z"
+        },
+        {
+          "id": "cmeeealch009812ooouqd0g6g",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.129Z"
+        },
+        {
+          "id": "cmeeeald2009a12oobdxj5087",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "20:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.150Z"
+        },
+        {
+          "id": "cmeeealdp009c12ook9150p63",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.174Z"
+        },
+        {
+          "id": "cmeeeale5009e12oohog24v5z",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.190Z"
+        },
+        {
+          "id": "cmeeealeq009g12oovk2n8fux",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.210Z"
+        },
+        {
+          "id": "cmeeealfa009i12oozw3wb8s8",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.231Z"
+        },
+        {
+          "id": "cmeeealru009k12oojbpjybow",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.683Z"
+        },
+        {
+          "id": "cmeeealsx009m12oocp3c6woq",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "21:30",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.722Z"
+        },
+        {
+          "id": "cmeeealtj009o12oomqodfcxa",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 2,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.743Z"
+        },
+        {
+          "id": "cmeeealu9009q12oob1v3s9g4",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 4,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.770Z"
+        },
+        {
+          "id": "cmeeealut009s12ooycfhi2gf",
+          "restaurantId": "cme996jnr008qj4h1f5hf0yd9",
+          "date": "2025-08-17",
+          "time": "22:00",
+          "partySize": 6,
+          "status": "AVAILABLE",
+          "createdAt": "2025-08-16T15:11:38.789Z"
+        }
+      ],
+      "reservations": []
+    }
+  ],
+  "users": [
+    {
+      "id": "cmeeealve009t12oolbhal5bc",
+      "email": "john@example.com",
+      "phone": "+919876543210",
+      "name": "John Doe",
+      "verified": false,
+      "createdAt": "2025-08-16T15:11:38.811Z",
+      "reservations": [],
+      "auth": null,
+      "details": null
+    },
+    {
+      "id": "cmeeealw6009u12ooq14mbj5c",
+      "email": "jane@example.com",
+      "phone": "+919876543211",
+      "name": "Jane Smith",
+      "verified": false,
+      "createdAt": "2025-08-16T15:11:38.838Z",
+      "reservations": [],
+      "auth": null,
+      "details": null
+    }
+  ],
+  "cuisineTags": [
+    {
+      "id": "cme8zilzf0000zuk6g8z7am5k",
+      "name": "Italian"
+    },
+    {
+      "id": "cme8zilzu0001zuk6wn9cuhzh",
+      "name": "Japanese"
+    },
+    {
+      "id": "cme8zim060002zuk668n1hcs5",
+      "name": "Indian"
+    },
+    {
+      "id": "cme8zim0i0003zuk6727pcaeh",
+      "name": "American"
+    },
+    {
+      "id": "cme8zim0t0004zuk6z62goo4j",
+      "name": "Mediterranean"
+    },
+    {
+      "id": "cme8zim170005zuk63wgsbl3d",
+      "name": "Chinese"
+    },
+    {
+      "id": "cme8zim1i0006zuk6j41qli1n",
+      "name": "Thai"
+    },
+    {
+      "id": "cme8zim1v0007zuk6u7275r6z",
+      "name": "Mexican"
+    },
+    {
+      "id": "cme996haj0008j4h1nhkcal0k",
+      "name": "cocktails"
+    },
+    {
+      "id": "cme996hcc0009j4h13deyvfgj",
+      "name": "dinner"
+    },
+    {
+      "id": "cme996hd3000aj4h1jbdsh9tx",
+      "name": "hot"
+    }
+  ]
+}
