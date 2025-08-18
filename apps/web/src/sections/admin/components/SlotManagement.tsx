@@ -135,7 +135,7 @@ export const SlotManagement: React.FC<SlotManagementProps> = ({
       {/* Slots Grid */}
       <div>
         <h3 className="text-md font-medium text-slate-200 mb-4">
-          Slots for {date}
+          Slots for {new Date(date).toLocaleDateString()}
         </h3>
 
         {loading ? (

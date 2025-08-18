@@ -208,21 +208,6 @@ async function main() {
       heroImageUrl: "/api/placeholder/400/300",
       email: "vidyarthibhavan@example.com",
       cuisineTagIds: [createdCuisineTags.find(t => t.name === 'Indian')?.id].filter(Boolean),
-    },
-    {
-      name: "23rd Street Pizza",
-      slug: "23rd-street-pizza",
-      emoji: "🍕",
-      latitude: 12.9679447,
-      longitude: 77.6072707,
-      neighborhood: "Koramangala",
-      category: "dinner",
-      isHot: false,
-      heroImageUrl: "/api/placeholder/400/300",
-      instagramUrl: "",
-      website: "",
-      email: "reservations@23rdstreetpizza.com",
-      cuisineTagIds: [createdCuisineTags.find(t => t.name === 'dinner')?.id].filter(Boolean),
     }
   ];
 
