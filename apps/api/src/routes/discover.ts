@@ -205,7 +205,14 @@ router.get('/available-today', async (req, res) => {
       }
     });
 
-    const restaurants = Array.from(restaurantMap.values());
+    let restaurants = Array.from(restaurantMap.values());
+
+    // Sort restaurants to show "23rd Street Pizza" first, then alphabetically
+    restaurants.sort((a, b) => {
+      if (a.restaurant.name === "23rd Street Pizza") return -1;
+      if (b.restaurant.name === "23rd Street Pizza") return 1;
+      return a.restaurant.name.localeCompare(b.restaurant.name);
+    });
 
     console.log(`Found ${restaurants.length} restaurants with ${availableSlots.length} total available slots in next 24 hours`);
     res.json({ restaurants });
