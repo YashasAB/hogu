@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -110,18 +109,18 @@ export default function RestaurantDetail() {
   useEffect(() => {
     const fetchAvailabilityData = async () => {
       if (!restaurant) return;
-      
+
       setAvailabilityLoading(true);
       try {
         const today = new Date();
         const availabilityPromises = [];
-        
+
         // Check next 30 days
         for (let i = 0; i < 30; i++) {
           const checkDate = new Date(today);
           checkDate.setDate(today.getDate() + i);
           const dateStr = checkDate.toISOString().split("T")[0];
-          
+
           // Check for each possible party size (2, 4, 6, 8)
           const partySizePromises = [2, 4, 6, 8].map(async (size) => {
             try {
@@ -139,9 +138,9 @@ export default function RestaurantDetail() {
               return null;
             }
           });
-          
+
           const availablePartySizes = (await Promise.all(partySizePromises)).filter(size => size !== null);
-          
+
           if (availablePartySizes.length > 0) {
             availabilityPromises.push({
               date: dateStr,
@@ -149,7 +148,7 @@ export default function RestaurantDetail() {
             });
           }
         }
-        
+
         const availability = await Promise.all(availabilityPromises);
         setAvailabilityData(availability.filter(item => item.partySizes.length > 0));
       } catch (error) {
@@ -168,7 +167,7 @@ export default function RestaurantDetail() {
       // Set the closest available date
       const closestDate = availabilityData[0].date;
       setDate(closestDate);
-      
+
       // Set the smallest available party size for that date
       const smallestPartySize = Math.min(...availabilityData[0].partySizes);
       setPartySize(smallestPartySize);
@@ -216,6 +215,7 @@ export default function RestaurantDetail() {
       return;
     }
 
+    // Check if user is logged in before making reservation
     const token = localStorage.getItem("hogu_token");
     if (!token) {
       navigate("/login");
@@ -361,7 +361,7 @@ export default function RestaurantDetail() {
               console.error("Failed to load image URL:", e.currentTarget.src);
               console.error("heroImageUrl from data:", restaurant.heroImageUrl);
               console.error("==============================");
-              
+
               // Try dynamic endpoint if direct URL failed and we haven't already tried it
               if (!e.currentTarget.src.includes('/hero-image') && !e.currentTarget.src.includes('placeholder')) {
                 console.log("Trying dynamic hero image endpoint...");
@@ -442,19 +442,19 @@ export default function RestaurantDetail() {
                     const today = new Date();
                     const tomorrow = new Date(today);
                     tomorrow.setDate(today.getDate() + 1);
-                    
+
                     let displayText = dateObj.toLocaleDateString('en-US', { 
                       weekday: 'long', 
                       month: 'short', 
                       day: 'numeric' 
                     });
-                    
+
                     if (availableDate === today.toISOString().split('T')[0]) {
                       displayText += ' (Today)';
                     } else if (availableDate === tomorrow.toISOString().split('T')[0]) {
                       displayText += ' (Tomorrow)';
                     }
-                    
+
                     return (
                       <option key={availableDate} value={availableDate}>
                         {displayText}

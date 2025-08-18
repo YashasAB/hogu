@@ -54,6 +54,10 @@ export default function TodayNearYou({ city }: TodayNearYouProps) {
     fetchAvailableRestaurants();
   }, [city]);
 
+  const handleRestaurantClick = (restaurantSlug: string) => {
+    navigate(`/r/${restaurantSlug}`);
+  };
+
   return (
     <section id="today" className="space-y-3">
       <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -98,7 +102,7 @@ export default function TodayNearYou({ city }: TodayNearYouProps) {
               <div
                 key={restaurant.restaurant.id}
                 className="w-[calc(26.67%-8px)] min-w-[112px] flex-shrink-0 border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow cursor-pointer"
-                onClick={() => navigate(`/r/${restaurant.restaurant.slug}`)}
+                onClick={() => handleRestaurantClick(restaurant.restaurant.slug)}
               >
                 <div className="w-full h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-2 p-3 flex flex-col justify-between border border-white/10 hover:border-brand/30 transition-all duration-300">
                   <div className="flex items-center gap-2">
