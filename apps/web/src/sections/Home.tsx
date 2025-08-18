@@ -345,15 +345,9 @@ export default function Home() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {user ? (
-              <Link to="/explore-tonight" className="btn btn-accent">
-                Find a table today
-              </Link>
-            ) : (
-              <Link to="/login" className="btn btn-accent">
-                Find a table today
-              </Link>
-            )}
+            <Link to="/explore-tonight" className="btn btn-accent">
+              Find a table today
+            </Link>
             <a href="#week" className="btn bg-white text-brand">
               Plan the week
             </a>
