@@ -274,11 +274,11 @@ export default function RestaurantAdminPanel() {
         api.getSlots(date),
         api.getBookings(),
       ]);
-      
+
       // Handle the new response format
       const bookingsData = (bookingsResponse as any).bookings || bookingsResponse;
       const liveStatusData = (bookingsResponse as any).liveStatus;
-      
+
       console.log("🔄 Received slots:", slotsData.length, "bookings:", bookingsData.length);
       setSlots(slotsData);
       setBookings(bookingsData);
@@ -355,16 +355,16 @@ export default function RestaurantAdminPanel() {
     try {
       const updatedRestaurant = await api.updateRestaurant(profileData);
       setRestaurant(updatedRestaurant);
-      
+
       // Clear any preview since we've saved
       const profileComponent = document.querySelector('[data-component="restaurant-profile"]');
       if (profileComponent) {
         // Trigger a re-render to clear preview
         window.dispatchEvent(new CustomEvent('profile-saved'));
       }
-      
+
       alert("Profile updated successfully!");
-      
+
       // Redirect to dashboard after a brief delay
       setTimeout(() => {
         setActiveTab("dashboard");
