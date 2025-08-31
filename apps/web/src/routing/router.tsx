@@ -50,8 +50,7 @@ export const router = createBrowserRouter([
     element: <DropDetail />
   },
   {
-    path: '/dating',
-    element: <Dating />
+    path: '/dating', element: <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center"><h1 className="text-2xl">Dating Feature Coming Soon</h1></div>
   },
   {
     path: '/restaurant-login',
