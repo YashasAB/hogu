@@ -348,8 +348,8 @@ export default function Home() {
             <Link to="/explore-tonight" className="btn btn-accent">
               Find a table today
             </Link>
-            <a href="#week" className="btn bg-white text-brand">
-              Plan the week
+            <a href="" className="btn bg-white text-brand">
+              Dating
             </a>
             {!token && (
               <Link to="/login" className="btn btn-primary">
