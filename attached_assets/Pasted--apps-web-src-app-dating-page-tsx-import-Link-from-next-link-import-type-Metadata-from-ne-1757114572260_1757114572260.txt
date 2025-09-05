@@ -1,0 +1,57 @@
+// /apps/web/src/app/dating/page.tsx
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Hogu Dating — Real Dates, Not Swipes",
+  description:
+    "Get curated matches, say yes, share availability, and go on real dates in your preferred neighborhoods. No flaking, no endless swiping.",
+};
+
+export default function DatingLandingPage() {
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-16">
+      <section className="text-center">
+        <h1 className="text-3xl md:text-5xl font-semibold">
+          Get real, curated dates. No endless swiping.
+        </h1>
+        <p className="mt-4 text-base md:text-lg text-gray-600">
+          Hogu introduces you to serious matches, helps you share availability,
+          and gets you off the phone and into a real conversation.
+        </p>
+      </section>
+
+      <section className="mt-10 grid gap-3">
+        <div className="rounded-xl border p-5">
+          <ul className="list-disc list-inside text-gray-800 text-sm md:text-base space-y-2 text-left">
+            <li>Get personalized matches introduced to you</li>
+            <li>Go out on real dates in your preferred neighborhoods</li>
+            <li>No flaking — small venue deposit (used as credit)</li>
+            <li>Only serious people — quality over quantity</li>
+            <li>Stop swiping aimlessly and meet IRL</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Link
+          href="/dating/signup"
+          className="inline-flex items-center justify-center rounded-lg px-5 py-3 border border-black hover:bg-black hover:text-white transition"
+        >
+          Sign up
+        </Link>
+        <Link
+          href="/dating/login"
+          className="inline-flex items-center justify-center rounded-lg px-5 py-3 border border-gray-300 hover:bg-gray-100 transition"
+        >
+          Log in
+        </Link>
+      </section>
+
+      <p className="mt-8 text-center text-xs text-gray-500">
+        Users never message each other. Coordination happens via the app and
+        Hogu’s flow. Built for Bengaluru neighborhoods.
+      </p>
+    </main>
+  );
+}
