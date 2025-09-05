@@ -10,6 +10,7 @@ import RestaurantLogin from '../sections/RestaurantLogin'
 import ExploreRestaurants from '../sections/ExploreRestaurants'
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
 import Signup from '../sections/Signup'
+import DatingHome from '../sections/Dating/datingHome'
 
 
 export const router = createBrowserRouter([
@@ -50,7 +51,8 @@ export const router = createBrowserRouter([
     element: <DropDetail />
   },
   {
-    path: '/dating', element: <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center"><h1 className="text-2xl">Dating Feature Coming Soon</h1></div>
+    path: '/dating',
+    element: <DatingHome />
   },
   {
     path: '/restaurant-login',
