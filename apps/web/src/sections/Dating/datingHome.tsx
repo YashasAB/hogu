@@ -1,75 +1,324 @@
-
-import React from 'react';
+// apps/web/src/sections/Dating/datingHome.tsx
+import React from "react";
 
 export default function DatingHome() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-pink-600 via-red-500 to-orange-500 px-6 py-20">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Find Your Perfect Date Night
-          </h1>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Discover romantic restaurants and create unforgettable dining experiences with someone special
-          </p>
-          <button className="bg-white text-pink-600 px-8 py-3 rounded-full font-semibold text-lg hover:bg-pink-50 transition-colors">
-            Start Your Date Night Journey
-          </button>
-        </div>
-      </section>
+    <div className="hogu-landing">
+      {/* Background */}
+      <div className="hogu-bg" aria-hidden />
 
-      {/* Features Section */}
-      <section className="py-16 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Perfect for Date Nights
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-slate-900 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">💕</div>
-              <h3 className="text-xl font-semibold mb-3">Romantic Atmosphere</h3>
-              <p className="text-slate-400">
-                Curated restaurants with intimate lighting, cozy seating, and romantic ambiance
-              </p>
-            </div>
-            <div className="bg-slate-900 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">🍷</div>
-              <h3 className="text-xl font-semibold mb-3">Special Menus</h3>
-              <p className="text-slate-400">
-                Discover tasting menus, wine pairings, and special date night offerings
-              </p>
-            </div>
-            <div className="bg-slate-900 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-xl font-semibold mb-3">Easy Booking</h3>
-              <p className="text-slate-400">
-                Book tables for two with special requests for anniversaries and celebrations
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Header */}
+      <header className="hogu-shell hogu-header">
+        <div className="hogu-brand">Hogu</div>
+        <nav className="hogu-nav">
+          <a className="hogu-link" href="/dating/login">
+            Log in
+          </a>
+          <a className="hogu-link hogu-link--primary" href="/dating/signup">
+            Sign up
+          </a>
+        </nav>
+      </header>
 
-      {/* CTA Section */}
-      <section className="py-16 px-6 bg-slate-900">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            Ready to Plan Your Date Night?
-          </h2>
-          <p className="text-xl text-slate-400 mb-8">
-            Browse romantic restaurants and make reservations for unforgettable evenings
-          </p>
-          <div className="space-x-4">
-            <button className="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-700 transition-colors">
-              Browse Restaurants
-            </button>
-            <button className="border border-pink-600 text-pink-600 px-6 py-3 rounded-lg font-semibold hover:bg-pink-600 hover:text-white transition-colors">
-              Learn More
-            </button>
-          </div>
+      {/* Hero */}
+      <main className="hogu-shell hogu-hero">
+        <h1 className="hogu-title">
+          Real dates. <span className="hogu-accent">Not swipes.</span>
+        </h1>
+        <p className="hogu-subtitle">
+          Curated matches with serious intent. Share availability, meet in your
+          preferred neighborhoods, and let the night do the talking.
+        </p>
+
+        <div className="hogu-cta">
+          <a
+            className="hogu-btn hogu-btn--primary"
+            href="/dating/signup"
+            aria-label="Sign up for Hogu Dating"
+          >
+            Sign up
+          </a>
+          <a
+            className="hogu-btn hogu-btn--ghost"
+            href="/dating/login"
+            aria-label="Log in to Hogu Dating"
+          >
+            Log in
+          </a>
         </div>
-      </section>
+
+        {/* Value Props */}
+        <section className="hogu-grid">
+          <article className="hogu-card">
+            <div className="hogu-chip">Curated</div>
+            <h3>Personalized matches</h3>
+            <p>Fewer, higher-quality introductions. No feed fatigue.</p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">IRL</div>
+            <h3>Real dates, fast</h3>
+            <p>Say “Yes”, share your times, and we move it offline.</p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">Commitment</div>
+            <h3>No flaking</h3>
+            <p>Small venue deposit that turns into credit at the table.</p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">Neighborhoods</div>
+            <h3>Built for BLR</h3>
+            <p>
+              Indiranagar • Koramangala • HSR • Whitefield • Central BLR •
+              Kalyan Nagar
+            </p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">Intent</div>
+            <h3>Only serious people</h3>
+            <p>Clear preferences, aligned goals, respectful culture.</p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">Clarity</div>
+            <h3>Get off the phone</h3>
+            <p>Stop swiping. Make a plan. Meet someone great.</p>
+          </article>
+        </section>
+
+        {/* Trust strip */}
+        <div className="hogu-trust">
+          <span>Neighborhood-first</span>
+          <span className="dot" />
+          <span>Deposit becomes credit</span>
+          <span className="dot" />
+          <span>Privacy & respect</span>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="hogu-shell hogu-footer">
+        <p>
+          Hogu connects real people for real dates. Users never message each
+          other; coordination runs through the app’s flow.
+        </p>
+      </footer>
+
+      {/* Local, component-scoped styles */}
+      <style>
+        {`
+        .hogu-landing {
+          min-height: 100dvh;
+          color: #0b0b0b;
+          background: #0f1115;
+          position: relative;
+          overflow-x: hidden;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        .hogu-bg {
+          position: absolute;
+          inset: -20% -10% 0 -10%;
+          background:
+            radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.08), transparent 60%),
+            radial-gradient(800px 400px at 10% 10%, rgba(100,116,255,0.10), transparent 60%),
+            radial-gradient(800px 400px at 90% 0%, rgba(16,185,129,0.08), transparent 60%);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .hogu-shell {
+          width: 100%;
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 20px clamp(16px, 3vw, 32px);
+          position: relative;
+          z-index: 1;
+        }
+
+        .hogu-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .hogu-brand {
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          color: #fff;
+          font-size: 22px;
+        }
+
+        .hogu-nav .hogu-link {
+          margin-left: 12px;
+          padding: 10px 14px;
+          border-radius: 10px;
+          text-decoration: none;
+          font-weight: 600;
+          border: 1px solid rgba(255,255,255,0.15);
+          color: #e6e6e6;
+          transition: all .2s ease;
+          backdrop-filter: blur(6px);
+        }
+        .hogu-link:hover { background: rgba(255,255,255,0.06); }
+        .hogu-link--primary {
+          color: #0b0b0b;
+          background: #e32995;
+          border-color: transparent;
+        }
+        .hogu-link--primary:hover {
+          transform: translateY(-1px);
+          filter: brightness(0.98);
+        }
+
+        .hogu-hero {
+          text-align: center;
+          padding-top: clamp(24px, 6vh, 64px);
+          padding-bottom: clamp(32px, 8vh, 96px);
+        }
+
+        .hogu-title {
+          color: #ffffff;
+          font-size: clamp(28px, 5vw, 56px);
+          line-height: 1.08;
+          letter-spacing: -0.02em;
+          margin: 0;
+        }
+        .hogu-accent {
+          background: linear-gradient(135deg, #a5b4fc, #34d399);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .hogu-subtitle {
+          margin: 16px auto 0;
+          max-width: 680px;
+          color: rgba(255,255,255,0.82);
+          font-size: clamp(14px, 2.2vw, 18px);
+          line-height: 1.6;
+        }
+
+        .hogu-cta {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          margin-top: 28px;
+          flex-wrap: wrap;
+        }
+
+        .hogu-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px 18px;
+          border-radius: 14px;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 15px;
+          transition: all .2s ease;
+          border: 1px solid rgba(255,255,255,0.14);
+          backdrop-filter: blur(6px);
+        }
+        .hogu-btn--primary {
+          color: #0b0b0b;
+          background: linear-gradient(135deg, #ffffff, #dfe3ff);
+          border-color: transparent;
+          box-shadow: 0 8px 24px rgba(164, 176, 255, 0.15);
+        }
+        .hogu-btn--primary:hover { transform: translateY(-1px); }
+        .hogu-btn--ghost {
+          color: #eaeaea;
+          background: rgba(255,255,255,0.06);
+        }
+        .hogu-btn--ghost:hover {
+          background: rgba(255,255,255,0.10);
+          transform: translateY(-1px);
+        }
+
+        .hogu-grid {
+          margin-top: 36px;
+          display: grid;
+          grid-template-columns: repeat(1, minmax(0, 1fr));
+          gap: 14px;
+        }
+        @media (min-width: 700px) {
+          .hogu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+          .hogu-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        .hogu-card {
+          background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 18px;
+          color: #eaeaea;
+          text-align: left;
+          min-height: 140px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .hogu-card h3 {
+          margin: 0;
+          font-size: 18px;
+          color: #ffffff;
+          letter-spacing: -0.01em;
+        }
+        .hogu-card p {
+          margin: 0;
+          font-size: 14px;
+          color: rgba(255,255,255,0.78);
+          line-height: 1.55;
+        }
+
+        .hogu-chip {
+          align-self: flex-start;
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #0b0b0b;
+          background: linear-gradient(135deg, #a5b4fc, #34d399);
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-weight: 800;
+        }
+
+        .hogu-trust {
+          margin-top: 26px;
+          color: rgba(255,255,255,0.65);
+          font-size: 12.5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .hogu-trust .dot {
+          width: 4px;
+          height: 4px;
+          background: rgba(255,255,255,0.4);
+          border-radius: 999px;
+          display: inline-block;
+        }
+
+        .hogu-footer {
+          padding-top: 18px;
+          padding-bottom: 32px;
+        }
+        .hogu-footer p {
+          color: rgba(255,255,255,0.55);
+          text-align: center;
+          font-size: 12.5px;
+          margin: 0;
+        }
+        `}
+      </style>
     </div>
   );
 }
