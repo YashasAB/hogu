@@ -79,7 +79,7 @@ app.get('/health/db', async (req, res) => {
 });
 
 // Import dating auth routes
-import datingAuthRouter from './dating/auth/routes.js';
+import datingAuthRouter from './dating/auth/routes';
 
 // Routes
 app.use('/api/auth', authRoutes);
