@@ -1,139 +1,86 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createSessionCookie = createSessionCookie;
-exports.parseSessionCookie = parseSessionCookie;
-exports.setSessionCookie = setSessionCookie;
-exports.clearSessionCookie = clearSessionCookie;
-exports.authenticateDatingUser = authenticateDatingUser;
-exports.optionalDatingAuth = optionalDatingAuth;
-const crypto_1 = require("crypto");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-const SESSION_SECRET = process.env.SESSION_SECRET || 'change_me_for_prod';
-const COOKIE_NAME = process.env.DATING_SESSION_COOKIE_NAME || 'dating_sess';
-const MAX_AGE_SECONDS = parseInt(process.env.DATING_SESSION_MAX_AGE_SECONDS || '2592000');
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-/**
- * Sign a value with HMAC
- */
-function sign(value) {
-    return (0, crypto_1.createHmac)('sha256', SESSION_SECRET)
-        .update(value)
-        .digest('hex');
+import { createHmac } from "crypto";
+
+const COOKIE_NAME = process.env.DATING_SESSION_COOKIE_NAME || "dating_sess";
+const SECRET = Buffer.from(process.env.SESSION_SECRET || "dev_session_secret");
+const MAX_AGE = parseInt(
+  process.env.DATING_SESSION_MAX_AGE_SECONDS || "2592000",
+  10,
+); // 30d
+
+function b64url(str) {
+  return Buffer.from(str, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
-/**
- * Verify a signed value
- */
-function verify(value, signature) {
-    const expectedSignature = sign(value);
-    return (0, crypto_1.timingSafeEqual)(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'));
+function fromB64url(s) {
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  return Buffer.from(s, "base64").toString("utf8");
 }
-/**
- * Create a signed session cookie value
- */
-function createSessionCookie(userId) {
-    const payload = JSON.stringify({ userId, exp: Date.now() + (MAX_AGE_SECONDS * 1000) });
-    const signature = sign(payload);
-    return `${payload}.${signature}`;
+function sign(val) {
+  return createHmac("sha256", SECRET).update(val).digest("base64url");
 }
-/**
- * Parse and verify a session cookie
- */
-function parseSessionCookie(cookieValue) {
-    try {
-        const [payload, signature] = cookieValue.split('.');
-        if (!payload || !signature || !verify(payload, signature)) {
-            return null;
-        }
-        const data = JSON.parse(payload);
-        // Check expiration
-        if (Date.now() > data.exp) {
-            return null;
-        }
-        return { userId: data.userId };
-    }
-    catch (error) {
-        return null;
-    }
+
+export function makeSessionValue(userId) {
+  const v = b64url(String(userId));
+  const sig = sign(v);
+  return `${v}.${sig}`;
 }
-/**
- * Set session cookie on response
- */
-function setSessionCookie(res, userId) {
-    const cookieValue = createSessionCookie(userId);
-    res.cookie(COOKIE_NAME, cookieValue, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? 'strict' : 'lax',
-        maxAge: MAX_AGE_SECONDS * 1000,
-        path: '/'
-    });
+export function parseSessionValue(val) {
+  if (!val) return null;
+  const [v, sig] = val.split(".");
+  if (!v || !sig) return null;
+  if (sign(v) !== sig) return null;
+  try {
+    const userId = fromB64url(v);
+    return userId || null;
+  } catch {
+    return null;
+  }
 }
-/**
- * Clear session cookie
- */
-function clearSessionCookie(res) {
-    res.clearCookie(COOKIE_NAME, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? 'strict' : 'lax',
-        path: '/'
-    });
+
+export function setSessionCookie(res, userId) {
+  const value = makeSessionValue(userId);
+  const secure = process.env.NODE_ENV === "production";
+  const cookie = [
+    `${COOKIE_NAME}=${value}`,
+    `Path=/`,
+    `HttpOnly`,
+    `SameSite=Lax`,
+    `Max-Age=${MAX_AGE}`,
+    secure ? `Secure` : ``,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  res.setHeader("Set-Cookie", cookie);
 }
-/**
- * Middleware to authenticate dating users
- */
-async function authenticateDatingUser(req, res, next) {
-    try {
-        const cookieValue = req.cookies[COOKIE_NAME];
-        if (!cookieValue) {
-            return res.status(401).json({ error: 'Not authenticated' });
-        }
-        const session = parseSessionCookie(cookieValue);
-        if (!session) {
-            clearSessionCookie(res);
-            return res.status(401).json({ error: 'Invalid or expired session' });
-        }
-        // Verify user still exists
-        const user = await prisma.datingUser.findUnique({
-            where: { id: session.userId },
-            select: { id: true, phone_e164: true, name: true }
-        });
-        if (!user) {
-            clearSessionCookie(res);
-            return res.status(401).json({ error: 'User not found' });
-        }
-        // Attach user to request
-        req.datingUser = user;
-        next();
-    }
-    catch (error) {
-        console.error('Dating auth middleware error:', error);
-        res.status(500).json({ error: 'Authentication error' });
-    }
+
+export function clearSessionCookie(res) {
+  const secure = process.env.NODE_ENV === "production";
+  const cookie = [
+    `${COOKIE_NAME}=;`,
+    `Path=/`,
+    `HttpOnly`,
+    `SameSite=Lax`,
+    `Max-Age=0`,
+    `Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+    secure ? `Secure` : ``,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  res.setHeader("Set-Cookie", cookie);
 }
-/**
- * Optional authentication middleware (doesn't fail if not authenticated)
- */
-async function optionalDatingAuth(req, res, next) {
-    try {
-        const cookieValue = req.cookies[COOKIE_NAME];
-        if (cookieValue) {
-            const session = parseSessionCookie(cookieValue);
-            if (session) {
-                const user = await prisma.datingUser.findUnique({
-                    where: { id: session.userId },
-                    select: { id: true, phone_e164: true, name: true }
-                });
-                if (user) {
-                    req.datingUser = user;
-                }
-            }
-        }
-        next();
-    }
-    catch (error) {
-        console.error('Optional dating auth error:', error);
-        next();
-    }
+
+export function datingSessionMiddleware(req, _res, next) {
+  const raw = req.headers.cookie || "";
+  const map = new Map();
+  raw.split(";").forEach((p) => {
+    const i = p.indexOf("=");
+    if (i > -1) map.set(p.slice(0, i).trim(), p.slice(i + 1).trim());
+  });
+  const cookieVal = map.get(COOKIE_NAME);
+  req.datingUserId = parseSessionValue(cookieVal);
+  next();
 }

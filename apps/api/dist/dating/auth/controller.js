@@ -1,175 +1,103 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.signup = signup;
-exports.login = login;
-exports.logout = logout;
-exports.me = me;
-const client_1 = require("@prisma/client");
-const validators_1 = require("./validators");
-const password_1 = require("../password");
-const session_1 = require("../session");
-const prisma = new client_1.PrismaClient();
-/**
- * Normalize phone number to E.164 format
- */
-function normalizePhone(phone) {
-    // Remove all non-digits
-    const digits = phone.replace(/\D/g, '');
-    // If it starts with country code, keep it
-    if (digits.length > 10 && digits.startsWith('91')) {
-        return '+' + digits;
-    }
-    // If it's 10 digits, assume India (+91)
-    if (digits.length === 10) {
-        return '+91' + digits;
-    }
-    // Default: add + if not present
-    return digits.startsWith('+') ? digits : '+' + digits;
-}
-async function signup(req, res) {
+import { PrismaClient } from "@prisma/client";
+import { hashPassword, verifyPassword } from "../password.js";
+import { setSessionCookie, clearSessionCookie } from "../session.js";
+import { requireLoginBody, requireSignupBody } from "./validators.js";
+
+const prisma = new PrismaClient();
+
+export const AuthController = {
+  async signup(req, res, next) {
     try {
-        const validation = validators_1.signupSchema.safeParse(req.body);
-        if (!validation.success) {
-            res.status(400).json({
-                error: 'Validation failed',
-                details: validation.error.flatten().fieldErrors
-            });
-            return;
-        }
-        const { phone, password, name, dob } = validation.data;
-        const normalizedPhone = normalizePhone(phone);
-        // Check if user already exists
-        const existingUser = await prisma.datingUser.findUnique({
-            where: { phone_e164: normalizedPhone }
-        });
-        if (existingUser) {
-            res.status(409).json({ error: 'User with this phone number already exists' });
-            return;
-        }
-        // Hash password
-        const passwordHash = await (0, password_1.hashPassword)(password);
-        // Create user
-        const user = await prisma.datingUser.create({
-            data: {
-                phone_e164: normalizedPhone,
-                password_hash: passwordHash,
-                name,
-                dob: new Date(dob)
-            },
-            select: {
-                id: true,
-                phone_e164: true,
-                name: true,
-                created_at: true
-            }
-        });
-        // Set session cookie
-        (0, session_1.setSessionCookie)(res, user.id);
-        res.status(201).json({
-            success: true,
-            user
-        });
+      const data = requireSignupBody(req.body);
+      const exists = await prisma.datingUser.findFirst({
+        where: { phoneE164: data.phoneE164 },
+        select: { id: true },
+      });
+      if (exists)
+        return res
+          .status(409)
+          .json({ ok: false, error: "Phone already registered" });
+
+      const passwordHash = await hashPassword(data.password);
+      const user = await prisma.datingUser.create({
+        data: {
+          phoneE164: data.phoneE164,
+          passwordHash,
+          name: data.name,
+          dob: new Date(data.dob),
+
+          profession: data.profession,
+          dreams: data.dreams,
+          fiveYearGoal: data.fiveYearGoal,
+          whatIWantInPartner: data.whatIWantInPartner,
+          whyPartnerWouldLikeMe: data.whyPartnerWouldLikeMe,
+
+          physicalActivity: data.physicalActivity,
+          dateBudget: data.dateBudget,
+          instagramHandle: data.instagramHandle,
+          diet: data.diet,
+          drinking: data.drinking,
+          smoking: data.smoking,
+        },
+        select: { id: true, name: true, phoneE164: true },
+      });
+
+      setSessionCookie(res, user.id);
+      return res.status(201).json({ ok: true, user });
+    } catch (err) {
+      if (err && err.details)
+        return res
+          .status(err.status || 400)
+          .json({ ok: false, error: "VALIDATION", details: err.details });
+      return next(err);
     }
-    catch (error) {
-        console.error('Dating signup error:', error);
-        res.status(500).json({ error: 'Signup failed' });
-    }
-}
-async function login(req, res) {
+  },
+
+  async login(req, res, next) {
     try {
-        const validation = validators_1.loginSchema.safeParse(req.body);
-        if (!validation.success) {
-            res.status(400).json({
-                error: 'Validation failed',
-                details: validation.error.flatten().fieldErrors
-            });
-            return;
-        }
-        const { phone, password } = validation.data;
-        const normalizedPhone = normalizePhone(phone);
-        // Find user
-        const user = await prisma.datingUser.findUnique({
-            where: { phone_e164: normalizedPhone }
+      const { phoneE164, password } = requireLoginBody(req.body);
+      const user = await prisma.datingUser.findFirst({
+        where: { phoneE164 },
+        select: { id: true, name: true, phoneE164: true, passwordHash: true },
+      });
+      if (!user)
+        return res
+          .status(401)
+          .json({ ok: false, error: "Invalid credentials" });
+
+      const valid = await verifyPassword(password, user.passwordHash);
+      if (!valid)
+        return res
+          .status(401)
+          .json({ ok: false, error: "Invalid credentials" });
+
+      setSessionCookie(res, user.id);
+      return res
+        .status(200)
+        .json({
+          ok: true,
+          user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
         });
-        if (!user) {
-            res.status(401).json({ error: 'Invalid phone number or password' });
-            return;
-        }
-        // Verify password
-        const isValidPassword = await (0, password_1.verifyPassword)(password, user.password_hash);
-        if (!isValidPassword) {
-            res.status(401).json({ error: 'Invalid phone number or password' });
-            return;
-        }
-        // Set session cookie
-        (0, session_1.setSessionCookie)(res, user.id);
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                phone_e164: user.phone_e164,
-                name: user.name,
-                created_at: user.created_at
-            }
-        });
+    } catch (err) {
+      return next(err);
     }
-    catch (error) {
-        console.error('Dating login error:', error);
-        res.status(500).json({ error: 'Login failed' });
-    }
-}
-async function logout(req, res) {
-    try {
-        (0, session_1.clearSessionCookie)(res);
-        res.json({ success: true, message: 'Logged out successfully' });
-    }
-    catch (error) {
-        console.error('Dating logout error:', error);
-        res.status(500).json({ error: 'Logout failed' });
-    }
-}
-async function me(req, res) {
-    try {
-        const user = req.datingUser;
-        if (!user) {
-            res.status(401).json({ error: 'Not authenticated' });
-            return;
-        }
-        // Get full user data
-        const fullUser = await prisma.datingUser.findUnique({
-            where: { id: user.id },
-            select: {
-                id: true,
-                phone_e164: true,
-                name: true,
-                dob: true,
-                profession: true,
-                dreams: true,
-                five_year_goal: true,
-                what_i_want_in_partner: true,
-                why_partner_would_like_me: true,
-                physical_activity: true,
-                date_budget: true,
-                instagram_handle: true,
-                diet: true,
-                drinking: true,
-                smoking: true,
-                created_at: true,
-                updated_at: true
-            }
-        });
-        if (!fullUser) {
-            (0, session_1.clearSessionCookie)(res);
-            res.status(401).json({ error: 'User not found' });
-            return;
-        }
-        res.json({
-            success: true,
-            user: fullUser
-        });
-    }
-    catch (error) {
-        console.error('Dating me error:', error);
-        res.status(500).json({ error: 'Failed to get user data' });
-    }
-}
+  },
+
+  async me(req, res) {
+    const userId = req.datingUserId || null;
+    if (!userId)
+      return res.status(401).json({ ok: false, error: "Not authenticated" });
+    const user = await prisma.datingUser.findFirst({
+      where: { id: userId },
+      select: { id: true, name: true, phoneE164: true },
+    });
+    if (!user)
+      return res.status(401).json({ ok: false, error: "Not authenticated" });
+    return res.status(200).json({ ok: true, user });
+  },
+
+  async logout(_req, res) {
+    clearSessionCookie(res);
+    return res.status(200).json({ ok: true });
+  },
+};
