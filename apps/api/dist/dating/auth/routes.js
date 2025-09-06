@@ -1,12 +1,11 @@
-import { Router } from "express";
-import { AuthController } from "./controller.js";
-import { datingSessionMiddleware } from "../session.js";
-
-const router = Router();
-
-router.post("/signup", AuthController.signup);
-router.post("/login", AuthController.login);
-router.get("/me", datingSessionMiddleware, AuthController.me);
-router.post("/logout", datingSessionMiddleware, AuthController.logout);
-
-export default router;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const controller_1 = require("./controller");
+const session_1 = require("../session");
+const router = (0, express_1.Router)();
+router.post("/signup", controller_1.AuthController.signup);
+router.post("/login", controller_1.AuthController.login);
+router.get("/me", session_1.datingSessionMiddleware, controller_1.AuthController.me);
+router.post("/logout", session_1.datingSessionMiddleware, controller_1.AuthController.logout);
+exports.default = router;
