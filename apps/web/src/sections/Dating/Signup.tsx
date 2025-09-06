@@ -211,17 +211,6 @@ export default function Signup() {
 
           <div className="grid-three">
             <div className="hogu-field">
-              <label>Timezone</label>
-              <input
-                className="hogu-input"
-                type="text"
-                value={form.tz}
-                onChange={(e) => set("tz", e.target.value)}
-                placeholder="Asia/Kolkata"
-              />
-            </div>
-
-            <div className="hogu-field">
               <label>Date budget</label>
               <select
                 className="hogu-input"
