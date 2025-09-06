@@ -1,11 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const controller_1 = require("./controller");
-const session_1 = require("../session");
-const router = (0, express_1.Router)();
-router.post('/signup', controller_1.signup);
-router.post('/login', controller_1.login);
-router.post('/logout', controller_1.logout);
-router.get('/me', session_1.authenticateDatingUser, controller_1.me);
-exports.default = router;
+import { Router } from "express";
+import { AuthController } from "./controller.js";
+import { datingSessionMiddleware } from "../session.js";
+
+const router = Router();
+
+router.post("/signup", AuthController.signup);
+router.post("/login", AuthController.login);
+router.get("/me", datingSessionMiddleware, AuthController.me);
+router.post("/logout", datingSessionMiddleware, AuthController.logout);
+
+export default router;
