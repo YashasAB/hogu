@@ -11,6 +11,8 @@ import ExploreRestaurants from '../sections/ExploreRestaurants'
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
 import Signup from '../sections/Signup'
 import DatingHome from '../sections/Dating/datingHome'
+import DatingLogin from '../sections/Dating/Login'
+import DatingSignup from '../sections/Dating/Signup'
 
 
 export const router = createBrowserRouter([
@@ -53,6 +55,14 @@ export const router = createBrowserRouter([
   {
     path: '/dating',
     element: <DatingHome />
+  },
+  {
+    path: '/dating/login',
+    element: <DatingLogin />
+  },
+  {
+    path: '/dating/signup',
+    element: <DatingSignup />
   },
   {
     path: '/restaurant-login',
