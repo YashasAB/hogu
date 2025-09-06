@@ -64,7 +64,10 @@ export default function DatingHome() {
           <article className="hogu-card">
             <div className="hogu-chip">Commitment</div>
             <h3>No flaking</h3>
-            <p>Small venue deposit that turns into credit at the table.</p>
+            <p>
+              Small venue deposit that turns into credit at the table. Get payed
+              the deposit if your date flakes.
+            </p>
           </article>
 
           <article className="hogu-card">

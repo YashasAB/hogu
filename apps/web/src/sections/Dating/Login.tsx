@@ -1,66 +1,119 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useState } from "react";
 
 export default function Login() {
+  const [form, setForm] = useState({ phone: "", password: "" });
+
+  const errors = useMemo(() => {
+    const e: Record<string, string> = {};
+    // Basic phone validation: E.164-ish or 10–15 digits
+    if (!/^\+?[0-9]{10,15}$/.test(form.phone))
+      e.phone = "Enter a valid phone number";
+    if (!form.password || form.password.length < 8)
+      e.password = "Min 8 characters";
+    return e;
+  }, [form]);
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (Object.keys(errors).length) return;
+    // Step 2 stub — backend wiring comes in Step 5
+    alert("Login stub (Step 2). Backend integration in Step 5.");
+  }
+
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-semibold mb-4">
-          Log in to Hogu Dating
-        </h1>
-        <p className="text-gray-600">
-          Welcome back! Enter your credentials to continue.
-        </p>
+    <div className="hogu-auth">
+      <div className="hogu-auth-card">
+        <h1>Welcome back</h1>
+        <p className="muted">Sign in with your phone number.</p>
+
+        <form className="hogu-form" onSubmit={onSubmit} noValidate>
+          <div className="hogu-field">
+            <label>Phone number</label>
+            <input
+              className="hogu-input"
+              type="tel"
+              inputMode="tel"
+              placeholder="+91 98765 43210"
+              value={form.phone}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, phone: e.target.value.trim() }))
+              }
+            />
+            {errors.phone && <span className="hogu-error">{errors.phone}</span>}
+          </div>
+
+          <div className="hogu-field">
+            <label>Password</label>
+            <input
+              className="hogu-input"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, password: e.target.value }))
+              }
+            />
+            {errors.password && (
+              <span className="hogu-error">{errors.password}</span>
+            )}
+          </div>
+
+          <button className="hogu-btn hogu-btn--primary" type="submit">
+            Log in
+          </button>
+
+          <p className="muted tiny">
+            New to Hogu?{" "}
+            <a className="hogu-link" href="/dating/signup">
+              Create an account
+            </a>
+          </p>
+        </form>
       </div>
 
-      <form className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-            placeholder="Enter your email"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-            placeholder="Enter your password"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition duration-200"
-        >
-          Log in
-        </button>
-      </form>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/dating/signup" className="text-black hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 text-center">
-        <Link to="/dating" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Back to Dating
-        </Link>
-      </div>
-    </main>
+      <style>{authCss}</style>
+    </div>
   );
 }
+
+const authCss = `
+.hogu-auth {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: #0f1115;
+  color: #eaeaea;
+}
+.hogu-auth-card {
+  width: min(560px, 92vw);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.hogu-auth-card h1 {
+  margin: 0 0 6px 0;
+  font-size: clamp(22px, 3.6vw, 30px);
+  color: #fff;
+}
+.muted { color: rgba(255,255,255,0.75); }
+.tiny { font-size: 12px; margin-top: 10px; }
+.hogu-form { margin-top: 16px; display: grid; gap: 14px; }
+.hogu-field { display: grid; gap: 6px; }
+.hogu-field label { font-weight: 600; color: rgba(255,255,255,0.9); font-size: 13px; }
+.hogu-input {
+  border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06); color: #fff; padding: 12px 12px; font-size: 14px; outline: none;
+}
+.hogu-input:focus { border-color: rgba(227,41,149,0.6); box-shadow: 0 0 0 3px rgba(227,41,149,0.18); }
+.hogu-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 14px; padding: 12px 18px; font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.14); transition: transform .15s ease;
+}
+.hogu-btn--primary { background: #e32995; color: #0b0b0b; border-color: transparent; }
+.hogu-btn--primary:hover { transform: translateY(-1px); }
+.hogu-link { color: #eaeaea; text-decoration: underline; }
+.hogu-error { color: #ffb3c6; font-size: 12px; }
+`;
