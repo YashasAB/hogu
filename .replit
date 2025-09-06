@@ -8,16 +8,12 @@ channel = "stable-25_05"
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
 
 [deployment]
-run = ["sh", "-c", "cd apps/api && NODE_ENV=production npm start"]
-deploymentTarget = "cloudrun"
-build = [
-  "sh",
-  "-c",
-  "cd apps/api && npx prisma generate && npx prisma migrate deploy && cd ../.. && pnpm -C apps/web build && pnpm -C apps/api build",
-]
+run = ["pnpm", "dev"]
+deploymentTarget = "autoscale"
+build = ["pnpm", "build"]
 
 [workflows]
-runButton = "Development"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Development"
@@ -32,20 +28,33 @@ args = "cd apps/api && npm run dev"
 task = "shell.exec"
 args = "cd apps/web && npm run dev"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Development Server"
+
+[[workflows.workflow]]
+name = "Development Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
-
-[[ports]]
-localPort = 5555
-externalPort = 3000
-
-[[ports]]
-localPort = 8080
 externalPort = 80
 
 [agent]

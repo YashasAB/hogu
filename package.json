@@ -2,7 +2,6 @@
   "name": "hogu",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@9",
   "scripts": {
     "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\"",
     "build": "pnpm -C apps/web build && pnpm -C apps/api build",
