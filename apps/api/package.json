@@ -2,7 +2,7 @@
   "name": "hogu-api",
   "version": "0.0.1",
   "scripts": {
-    "dev": "nodemon --quiet --watch src --ext ts --exec \"npx ts-node src/index.ts\"",
+    "dev": "tsc -p tsconfig.json && nodemon --quiet --watch dist dist/index.js",
     "build": "tsc -p tsconfig.json",
     "start": "NODE_ENV=production node dist/index.js",
     "prisma:generate": "prisma generate",

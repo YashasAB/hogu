@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"pnpm -C apps/api dev\"",
-    "start": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web preview\" \"pnpm -C apps/api start\"",
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web dev\" \"API_PORT=8080 pnpm -C apps/api dev\"",
+    "start": "concurrently -k -n WEB,API -c cyan,magenta \"pnpm -C apps/web preview\" \"API_PORT=8080 pnpm -C apps/api start\"",
     "build": "pnpm -C apps/web build && pnpm -C apps/api build",
     "build:api": "pnpm -C apps/api build",
     "build:web": "pnpm -C apps/web build",
