@@ -1,0 +1,103 @@
+// ======================
+// DATING MODULE (scalar-only, no relations/enums)
+// ======================
+
+model DatingUser {
+  id                    String   @id @default(cuid())
+  phoneE164             String   @unique
+  passwordHash          String
+  name                  String
+  dob                   DateTime
+
+  // Profile
+  profession            String?
+  dreams                String?
+  fiveYearGoal          String?
+  whatIWantInPartner    String?
+  whyPartnerWouldLikeMe String?
+
+  // Single-value preferences (validate in app; suggested sets below)
+  // physicalActivity: "RARELY" | "SOMETIMES" | "REGULAR" | "ATHLETE"
+  physicalActivity      String?
+  // dateBudget: "_500_1000" | "_1000_2500" | "_2500_5000" | "_5000_PLUS"
+  dateBudget            String?
+  instagramHandle       String?
+  // diet: "VEG" | "EGG" | "NON_VEG" | "VEGAN" | "JAIN"
+  diet                  String?
+  // drinking: "NEVER" | "SOCIALLY" | "OFTEN"
+  drinking              String?
+  // smoking: "NO" | "SOCIALLY" | "YES"
+  smoking               String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("dating_users")
+}
+
+model DatingUserPhoto {
+  id          String   @id @default(cuid())
+  userId      String                          // logical FK → dating_users.id
+  objectKey   String                          // e.g. "dating/photos/<userId>/<uuid>.jpg"
+  objectUrl   String?                         // optional public/CDN URL
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId], name: "idx_dating_user_photos_user")
+  @@map("dating_user_photos")
+}
+
+model DatingUserCuisine {
+  id        String   @id @default(cuid())
+  userId    String
+  cuisine   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, cuisine], name: "uniq_dating_user_cuisine")
+  @@index([userId], name: "idx_dating_user_cuisines_user")
+  @@map("dating_user_cuisines")
+}
+
+model DatingUserInterest {
+  id        String   @id @default(cuid())
+  userId    String
+  tag       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, tag], name: "uniq_dating_user_interest")
+  @@index([userId], name: "idx_dating_user_interests_user")
+  @@map("dating_user_interests")
+}
+
+/*
+  First date types — store as STRING so composite uniques stay scalar-only.
+  Allowed values (validate in app/validators):
+    "COFFEE","QUICK_COCKTAIL","BREAKFAST","LUNCH","DINNER",
+    "GO_KARTING","PAINT_DATE","BOWLING","MUSEUM_WALK","LIVE_MUSIC","ICECREAM_WALK"
+*/
+model DatingUserFirstDateType {
+  id            String   @id @default(cuid())
+  userId        String
+  firstDateType String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, firstDateType], name: "uniq_dating_user_first_date_type")
+  @@index([userId], name: "idx_dating_user_first_date_types_user")
+  @@map("dating_user_first_date_types")
+}
+
+model DatingUserLanguage {
+  id        String   @id @default(cuid())
+  userId    String
+  lang      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lang], name: "uniq_dating_user_language")
+  @@index([userId], name: "idx_dating_user_languages_user")
+  @@map("dating_user_languages")
+}

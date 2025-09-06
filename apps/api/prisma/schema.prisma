@@ -140,3 +140,4 @@ model UserDetail {
 
   @@map("user_details")
 }
+
