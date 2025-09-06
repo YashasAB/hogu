@@ -141,3 +141,97 @@ model UserDetail {
   @@map("user_details")
 }
 
+// ======================
+// DATING MODULE TABLES
+// ======================
+
+model DatingUser {
+  id                    String   @id @default(cuid())
+  phoneE164             String   @unique
+  passwordHash          String
+  name                  String
+  dob                   DateTime
+
+  // Profile text fields
+  profession            String?
+  dreams                String?
+  fiveYearGoal          String?
+  whatIWantInPartner    String?
+  whyPartnerWouldLikeMe String?
+
+  // Single-value preferences (validate in app layer)
+  physicalActivity      String?
+  dateBudget            String?
+  instagramHandle       String?
+  diet                  String?
+  drinking              String?
+  smoking               String?
+
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("dating_users")
+}
+
+model DatingUserPhoto {
+  id          String   @id @default(cuid())
+  userId      String
+  objectKey   String
+  objectUrl   String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId], name: "idx_dating_user_photos_user")
+  @@map("dating_user_photos")
+}
+
+model DatingUserCuisine {
+  id        String   @id @default(cuid())
+  userId    String
+  cuisine   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, cuisine], name: "uniq_dating_user_cuisine")
+  @@index([userId], name: "idx_dating_user_cuisines_user")
+  @@map("dating_user_cuisines")
+}
+
+model DatingUserInterest {
+  id        String   @id @default(cuid())
+  userId    String
+  tag       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, tag], name: "uniq_dating_user_interest")
+  @@index([userId], name: "idx_dating_user_interests_user")
+  @@map("dating_user_interests")
+}
+
+model DatingUserFirstDateType {
+  id            String   @id @default(cuid())
+  userId        String
+  firstDateType String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, firstDateType], name: "uniq_dating_user_first_date_type")
+  @@index([userId], name: "idx_dating_user_first_date_types_user")
+  @@map("dating_user_first_date_types")
+}
+
+model DatingUserLanguage {
+  id        String   @id @default(cuid())
+  userId    String
+  lang      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lang], name: "uniq_dating_user_language")
+  @@index([userId], name: "idx_dating_user_languages_user")
+  @@map("dating_user_languages")
+}
+
