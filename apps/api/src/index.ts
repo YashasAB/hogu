@@ -7,6 +7,7 @@ import discoverRoutes from './routes/discover';
 import restaurantRoutes from './routes/restaurants';
 import reservationRoutes from './routes/reservations';
 import adminRoutes from './routes/admin';
+import datingAuthRoutes from "./dating/auth/routes.js";
 
 const prisma = new PrismaClient({
   log: ['query', 'info', 'warn', 'error'],
@@ -84,6 +85,7 @@ app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
+app.use("/dating/auth", datingAuthRoutes);
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {
