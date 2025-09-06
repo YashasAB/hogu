@@ -107,12 +107,15 @@ app.get('/health/db', async (req, res) => {
         });
     }
 });
+// Import dating auth routes
+const routes_js_1 = __importDefault(require("./dating/auth/routes.js"));
 // Routes
 app.use('/api/auth', auth_1.default);
 app.use('/api/restaurants', restaurants_1.default);
 app.use('/api/reservations', reservations_1.default);
 app.use('/api/discover', discover_1.default);
 app.use('/api/admin', admin_1.default);
+app.use('/dating/auth', routes_js_1.default);
 // In production, serve the React app for all non-API routes
 if (isProduction) {
     app.get(/^\/(?!api\/).*/, (_req, res) => {
