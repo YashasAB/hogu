@@ -8,7 +8,7 @@ channel = "stable-25_05"
 defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
 
 [deployment]
-run = ["pnpm", "dev"]
+run = ["pnpm", "start"]
 deploymentTarget = "autoscale"
 build = ["pnpm", "build"]
 
