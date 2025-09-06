@@ -1,12 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import discoverRoutes from './routes/discover';
 import restaurantRoutes from './routes/restaurants';
 import reservationRoutes from './routes/reservations';
 import adminRoutes from './routes/admin';
+import datingAuthRoutes from './dating/auth/routes';
 
 const prisma = new PrismaClient({
   log: ['query', 'info', 'warn', 'error'],
@@ -47,6 +49,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Serve static files from React build in production
 const isProduction = process.env.NODE_ENV === 'production';
@@ -84,6 +87,7 @@ app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/dating/auth', datingAuthRoutes);
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {
