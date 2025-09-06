@@ -147,91 +147,91 @@ model UserDetail {
 
 model DatingUser {
   id                    String   @id @default(cuid())
-  phoneE164             String   @unique
-  passwordHash          String
-  name                  String
+  phone_e164            String   @unique @db.VarChar(20)
+  password_hash         String
+  name                  String   @db.VarChar(100)
   dob                   DateTime
 
   // Profile text fields
-  profession            String?
-  dreams                String?
-  fiveYearGoal          String?
-  whatIWantInPartner    String?
-  whyPartnerWouldLikeMe String?
+  profession            String?  @db.VarChar(120)
+  dreams                String?  @db.VarChar(500)
+  five_year_goal        String?  @db.VarChar(500)
+  what_i_want_in_partner String? @db.VarChar(500)
+  why_partner_would_like_me String? @db.VarChar(500)
 
   // Single-value preferences (validate in app layer)
-  physicalActivity      String?
-  dateBudget            String?
-  instagramHandle       String?
+  physical_activity     String?
+  date_budget           String?
+  instagram_handle      String?  @db.VarChar(64)
   diet                  String?
   drinking              String?
   smoking               String?
 
   // Timestamps
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 
   @@map("dating_users")
 }
 
 model DatingUserPhoto {
   id          String   @id @default(cuid())
-  userId      String
-  objectKey   String
-  objectUrl   String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user_id     String
+  object_key  String
+  object_url  String?
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
-  @@index([userId], name: "idx_dating_user_photos_user")
+  @@index([user_id])
   @@map("dating_user_photos")
 }
 
 model DatingUserCuisine {
   id        String   @id @default(cuid())
-  userId    String
+  user_id   String
   cuisine   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@unique([userId, cuisine], name: "uniq_dating_user_cuisine")
-  @@index([userId], name: "idx_dating_user_cuisines_user")
+  @@unique([user_id, cuisine])
+  @@index([user_id])
   @@map("dating_user_cuisines")
 }
 
 model DatingUserInterest {
   id        String   @id @default(cuid())
-  userId    String
+  user_id   String
   tag       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@unique([userId, tag], name: "uniq_dating_user_interest")
-  @@index([userId], name: "idx_dating_user_interests_user")
+  @@unique([user_id, tag])
+  @@index([user_id])
   @@map("dating_user_interests")
 }
 
 model DatingUserFirstDateType {
-  id            String   @id @default(cuid())
-  userId        String
-  firstDateType String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  user_id         String
+  first_date_type String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
-  @@unique([userId, firstDateType], name: "uniq_dating_user_first_date_type")
-  @@index([userId], name: "idx_dating_user_first_date_types_user")
+  @@unique([user_id, first_date_type])
+  @@index([user_id])
   @@map("dating_user_first_date_types")
 }
 
 model DatingUserLanguage {
   id        String   @id @default(cuid())
-  userId    String
+  user_id   String
   lang      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@unique([userId, lang], name: "uniq_dating_user_language")
-  @@index([userId], name: "idx_dating_user_languages_user")
+  @@unique([user_id, lang])
+  @@index([user_id])
   @@map("dating_user_languages")
 }
 
