@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { postJson } from "../../lib/api";
+import { presignPhotos, putToPresignedUrl } from "../../lib/uploads";
 
 const CUISINES = [
   "NORTH_INDIAN",
@@ -69,6 +71,9 @@ export default function Signup() {
   });
 
   const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]); // previews
+  const [files, setFiles] = useState<(File | null)[]>([null, null, null]); // actual files
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -111,6 +116,15 @@ export default function Signup() {
   async function handlePhoto(idx: number, file: File | null) {
     if (!file) return;
     if (!file.type.startsWith("image/")) return alert("Please select an image");
+    
+    // Store the actual file
+    setFiles((prev) => {
+      const next = [...prev]; 
+      next[idx] = file; 
+      return next;
+    });
+    
+    // Create preview
     const reader = new FileReader();
     reader.onload = () => {
       setPhotos((p) => {
@@ -129,20 +143,70 @@ export default function Signup() {
     if (form.password.length < 8) e.password = "Min 8 characters";
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.dob) e.dob = "Date of birth required";
-    if (photos.filter(Boolean).length < 3) e.photos = "Add exactly 3 photos";
+    if (files.filter(Boolean).length !== 3) e.photos = "Add exactly 3 photos";
     if (form.cuisines.length < 1) e.cuisines = "Pick at least one cuisine";
     if (form.firstDateTypes.length < 1)
       e.firstDateTypes = "Pick at least one preferred first date";
     if (!form.dateBudget) e.dateBudget = "Choose a date budget";
     // Soft guidance (not required): interests 3+
     return e;
-  }, [form, photos]);
+  }, [form, files]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     if (Object.keys(errors).length) return;
-    // Step 2 stub — no network call
-    alert("Signup stub (Step 2). Backend integration in Step 5.");
+
+    try {
+      setIsSubmitting(true);
+
+      // 1) presign
+      const realFiles = files.filter(Boolean) as File[];
+      const presigned = await presignPhotos(realFiles);
+
+      if (presigned.length !== 3) throw new Error("Failed to presign 3 uploads");
+
+      // 2) PUT uploads
+      await Promise.all(
+        presigned.map((p, i) => putToPresignedUrl(p.uploadUrl, realFiles[i], p.contentType))
+      );
+
+      // 3) assemble request body for signup (photos => objectKey + sortOrder)
+      const body = {
+        phone: form.phone,
+        password: form.password,
+        name: form.name,
+        dob: form.dob,
+        profession: form.profession,
+        dreams: form.dreams,
+        fiveYearGoal: form.fiveYearGoal,
+        whatIWantInPartner: form.wantInPartner,
+        whyPartnerWouldLikeMe: form.whyTheyLikeMe,
+        physicalActivity: form.physicalActivity,
+        dateBudget: form.dateBudget,
+        instagramHandle: form.instagram,
+        diet: form.diet,
+        drinking: form.drinking,
+        smoking: form.smoking,
+
+        // multi-selects serialized to strings arrays on backend later if needed
+        // but for photos we pass objectKeys now:
+        photos: presigned.map((p, i) => ({ objectKey: p.objectKey, sortOrder: i })),
+        cuisines: form.cuisines,            // (ignored by server in Step 6; will wire later)
+        interests: form.interests,          // same
+        firstDateTypes: form.firstDateTypes // same
+      };
+
+      // 4) call signup
+      const resp = await postJson<{ ok: boolean; user: { id: string } }>("/dating/auth/signup", body);
+
+      // 5) redirect on success
+      window.location.href = "/dating/app"; // or wherever your dashboard lives
+    } catch (err: any) {
+      setSubmitError(err?.message || "Failed to create account");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -462,8 +526,9 @@ export default function Signup() {
             />
           </div>
 
-          <button className="hogu-btn hogu-btn--primary" type="submit">
-            Create account
+          {submitError && <div className="hogu-error" style={{marginTop:8}}>{submitError}</div>}
+          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create account"}
           </button>
 
           <p className="muted tiny">

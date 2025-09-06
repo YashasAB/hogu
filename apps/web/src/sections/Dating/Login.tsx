@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from "react";
+import { postJson } from "../../lib/api";
 
 export default function Login() {
   const [form, setForm] = useState({ phone: "", password: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
@@ -13,11 +16,22 @@ export default function Login() {
     return e;
   }, [form]);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     if (Object.keys(errors).length) return;
-    // Step 2 stub — backend wiring comes in Step 5
-    alert("Login stub (Step 2). Backend integration in Step 5.");
+    try {
+      setIsSubmitting(true);
+      await postJson("/dating/auth/login", {
+        phone: form.phone,
+        password: form.password,
+      });
+      window.location.href = "/dating/app";
+    } catch (err: any) {
+      setSubmitError(err?.message || "Login failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -58,8 +72,9 @@ export default function Login() {
             )}
           </div>
 
-          <button className="hogu-btn hogu-btn--primary" type="submit">
-            Log in
+          {submitError && <div className="hogu-error" style={{marginTop:8}}>{submitError}</div>}
+          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log in"}
           </button>
 
           <p className="muted tiny">
