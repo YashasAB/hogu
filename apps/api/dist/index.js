@@ -46,106 +46,103 @@ const restaurants_1 = __importDefault(require("./routes/restaurants"));
 const reservations_1 = __importDefault(require("./routes/reservations"));
 const admin_1 = __importDefault(require("./routes/admin"));
 const prisma = new client_1.PrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
+    log: ["query", "info", "warn", "error"],
 });
 // Test database connection on startup
 async function testDatabaseConnection() {
     try {
         await prisma.$connect();
-        console.log('✅ Database connected successfully');
+        console.log("✅ Database connected successfully");
     }
     catch (error) {
-        console.error('❌ Database connection failed:', error);
+        console.error("❌ Database connection failed:", error);
         process.exit(1);
     }
 }
 testDatabaseConnection();
 const app = (0, express_1.default)();
 const PORT = Number(process.env.API_PORT || process.env.PORT) || 8080;
-console.log('Environment check:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT || 8080);
-console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+console.log("Environment check:");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("PORT:", process.env.PORT || 8080);
+console.log("DATABASE_URL set:", !!process.env.DATABASE_URL);
 // Set DATABASE_URL if not present (for deployment)
 if (!process.env.DATABASE_URL) {
     process.env.DATABASE_URL = "file:./dev.db";
 }
 // ---- Health routes FIRST, before anything heavy ----
-app.get('/health', (_req, res) => res.status(200).json({ status: 'healthy' }));
-app.get('/ready', (_req, res) => res.status(200).json({ status: 'ready' }));
+app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
+app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
 app.use((0, cors_1.default)({
     origin: true,
-    credentials: true
+    credentials: true,
 }));
 app.use(express_1.default.json());
 // Serve static files from React build in production
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 if (isProduction) {
-    const webDistPath = path_1.default.join(__dirname, '../../web/dist');
+    const webDistPath = path_1.default.join(__dirname, "../../web/dist");
     app.use(express_1.default.static(webDistPath));
-    console.log('Serving static files from:', webDistPath);
+    console.log("Serving static files from:", webDistPath);
 }
 // Additional health check with database test (after server is listening)
-app.get('/health/db', async (req, res) => {
+app.get("/health/db", async (req, res) => {
     try {
         // Test database connection
         await prisma.$queryRaw `SELECT 1`;
         res.status(200).json({
-            status: 'ok',
-            database: 'connected',
+            status: "ok",
+            database: "connected",
             uptime: process.uptime(),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
     catch (error) {
-        console.error('Database health check failed:', error);
+        console.error("Database health check failed:", error);
         res.status(503).json({
-            status: 'error',
-            database: 'disconnected',
-            error: 'Database connection failed',
-            timestamp: new Date().toISOString()
+            status: "error",
+            database: "disconnected",
+            error: "Database connection failed",
+            timestamp: new Date().toISOString(),
         });
     }
 });
-// Import dating auth routes
-const routes_1 = __importDefault(require("./dating/auth/routes"));
 // Routes
-app.use('/api/auth', auth_1.default);
-app.use('/api/restaurants', restaurants_1.default);
-app.use('/api/reservations', reservations_1.default);
-app.use('/api/discover', discover_1.default);
-app.use('/api/admin', admin_1.default);
-app.use('/dating/auth', routes_1.default);
+app.use("/api/auth", auth_1.default);
+app.use("/api/restaurants", restaurants_1.default);
+app.use("/api/reservations", reservations_1.default);
+app.use("/api/discover", discover_1.default);
+app.use("/api/admin", admin_1.default);
 // In production, serve the React app for all non-API routes
 if (isProduction) {
     app.get(/^\/(?!api\/).*/, (_req, res) => {
-        const webDistPath = path_1.default.join(__dirname, '../../web/dist');
-        res.sendFile(path_1.default.join(webDistPath, 'index.html'));
+        const webDistPath = path_1.default.join(__dirname, "../../web/dist");
+        res.sendFile(path_1.default.join(webDistPath, "index.html"));
     });
 }
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Hogu API listening on http://0.0.0.0:${PORT}`);
 });
 // 🔑 Mount everything heavy AFTER we're listening
-server.on('listening', async () => {
+server.on("listening", async () => {
     try {
         // Lazy-import the file that mounts image routes
-        const { mountImageRoutes } = await Promise.resolve().then(() => __importStar(require('./mount-images')));
+        const { mountImageRoutes } = await Promise.resolve().then(() => __importStar(require("./mount-images")));
         mountImageRoutes(app, prisma);
-        console.log('✅ Image routes mounted');
+        console.log("✅ Image routes mounted");
     }
     catch (e) {
-        console.error('⚠️ Failed to mount image routes (continuing):', e);
+        console.error("⚠️ Failed to mount image routes (continuing):", e);
     }
 });
-server.on('error', (error) => {
-    console.error('Server error:', error);
+server.on("error", (error) => {
+    console.error("Server error:", error);
     process.exit(1);
 });
 // Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
+process.on("SIGTERM", () => {
+    console.log("SIGTERM received, shutting down gracefully");
     server.close(() => {
-        console.log('Process terminated');
+        console.log("Process terminated");
     });
 });
