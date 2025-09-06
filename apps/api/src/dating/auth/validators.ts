@@ -25,6 +25,26 @@ export function requireSignupBody(body: any) {
     throw err;
   }
 
+  // Validate photos
+  const photosRaw = Array.isArray(body.photos) ? body.photos : [];
+  const photos = photosRaw
+    .map((p: any, i: number) => ({
+      objectKey: String(p?.objectKey || ""),
+      sortOrder: Number(p?.sortOrder ?? i),
+    }))
+    .filter((p: any) => p.objectKey);
+
+  if (photos.length !== 3) {
+    errors.photos = "Exactly 3 photo objectKeys required";
+  }
+
+  if (Object.keys(errors).length) {
+    const err = new Error("Validation failed");
+    (err as any).status = 400;
+    (err as any).details = errors;
+    throw err;
+  }
+
   const pick = (k: string) =>
     body[k] === undefined ? undefined : String(body[k]);
   return {
@@ -43,6 +63,7 @@ export function requireSignupBody(body: any) {
     diet: pick("diet"),
     drinking: pick("drinking"),
     smoking: pick("smoking"),
+    photos,
   };
 }
 
