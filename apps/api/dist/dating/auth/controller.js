@@ -39,6 +39,15 @@ exports.AuthController = {
                 },
                 select: { id: true, name: true, phoneE164: true },
             });
+            // Create photo records
+            await Promise.all(data.photos.map((p) => prisma.datingUserPhoto.create({
+                data: {
+                    userId: user.id,
+                    objectKey: p.objectKey,
+                    sortOrder: p.sortOrder ?? 0,
+                },
+                select: { id: true },
+            })));
             (0, session_1.setSessionCookie)(res, user.id);
             return res.status(201).json({ ok: true, user });
         }

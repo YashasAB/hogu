@@ -29,6 +29,23 @@ function requireSignupBody(body) {
         err.details = errors;
         throw err;
     }
+    // Validate photos
+    const photosRaw = Array.isArray(body.photos) ? body.photos : [];
+    const photos = photosRaw
+        .map((p, i) => ({
+        objectKey: String(p?.objectKey || ""),
+        sortOrder: Number(p?.sortOrder ?? i),
+    }))
+        .filter((p) => p.objectKey);
+    if (photos.length !== 3) {
+        errors.photos = "Exactly 3 photo objectKeys required";
+    }
+    if (Object.keys(errors).length) {
+        const err = new Error("Validation failed");
+        err.status = 400;
+        err.details = errors;
+        throw err;
+    }
     const pick = (k) => body[k] === undefined ? undefined : String(body[k]);
     return {
         phoneE164: phone.startsWith("+") ? phone : `+${phone}`,
@@ -46,6 +63,7 @@ function requireSignupBody(body) {
         diet: pick("diet"),
         drinking: pick("drinking"),
         smoking: pick("smoking"),
+        photos,
     };
 }
 function requireLoginBody(body) {
