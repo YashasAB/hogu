@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateRestaurant = void 0;
 exports.authenticateToken = authenticateToken;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 const authenticateRestaurant = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -14,7 +14,7 @@ const authenticateRestaurant = async (req, res, next) => {
             console.log('Restaurant auth: No token provided');
             return res.status(401).json({ error: 'No token provided' });
         }
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
         console.log('Restaurant auth: Decoded restaurant ID:', decoded.restaurantId);
         req.restaurantId = decoded.restaurantId;
         next();

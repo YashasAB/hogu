@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 
 export interface AuthenticatedRequest extends Request {
   restaurantId?: string;
@@ -21,7 +21,7 @@ export const authenticateRestaurant = async (req: AuthenticatedRequest, res: Res
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { restaurantId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { restaurantId: string };
     console.log('Restaurant auth: Decoded restaurant ID:', decoded.restaurantId);
     req.restaurantId = decoded.restaurantId;
     next();
