@@ -1,76 +1,87 @@
 import { createBrowserRouter } from 'react-router-dom'
-import Home from '../sections/Home'
-import Login from '../sections/Login'
-import RestaurantDetail from '../sections/RestaurantDetail'
-import Hold from '../sections/Hold'
-import Profile from '../sections/Profile'
-import Drops from '../sections/Drops'
-import DropDetail from '../sections/DropDetail'
-import RestaurantLogin from '../sections/RestaurantLogin'
-import ExploreRestaurants from '../sections/ExploreRestaurants'
+
+// Dating sections (now primary at /)
+import DatingHome from '../sections/dating/Home'
+import DatingLogin from '../sections/dating/Login'
+import DatingSignup from '../sections/dating/Signup'
+
+// Restaurant reservation sections (moved to /restaurant-reservations)
+import RestaurantHome from '../sections/restaurant/Home'
+import RestaurantLogin from '../sections/restaurant/Login'
+import RestaurantSignup from '../sections/restaurant/Signup'
+import RestaurantDetail from '../sections/restaurant/RestaurantDetail'
+import RestaurantLoginAdmin from '../sections/restaurant/RestaurantLogin'
+import ExploreRestaurants from '../sections/restaurant/ExploreRestaurants'
+import Hold from '../sections/restaurant/Hold'
+import Profile from '../sections/restaurant/Profile'
+import Drops from '../sections/restaurant/Drops'
+import DropDetail from '../sections/restaurant/DropDetail'
+
+// Admin sections
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
-import Signup from '../sections/Signup'
-import DatingHome from '../sections/Dating/datingHome'
-import DatingLogin from '../sections/Dating/Login'
-import DatingSignup from '../sections/Dating/Signup'
 
 
 export const router = createBrowserRouter([
+  // Dating routes (primary - at root)
   {
     path: '/',
-    element: <Home />
-  },
-  {
-    path: '/login',
-    element: <Login />
-  },
-  {
-    path: '/signup', 
-    element: <Signup />
-  },
-  {
-    path: '/restaurant/:id',
-    element: <RestaurantDetail />
-  },
-  {
-    path: '/r/:slug',
-    element: <RestaurantDetail />
-  },
-  {
-    path: '/hold/:id',
-    element: <Hold />
-  },
-  {
-    path: '/profile',
-    element: <Profile />
-  },
-  {
-    path: '/drops',
-    element: <Drops />
-  },
-  {
-    path: '/drops/:id',
-    element: <DropDetail />
-  },
-  {
-    path: '/dating',
     element: <DatingHome />
   },
   {
-    path: '/dating/login',
+    path: '/login',
     element: <DatingLogin />
   },
   {
-    path: '/dating/signup',
+    path: '/signup',
     element: <DatingSignup />
   },
+
+  // Restaurant reservation routes (dormant - under /restaurant-reservations)
   {
-    path: '/restaurant-login',
+    path: '/restaurant-reservations',
+    element: <RestaurantHome />
+  },
+  {
+    path: '/restaurant-reservations/login',
     element: <RestaurantLogin />
   },
   {
-    path: '/explore-tonight',
+    path: '/restaurant-reservations/signup',
+    element: <RestaurantSignup />
+  },
+  {
+    path: '/restaurant-reservations/restaurant/:id',
+    element: <RestaurantDetail />
+  },
+  {
+    path: '/restaurant-reservations/r/:slug',
+    element: <RestaurantDetail />
+  },
+  {
+    path: '/restaurant-reservations/hold/:id',
+    element: <Hold />
+  },
+  {
+    path: '/restaurant-reservations/profile',
+    element: <Profile />
+  },
+  {
+    path: '/restaurant-reservations/drops',
+    element: <Drops />
+  },
+  {
+    path: '/restaurant-reservations/drops/:id',
+    element: <DropDetail />
+  },
+  {
+    path: '/restaurant-reservations/explore-tonight',
     element: <ExploreRestaurants />
+  },
+
+  // Restaurant admin routes
+  {
+    path: '/restaurant-login',
+    element: <RestaurantLoginAdmin />
   },
   {
     path: '/admin/:restaurantId',

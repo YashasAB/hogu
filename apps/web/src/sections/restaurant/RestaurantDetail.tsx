@@ -218,7 +218,7 @@ export default function RestaurantDetail() {
     // Check if user is logged in before making reservation
     const token = localStorage.getItem("hogu_token");
     if (!token) {
-      navigate("/login");
+      navigate("/restaurant-reservations/login");
       return;
     }
 
@@ -253,7 +253,7 @@ export default function RestaurantDetail() {
 
       // Reset selection and navigate to home
       setSelectedSlot(null);
-      navigate("/");
+      navigate("/restaurant-reservations");
     } catch (error) {
       console.error("Reservation error:", error);
       alert("Failed to create reservation. Please try again.");
@@ -263,7 +263,7 @@ export default function RestaurantDetail() {
   const handleMobileCTA = () => {
     const token = localStorage.getItem("hogu_token");
     if (!token) {
-      navigate("/login");
+      navigate("/restaurant-reservations/login");
       return;
     }
 
@@ -296,7 +296,7 @@ export default function RestaurantDetail() {
           <p className="text-slate-400">
             The restaurant you're looking for doesn't exist.
           </p>
-          <Link to="/explore-tonight" className="btn btn-primary">
+          <Link to="/restaurant-reservations/explore-tonight" className="btn btn-primary">
             ← Back to Explore
           </Link>
         </div>
@@ -312,7 +312,7 @@ export default function RestaurantDetail() {
           <p className="text-slate-400">
             Unfortunately, {restaurant.name} has no available time slots in the next 30 days.
           </p>
-          <Link to="/explore-tonight" className="btn btn-primary">
+          <Link to="/restaurant-reservations/explore-tonight" className="btn btn-primary">
             ← Back to Explore
           </Link>
         </div>
@@ -332,7 +332,7 @@ export default function RestaurantDetail() {
           <div className="text-sm opacity-80">Explore · Bengaluru</div>
           <div className="ml-auto">
             <Link
-              to="/explore-tonight"
+              to="/restaurant-reservations/explore-tonight"
               className="px-3 py-2 rounded-xl bg-slate-900/80 border border-white/10 text-sm font-medium hover:bg-slate-800/80"
             >
               ← Back to Map

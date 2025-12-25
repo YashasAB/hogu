@@ -1,4 +1,4 @@
-// apps/web/srcsrc/sections/Home.tsx
+// apps/web/src/sections/restaurant/Home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -8,9 +8,9 @@ declare global {
     emergencyLogout?: () => void;
   }
 }
-import DarkDatePicker from "../components/DarkDatePicker";
-import TodayNearYou from "../components/TodayNearYou"; // Import the new component
-import UserReservations from "../components/UserReservations"; // Import the UserReservations component
+import DarkDatePicker from "../../components/DarkDatePicker";
+import TodayNearYou from "../../components/TodayNearYou";
+import UserReservations from "../../components/UserReservations";
 
 // Define types for better type safety
 type Slot = { slot_id: string; time: string; party_size: number };
@@ -237,7 +237,7 @@ export default function Home() {
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="py-1">
                   <Link
-                    to="/me"
+                    to="/restaurant-reservations/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowUserDropdown(false)}
                   >
@@ -257,7 +257,7 @@ export default function Home() {
                     My Profile
                   </Link>
                   <Link
-                    to="/me"
+                    to="/restaurant-reservations/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowUserDropdown(false)}
                   >
@@ -345,14 +345,14 @@ export default function Home() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link to="/explore-tonight" className="btn btn-accent">
+            <Link to="/restaurant-reservations/explore-tonight" className="btn btn-accent">
               Find a table today
             </Link>
-            <a href="/dating" className="btn bg-white text-brand">
+            <a href="/" className="btn bg-white text-brand">
               Dating
             </a>
             {!token && (
-              <Link to="/login" className="btn btn-primary">
+              <Link to="/restaurant-reservations/login" className="btn btn-primary">
                 Log in
               </Link>
             )}
@@ -487,7 +487,7 @@ export default function Home() {
       {/* FOOTNOTE: separate restaurant endpoint */}
       <footer className="text-muted text-xs">
         Are you a restaurant?{" "}
-        <Link to="/restaurant/login" className="underline">
+        <Link to="/restaurant-login" className="underline">
           Sign in here
         </Link>
         .

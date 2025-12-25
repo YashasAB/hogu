@@ -8,7 +8,7 @@ import {
   MAP_STYLES,
   MAP_TEXT,
   CATEGORY_EMOJIS,
-} from "../constants/mapConfig";
+} from "../../constants/mapConfig";
 
 type Restaurant = {
   id: string;
@@ -194,7 +194,7 @@ export default function ExploreRestaurants() {
         <div style="text-align: center; font-family: ui-sans-serif, system-ui, sans-serif;">
           <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #1f2937;">${restaurant.name}</h3>
           <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">${restaurant.neighborhood}</p>
-          <a href="/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
+          <a href="/restaurant-reservations/r/${restaurant.slug}" style="display: inline-block; background: #e11d48; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Reserve Now</a>
         </div>
       `);
       
@@ -245,7 +245,7 @@ export default function ExploreRestaurants() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link to="/" className="btn bg-white text-brand">
+            <Link to="/restaurant-reservations" className="btn bg-white text-brand">
               ← Back to Home
             </Link>
             <a href="#map" className="btn btn-accent">
@@ -367,7 +367,7 @@ export default function ExploreRestaurants() {
           {filteredRestaurants.map((restaurant) => (
             <Link
               key={restaurant.id}
-              to={`/r/${restaurant.slug}`}
+              to={`/restaurant-reservations/r/${restaurant.slug}`}
               className="card hover:shadow-lg transition group"
             >
               <div className="flex items-center gap-4">

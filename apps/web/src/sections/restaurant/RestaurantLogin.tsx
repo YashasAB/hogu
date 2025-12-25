@@ -140,13 +140,13 @@ export default function RestaurantLogin() {
         {/* Back to Customer Site */}
         <div className="text-center">
           <a 
-            href="/"
+            href="/restaurant-reservations"
             className="text-brand hover:underline font-medium inline-flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Customer Site
+            Back to Restaurant Reservations
           </a>
         </div>
       </div>

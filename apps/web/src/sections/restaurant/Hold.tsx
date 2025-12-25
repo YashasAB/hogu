@@ -54,7 +54,7 @@ export default function Hold() {
 
       if (diff <= 0) {
         setTimeLeft(0)
-        navigate(`/r/${reservation.restaurant.slug}`)
+        navigate(`/restaurant-reservations/r/${reservation.restaurant.slug}`)
       } else {
         setTimeLeft(Math.ceil(diff / 1000))
       }
@@ -81,7 +81,7 @@ export default function Hold() {
 
       // Success - show confirmation page
       alert('Reservation confirmed! Check your email for details.')
-      navigate('/me')
+      navigate('/restaurant-reservations/profile')
     } catch (error) {
       console.error('Failed to confirm reservation:', error)
       alert('Failed to confirm reservation')
@@ -99,7 +99,7 @@ export default function Hold() {
       })
 
       if (response.ok) {
-        navigate(`/r/${reservation?.restaurant.slug}`)
+        navigate(`/restaurant-reservations/r/${reservation?.restaurant.slug}`)
       }
     } catch (error) {
       console.error('Failed to cancel reservation:', error)

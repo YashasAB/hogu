@@ -23,7 +23,7 @@ export default function Profile() {
   useEffect(() => {
     const token = localStorage.getItem('hogu_token')
     if (!token) {
-      navigate('/login')
+      navigate('/restaurant-reservations/login')
       return
     }
 
@@ -50,7 +50,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     localStorage.removeItem('hogu_token')
-    navigate('/')
+    navigate('/restaurant-reservations')
   }
 
   const formatTime = (time: string) => {
@@ -103,21 +103,21 @@ export default function Profile() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
-          onClick={() => navigate('/drops')}
+          onClick={() => navigate('/restaurant-reservations/drops')}
           className="card text-left hover:shadow-lg transition-shadow"
         >
           <h3 className="font-medium mb-1">Drops</h3>
           <p className="text-muted text-sm">Join reservation drops</p>
         </button>
         <button
-          onClick={() => navigate('/waitlist')}
+          onClick={() => navigate('/restaurant-reservations/waitlist')}
           className="card text-left hover:shadow-lg transition-shadow"
         >
           <h3 className="font-medium mb-1">Waitlist</h3>
           <p className="text-muted text-sm">Manage your waitlist</p>
         </button>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/restaurant-reservations')}
           className="card text-left hover:shadow-lg transition-shadow"
         >
           <h3 className="font-medium mb-1">Discover</h3>
@@ -142,7 +142,7 @@ export default function Profile() {
           <div className="text-center py-8">
             <p className="text-muted mb-4">No reservations yet</p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/restaurant-reservations')}
               className="btn btn-primary"
             >
               Make Your First Reservation
@@ -169,7 +169,7 @@ export default function Profile() {
                 {reservation.status === 'HELD' && (
                   <div className="mt-3">
                     <button
-                      onClick={() => navigate(`/r/${reservation.restaurant.slug}/hold/${reservation.id}`)}
+                      onClick={() => navigate(`/restaurant-reservations/r/${reservation.restaurant.slug}/hold/${reservation.id}`)}
                       className="btn btn-primary btn-sm"
                     >
                       Complete Booking

@@ -26,7 +26,7 @@ export default function Login() {
         phone: form.phone,
         password: form.password,
       });
-      window.location.href = "/dating/app";
+      window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Login failed");
     } finally {
@@ -79,7 +79,7 @@ export default function Login() {
 
           <p className="muted tiny">
             New to Hogu?{" "}
-            <a className="hogu-link" href="/dating/signup">
+            <a className="hogu-link" href="/signup">
               Create an account
             </a>
           </p>

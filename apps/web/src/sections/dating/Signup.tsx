@@ -201,7 +201,7 @@ export default function Signup() {
       const resp = await postJson<{ ok: boolean; user: { id: string } }>("/dating/auth/signup", body);
 
       // 5) redirect on success
-      window.location.href = "/dating/app"; // or wherever your dashboard lives
+      window.location.href = "/app"; // or wherever your dashboard lives
     } catch (err: any) {
       setSubmitError(err?.message || "Failed to create account");
     } finally {
@@ -533,7 +533,7 @@ export default function Signup() {
 
           <p className="muted tiny">
             Already have an account?{" "}
-            <a className="hogu-link" href="/dating/login">
+            <a className="hogu-link" href="/login">
               Log in
             </a>
           </p>

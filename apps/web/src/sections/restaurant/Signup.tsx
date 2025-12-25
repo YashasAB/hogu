@@ -82,14 +82,14 @@ export default function Signup() {
               </div>
               
               <Link 
-                to="/login"
+                to="/restaurant-reservations/login"
                 className="btn btn-primary w-full py-3 text-lg font-semibold inline-block"
               >
                 Click Here to Log In
               </Link>
               
               <Link 
-                to="/"
+                to="/restaurant-reservations"
                 className="text-gray-600 hover:text-gray-800 font-medium inline-block"
               >
                 ← Back to Home
@@ -228,7 +228,7 @@ export default function Signup() {
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
               <Link
-                to="/login"
+                to="/restaurant-reservations/login"
                 className="text-brand hover:underline font-medium"
               >
                 Sign In

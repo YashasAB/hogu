@@ -1,4 +1,4 @@
-// apps/web/src/sections/Dating/datingHome.tsx
+// apps/web/src/sections/dating/Home.tsx
 import React from "react";
 
 export default function DatingHome() {
@@ -11,10 +11,10 @@ export default function DatingHome() {
       <header className="hogu-shell hogu-header">
         <div className="hogu-brand">Hogu</div>
         <nav className="hogu-nav">
-          <a className="hogu-link" href="/dating/login">
+          <a className="hogu-link" href="/login">
             Log in
           </a>
-          <a className="hogu-link hogu-link--primary" href="/dating/signup">
+          <a className="hogu-link hogu-link--primary" href="/signup">
             Sign up
           </a>
         </nav>
@@ -33,14 +33,14 @@ export default function DatingHome() {
         <div className="hogu-cta">
           <a
             className="hogu-btn hogu-btn--primary"
-            href="/dating/signup"
+            href="/signup"
             aria-label="Sign up for Hogu Dating"
           >
             Sign up
           </a>
           <a
             className="hogu-btn hogu-btn--ghost"
-            href="/dating/login"
+            href="/login"
             aria-label="Log in to Hogu Dating"
           >
             Log in
@@ -107,6 +107,11 @@ export default function DatingHome() {
         <p>
           Hogu connects real people for real dates. Users never message each
           other; coordination runs through the app’s flow.
+        </p>
+        <p style={{ marginTop: '16px' }}>
+          <a href="/restaurant-reservations" className="hogu-link" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Looking for restaurant reservations?
+          </a>
         </p>
       </footer>
 

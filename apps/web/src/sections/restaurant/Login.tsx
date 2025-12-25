@@ -42,7 +42,7 @@ export default function Login() {
       localStorage.setItem('hogu_token', data.token)
       
       // Redirect to home or previous page
-      navigate('/')
+      navigate('/restaurant-reservations')
     } catch (error) {
       console.error('Login error:', error)
       setError('Login failed. Please try again.')
@@ -117,7 +117,7 @@ export default function Login() {
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
               <Link 
-                to="/signup" 
+                to="/restaurant-reservations/signup" 
                 className="text-brand hover:underline font-medium"
               >
                 Create Account
