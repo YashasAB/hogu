@@ -1,10 +1,26 @@
 # Overview
 
-Hogu is a restaurant reservation platform built for Bengaluru, inspired by Resy's approach to fair access and scarcity management. The system provides a monorepo architecture with a React frontend and Express API backend, designed to handle table reservations, inventory management, and user authentication. The platform focuses on preventing bot abuse, managing restaurant capacity efficiently, and providing a premium dining discovery experience.
+Hogu is a dating platform built for Bengaluru with restaurant reservation capabilities. The system provides a monorepo architecture with a React frontend and Express API backend.
+
+**Primary Feature**: Curated dating with photo uploads using Replit Object Storage
+**Secondary Feature**: Restaurant reservations accessible at /restaurant-reservations
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+# URL Structure
+
+- `/` - Dating homepage (primary)
+- `/login` - Dating login
+- `/signup` - Dating signup with photo uploads
+- `/app` - Dating app dashboard (after login)
+- `/restaurant-reservations` - Restaurant booking homepage
+- `/restaurant-reservations/explore` - Restaurant map/list
+- `/restaurant-reservations/login` - Restaurant user login
+- `/restaurant-reservations/r/:slug` - Restaurant detail page
+- `/restaurant-login` - Restaurant owner/admin login
+- `/admin/:restaurantId` - Restaurant admin dashboard
 
 # System Architecture
 
@@ -17,18 +33,52 @@ Preferred communication style: Simple, everyday language.
 - **Maps Integration**: Leaflet with react-leaflet for restaurant location visualization
 - **Date Handling**: react-day-picker for reservation date selection
 
+## Frontend File Structure
+```
+apps/web/src/
+├── components/           # Shared UI components
+│   ├── media/           # Media-related components (PhotoCarousel)
+│   ├── DarkDatePicker.tsx
+│   ├── TodayNearYou.tsx
+│   └── UserReservations.tsx
+├── constants/           # App constants (mapConfig.ts)
+├── lib/                 # API utilities, upload helpers
+├── routing/             # router.tsx - centralized routing
+├── sections/            # Feature-based page components
+│   ├── dating/          # Dating feature pages
+│   │   ├── Home.tsx     # Main dating landing page (/)
+│   │   ├── Login.tsx    # Dating login (/login)
+│   │   ├── Signup.tsx   # Dating signup with photos (/signup)
+│   │   └── App.tsx      # Dating app dashboard (/app)
+│   ├── restaurant/      # Restaurant reservation pages
+│   │   ├── Home.tsx     # Restaurant home (/restaurant-reservations)
+│   │   ├── ExploreRestaurants.tsx
+│   │   ├── RestaurantDetail.tsx
+│   │   ├── RestaurantLogin.tsx
+│   │   └── Profile.tsx
+│   └── admin/           # Restaurant admin pages
+│       └── RestaurantDashboard.tsx
+└── shells/              # Layout wrappers (App.tsx)
+```
+
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js framework
-- **Database**: Prisma ORM with SQLite for development (designed for PostgreSQL in production)
+- **Database**: PostgreSQL via Prisma ORM
 - **Authentication**: JWT-based authentication with bcrypt for password hashing
 - **File Uploads**: Multer for handling multipart/form-data with memory storage
-- **Image Storage**: Replit Object Storage for restaurant hero images and assets
+- **Image Storage**: Replit Object Storage (bucket: replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f)
 - **API Design**: RESTful endpoints with proper HTTP status codes and error handling
 - **CORS**: Configured for cross-origin requests with credential support
 
+## API Routes
+- `/api/dating/*` - Dating endpoints (auth, photos, matches)
+- `/api/restaurants/*` - Restaurant data and reservations
+- `/api/discover/*` - Restaurant discovery and availability
+- `/api/images/*` - Image serving from Object Storage
+
 ## Data Model Design
 The system uses a comprehensive schema covering:
-- **User Management**: Users, authentication providers, roles, and RBAC
+- **Dating Users**: Profile data, photos (via Object Storage), preferences
 - **Restaurant Data**: Restaurant details, photos, areas, seating configurations
 - **Inventory System**: Time-slotted availability with capacity management
 - **Reservation Flow**: Bookings with status tracking and party size validation
@@ -38,7 +88,7 @@ The system uses a comprehensive schema covering:
 - **Monorepo Structure**: PNPM workspaces with separate web and API applications
 - **Package Management**: PNPM for efficient dependency management and workspace linking
 - **Build System**: TypeScript compilation with shared base configuration
-- **Development Server**: Concurrent development with API on port 8080 and web on port 5173
+- **Development Server**: Concurrent development with API on port 8080 and web on port 5000
 - **Database Migrations**: Prisma migrate for schema evolution and seeding
 
 ## Production Deployment
@@ -57,7 +107,7 @@ The system uses a comprehensive schema covering:
 - **TypeScript**: Static type checking across the entire stack
 
 ## Database and Storage
-- **SQLite**: Development database (with PostgreSQL migration path)
+- **PostgreSQL**: Production database
 - **Replit Object Storage**: Image and asset storage with binary content serving
 
 ## File Handling and Processing
@@ -81,3 +131,9 @@ The system uses a comprehensive schema covering:
 - **jsonwebtoken**: JWT token generation and validation
 - **bcryptjs**: Password hashing and verification
 - **CORS**: Cross-origin request handling
+
+# Recent Changes
+
+- 2025-12-25: Reorganized app structure - dating promoted to homepage (/), restaurant reservations moved to /restaurant-reservations
+- 2025-12-25: Created feature-based folder structure (sections/dating/, sections/restaurant/, sections/admin/)
+- 2025-12-25: Updated all routing and navigation links for new URL structure
