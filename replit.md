@@ -66,7 +66,7 @@ apps/web/src/
 - **Database**: PostgreSQL via Prisma ORM
 - **Authentication**: JWT-based authentication with bcrypt for password hashing
 - **File Uploads**: Multer for handling multipart/form-data with memory storage
-- **Image Storage**: Replit Object Storage (bucket: replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f)
+- **Image Storage**: Replit Object Storage via Google Cloud Storage (uses DEFAULT_OBJECT_STORAGE_BUCKET_ID env var)
 - **API Design**: RESTful endpoints with proper HTTP status codes and error handling
 - **CORS**: Configured for cross-origin requests with credential support
 
@@ -134,6 +134,9 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-02: Migrated Object Storage from AWS S3 SDK to Replit GCS integration (sidecar-based auth)
+- 2026-02-02: Photo upload presign API now working at /api/dating/uploads/presign
+- 2026-02-02: Image serving uses GCS streaming at /api/images/storage/*
 - 2025-12-25: Reorganized app structure - dating promoted to homepage (/), restaurant reservations moved to /restaurant-reservations
 - 2025-12-25: Created feature-based folder structure (sections/dating/, sections/restaurant/, sections/admin/)
 - 2025-12-25: Updated all routing and navigation links for new URL structure
