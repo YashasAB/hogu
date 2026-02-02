@@ -136,6 +136,10 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-02: Added dating app dashboard at /app with matches view, profile viewing, and profile editing
+- 2026-02-02: Created DatingMatch table for tracking user matches (status: MATCHED, UNMATCHED)
+- 2026-02-02: Added profile API endpoints: GET /api/dating/profile/matches, GET /api/dating/profile/me, PUT /api/dating/profile/me
+- 2026-02-02: Fixed Prisma schema to use camelCase fields matching database columns (phoneE164, passwordHash, etc.)
 - 2026-02-02: Added database admin panel at /db-admin with password protection (ADMIN_PASSWORD secret)
 - 2026-02-02: Migrated Object Storage from AWS S3 SDK to Replit GCS integration (sidecar-based auth)
 - 2026-02-02: Photo upload presign API now working at /api/dating/uploads/presign

@@ -147,91 +147,88 @@ model UserDetail {
 
 model DatingUser {
   id                    String   @id @default(cuid())
-  phone_e164            String   @unique @db.VarChar(20)
-  password_hash         String
-  name                  String   @db.VarChar(100)
+  phoneE164             String   @unique @map("phoneE164")
+  passwordHash          String   @map("passwordHash")
+  name                  String
   dob                   DateTime
 
-  // Profile text fields
-  profession            String?  @db.VarChar(120)
-  dreams                String?  @db.VarChar(500)
-  five_year_goal        String?  @db.VarChar(500)
-  what_i_want_in_partner String? @db.VarChar(500)
-  why_partner_would_like_me String? @db.VarChar(500)
+  profession            String?
+  dreams                String?
+  fiveYearGoal          String?  @map("fiveYearGoal")
+  whatIWantInPartner    String?  @map("whatIWantInPartner")
+  whyPartnerWouldLikeMe String?  @map("whyPartnerWouldLikeMe")
 
-  // Single-value preferences (validate in app layer)
-  physical_activity     String?
-  date_budget           String?
-  instagram_handle      String?  @db.VarChar(64)
+  physicalActivity      String?  @map("physicalActivity")
+  dateBudget            String?  @map("dateBudget")
+  instagramHandle       String?  @map("instagramHandle")
   diet                  String?
   drinking              String?
   smoking               String?
 
-  // Timestamps
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  createdAt             DateTime @default(now()) @map("createdAt")
+  updatedAt             DateTime @updatedAt @map("updatedAt")
 
   @@map("dating_users")
 }
 
 model DatingUserPhoto {
   id          String   @id @default(cuid())
-  user_id     String
-  object_key  String
-  object_url  String?
-  sort_order  Int      @default(0)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  userId      String   @map("userId")
+  objectKey   String   @map("objectKey")
+  objectUrl   String?  @map("objectUrl")
+  sortOrder   Int      @default(0) @map("sortOrder")
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
 
-  @@index([user_id])
+  @@index([userId])
   @@map("dating_user_photos")
 }
 
 model DatingUserCuisine {
   id        String   @id @default(cuid())
-  user_id   String
+  userId    String   @map("userId")
   cuisine   String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
 
-  @@unique([user_id, cuisine])
-  @@index([user_id])
+  @@unique([userId, cuisine])
+  @@index([userId])
   @@map("dating_user_cuisines")
 }
 
 model DatingUserInterest {
   id        String   @id @default(cuid())
-  user_id   String
+  userId    String   @map("userId")
   tag       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
 
-  @@unique([user_id, tag])
-  @@index([user_id])
+  @@unique([userId, tag])
+  @@index([userId])
   @@map("dating_user_interests")
 }
 
 model DatingUserFirstDateType {
-  id              String   @id @default(cuid())
-  user_id         String
-  first_date_type String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @map("userId")
+  firstDateType String   @map("firstDateType")
+  createdAt     DateTime @default(now()) @map("createdAt")
+  updatedAt     DateTime @updatedAt @map("updatedAt")
 
-  @@unique([user_id, first_date_type])
-  @@index([user_id])
+  @@unique([userId, firstDateType])
+  @@index([userId])
   @@map("dating_user_first_date_types")
 }
 
 model DatingUserLanguage {
   id        String   @id @default(cuid())
-  user_id   String
+  userId    String   @map("userId")
   lang      String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
 
-  @@unique([user_id, lang])
-  @@index([user_id])
+  @@unique([userId, lang])
+  @@index([userId])
   @@map("dating_user_languages")
 }
 

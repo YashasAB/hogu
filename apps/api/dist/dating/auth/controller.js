@@ -18,11 +18,11 @@ exports.AuthController = {
                 return res
                     .status(409)
                     .json({ ok: false, error: "Phone already registered" });
-            const passwordHash = await (0, password_1.hashPassword)(data.password);
+            const hash = await (0, password_1.hashPassword)(data.password);
             const user = await prisma.datingUser.create({
                 data: {
                     phoneE164: data.phoneE164,
-                    passwordHash,
+                    passwordHash: hash,
                     name: data.name,
                     dob: new Date(data.dob),
                     profession: data.profession,
@@ -39,7 +39,6 @@ exports.AuthController = {
                 },
                 select: { id: true, name: true, phoneE164: true },
             });
-            // Create photo records
             await Promise.all(data.photos.map((p) => prisma.datingUserPhoto.create({
                 data: {
                     userId: user.id,
@@ -49,7 +48,7 @@ exports.AuthController = {
                 select: { id: true },
             })));
             (0, session_1.setSessionCookie)(res, user.id);
-            return res.status(201).json({ ok: true, user });
+            return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
         }
         catch (err) {
             if (err.details)
@@ -101,7 +100,7 @@ exports.AuthController = {
         });
         if (!user)
             return res.status(401).json({ ok: false, error: "Not authenticated" });
-        return res.status(200).json({ ok: true, user });
+        return res.status(200).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     },
     async logout(_req, res) {
         (0, session_1.clearSessionCookie)(res);

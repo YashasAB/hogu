@@ -33,21 +33,21 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
     });
 
     const photos = await prisma.datingUserPhoto.findMany({
-      where: { user_id: { in: matchedUserIds } },
-      orderBy: { sort_order: "asc" },
+      where: { userId: { in: matchedUserIds } },
+      orderBy: { sortOrder: "asc" },
     });
 
     const photosByUser = new Map<string, typeof photos>();
     photos.forEach((p) => {
-      if (!photosByUser.has(p.user_id)) photosByUser.set(p.user_id, []);
-      photosByUser.get(p.user_id)!.push(p);
+      if (!photosByUser.has(p.userId)) photosByUser.set(p.userId, []);
+      photosByUser.get(p.userId)!.push(p);
     });
 
     const result = matchedUsers.map((u) => ({
       ...u,
       photos: (photosByUser.get(u.id) || []).map((p) => ({
-        objectKey: p.object_key,
-        sortOrder: p.sort_order,
+        objectKey: p.objectKey,
+        sortOrder: p.sortOrder,
       })),
       matchedAt: matches.find(
         (m) => m.user1_id === u.id || m.user2_id === u.id
@@ -72,16 +72,16 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
       select: {
         id: true,
         name: true,
-        phone_e164: true,
+        phoneE164: true,
         dob: true,
         profession: true,
         dreams: true,
-        five_year_goal: true,
-        what_i_want_in_partner: true,
-        why_partner_would_like_me: true,
-        physical_activity: true,
-        date_budget: true,
-        instagram_handle: true,
+        fiveYearGoal: true,
+        whatIWantInPartner: true,
+        whyPartnerWouldLikeMe: true,
+        physicalActivity: true,
+        dateBudget: true,
+        instagramHandle: true,
         diet: true,
         drinking: true,
         smoking: true,
@@ -92,27 +92,27 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
       return res.status(404).json({ ok: false, error: "User not found" });
 
     const photos = await prisma.datingUserPhoto.findMany({
-      where: { user_id: userId },
-      orderBy: { sort_order: "asc" },
+      where: { userId },
+      orderBy: { sortOrder: "asc" },
     });
 
     const cuisines = await prisma.datingUserCuisine.findMany({
-      where: { user_id: userId },
+      where: { userId },
       select: { cuisine: true },
     });
 
     const interests = await prisma.datingUserInterest.findMany({
-      where: { user_id: userId },
+      where: { userId },
       select: { tag: true },
     });
 
     const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
-      where: { user_id: userId },
-      select: { first_date_type: true },
+      where: { userId },
+      select: { firstDateType: true },
     });
 
     const languages = await prisma.datingUserLanguage.findMany({
-      where: { user_id: userId },
+      where: { userId },
       select: { lang: true },
     });
 
@@ -122,12 +122,12 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         ...user,
         photos: photos.map((p) => ({
           id: p.id,
-          objectKey: p.object_key,
-          sortOrder: p.sort_order,
+          objectKey: p.objectKey,
+          sortOrder: p.sortOrder,
         })),
         cuisines: cuisines.map((c) => c.cuisine),
         interests: interests.map((i) => i.tag),
-        firstDateTypes: firstDateTypes.map((f) => f.first_date_type),
+        firstDateTypes: firstDateTypes.map((f) => f.firstDateType),
         languages: languages.map((l) => l.lang),
       },
     });
@@ -166,12 +166,12 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         dob: true,
         profession: true,
         dreams: true,
-        five_year_goal: true,
-        what_i_want_in_partner: true,
-        why_partner_would_like_me: true,
-        physical_activity: true,
-        date_budget: true,
-        instagram_handle: true,
+        fiveYearGoal: true,
+        whatIWantInPartner: true,
+        whyPartnerWouldLikeMe: true,
+        physicalActivity: true,
+        dateBudget: true,
+        instagramHandle: true,
         diet: true,
         drinking: true,
         smoking: true,
@@ -182,27 +182,27 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
       return res.status(404).json({ ok: false, error: "User not found" });
 
     const photos = await prisma.datingUserPhoto.findMany({
-      where: { user_id: targetUserId },
-      orderBy: { sort_order: "asc" },
+      where: { userId: targetUserId },
+      orderBy: { sortOrder: "asc" },
     });
 
     const cuisines = await prisma.datingUserCuisine.findMany({
-      where: { user_id: targetUserId },
+      where: { userId: targetUserId },
       select: { cuisine: true },
     });
 
     const interests = await prisma.datingUserInterest.findMany({
-      where: { user_id: targetUserId },
+      where: { userId: targetUserId },
       select: { tag: true },
     });
 
     const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
-      where: { user_id: targetUserId },
-      select: { first_date_type: true },
+      where: { userId: targetUserId },
+      select: { firstDateType: true },
     });
 
     const languages = await prisma.datingUserLanguage.findMany({
-      where: { user_id: targetUserId },
+      where: { userId: targetUserId },
       select: { lang: true },
     });
 
@@ -211,12 +211,12 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
       profile: {
         ...user,
         photos: photos.map((p) => ({
-          objectKey: p.object_key,
-          sortOrder: p.sort_order,
+          objectKey: p.objectKey,
+          sortOrder: p.sortOrder,
         })),
         cuisines: cuisines.map((c) => c.cuisine),
         interests: interests.map((i) => i.tag),
-        firstDateTypes: firstDateTypes.map((f) => f.first_date_type),
+        firstDateTypes: firstDateTypes.map((f) => f.firstDateType),
         languages: languages.map((l) => l.lang),
       },
     });
@@ -257,12 +257,12 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         name,
         profession,
         dreams,
-        five_year_goal: fiveYearGoal,
-        what_i_want_in_partner: whatIWantInPartner,
-        why_partner_would_like_me: whyPartnerWouldLikeMe,
-        physical_activity: physicalActivity,
-        date_budget: dateBudget,
-        instagram_handle: instagramHandle,
+        fiveYearGoal,
+        whatIWantInPartner,
+        whyPartnerWouldLikeMe,
+        physicalActivity,
+        dateBudget,
+        instagramHandle,
         diet,
         drinking,
         smoking,
@@ -270,37 +270,37 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
     });
 
     if (cuisines !== undefined) {
-      await prisma.datingUserCuisine.deleteMany({ where: { user_id: userId } });
+      await prisma.datingUserCuisine.deleteMany({ where: { userId } });
       if (cuisines.length > 0) {
         await prisma.datingUserCuisine.createMany({
-          data: cuisines.map((c: string) => ({ user_id: userId, cuisine: c })),
+          data: cuisines.map((c: string) => ({ userId, cuisine: c })),
         });
       }
     }
 
     if (interests !== undefined) {
-      await prisma.datingUserInterest.deleteMany({ where: { user_id: userId } });
+      await prisma.datingUserInterest.deleteMany({ where: { userId } });
       if (interests.length > 0) {
         await prisma.datingUserInterest.createMany({
-          data: interests.map((t: string) => ({ user_id: userId, tag: t })),
+          data: interests.map((t: string) => ({ userId, tag: t })),
         });
       }
     }
 
     if (firstDateTypes !== undefined) {
-      await prisma.datingUserFirstDateType.deleteMany({ where: { user_id: userId } });
+      await prisma.datingUserFirstDateType.deleteMany({ where: { userId } });
       if (firstDateTypes.length > 0) {
         await prisma.datingUserFirstDateType.createMany({
-          data: firstDateTypes.map((t: string) => ({ user_id: userId, first_date_type: t })),
+          data: firstDateTypes.map((t: string) => ({ userId, firstDateType: t })),
         });
       }
     }
 
     if (languages !== undefined) {
-      await prisma.datingUserLanguage.deleteMany({ where: { user_id: userId } });
+      await prisma.datingUserLanguage.deleteMany({ where: { userId } });
       if (languages.length > 0) {
         await prisma.datingUserLanguage.createMany({
-          data: languages.map((l: string) => ({ user_id: userId, lang: l })),
+          data: languages.map((l: string) => ({ userId, lang: l })),
         });
       }
     }

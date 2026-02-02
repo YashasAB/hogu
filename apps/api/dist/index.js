@@ -48,6 +48,7 @@ const admin_1 = __importDefault(require("./routes/admin"));
 const db_admin_1 = __importDefault(require("./routes/db-admin"));
 const routes_1 = __importDefault(require("./dating/auth/routes"));
 const routes_2 = __importDefault(require("./dating/uploads/routes"));
+const routes_3 = __importDefault(require("./dating/profile/routes"));
 const prisma = new client_1.PrismaClient({
     log: ["query", "info", "warn", "error"],
 });
@@ -119,6 +120,7 @@ app.use("/api/admin", admin_1.default);
 app.use("/api/db-admin", db_admin_1.default);
 app.use("/api/dating/auth", routes_1.default);
 app.use("/api/dating/uploads", routes_2.default);
+app.use("/api/dating/profile", routes_3.default);
 // In production, serve the React app for all non-API routes
 if (isProduction) {
     app.get(/^\/(?!api\/).*/, (_req, res) => {
