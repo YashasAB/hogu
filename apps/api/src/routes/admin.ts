@@ -5,9 +5,6 @@ import {
   AuthenticatedRestaurantRequest,
 } from "../middleware/auth";
 import mime from "mime-types";
-import { Client } from "@replit/object-storage";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
 
 const router = Router();
