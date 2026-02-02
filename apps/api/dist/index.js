@@ -115,8 +115,8 @@ app.use("/api/restaurants", restaurants_1.default);
 app.use("/api/reservations", reservations_1.default);
 app.use("/api/discover", discover_1.default);
 app.use("/api/admin", admin_1.default);
-app.use("/dating/auth", routes_1.default);
-app.use("/dating/uploads", routes_2.default);
+app.use("/api/dating/auth", routes_1.default);
+app.use("/api/dating/uploads", routes_2.default);
 // In production, serve the React app for all non-API routes
 if (isProduction) {
     app.get(/^\/(?!api\/).*/, (_req, res) => {
