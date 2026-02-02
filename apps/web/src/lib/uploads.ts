@@ -5,7 +5,7 @@ type PresignItem = { objectKey: string; uploadUrl: string; contentType: string }
 export async function presignPhotos(files: File[]) {
   const contentTypes = files.map((f) => f.type || "image/jpeg");
   const resp = await postJson<{ ok: true; items: PresignItem[] }>(
-    "/dating/uploads/presign",
+    "/api/dating/uploads/presign",
     { count: files.length, contentTypes, userHint: "signup" }
   );
   return resp.items;

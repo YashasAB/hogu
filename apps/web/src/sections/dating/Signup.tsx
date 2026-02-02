@@ -198,7 +198,7 @@ export default function Signup() {
       };
 
       // 4) call signup
-      const resp = await postJson<{ ok: boolean; user: { id: string } }>("/dating/auth/signup", body);
+      const resp = await postJson<{ ok: boolean; user: { id: string } }>("/api/dating/auth/signup", body);
 
       // 5) redirect on success
       window.location.href = "/app"; // or wherever your dashboard lives

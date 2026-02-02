@@ -22,7 +22,7 @@ export default function Login() {
     if (Object.keys(errors).length) return;
     try {
       setIsSubmitting(true);
-      await postJson("/dating/auth/login", {
+      await postJson("/api/dating/auth/login", {
         phone: form.phone,
         password: form.password,
       });
