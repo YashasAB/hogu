@@ -5,7 +5,7 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [objectStorage]
-defaultBucketID = "replit-objstore-5d4a1c81-2e13-484c-92e0-96c3c7f4803f"
+defaultBucketID = "replit-objstore-a745c2d5-608e-4eae-a046-0d776c41c1db"
 
 [deployment]
 run = ["bash", "-c", "PORT=5000 API_PORT=8080 pnpm start"]
@@ -63,3 +63,4 @@ externalPort = 8080
 
 [agent]
 expertMode = true
+integrations = ["javascript_object_storage:2.0.0"]
