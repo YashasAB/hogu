@@ -21,6 +21,7 @@ Preferred communication style: Simple, everyday language.
 - `/restaurant-reservations/r/:slug` - Restaurant detail page
 - `/restaurant-login` - Restaurant owner/admin login
 - `/admin/:restaurantId` - Restaurant admin dashboard
+- `/db-admin` - Database admin panel (requires ADMIN_PASSWORD)
 
 # System Architecture
 
@@ -75,6 +76,7 @@ apps/web/src/
 - `/api/restaurants/*` - Restaurant data and reservations
 - `/api/discover/*` - Restaurant discovery and availability
 - `/api/images/*` - Image serving from Object Storage
+- `/api/db-admin/*` - Database admin API (protected by ADMIN_PASSWORD)
 
 ## Data Model Design
 The system uses a comprehensive schema covering:
@@ -134,6 +136,7 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-02: Added database admin panel at /db-admin with password protection (ADMIN_PASSWORD secret)
 - 2026-02-02: Migrated Object Storage from AWS S3 SDK to Replit GCS integration (sidecar-based auth)
 - 2026-02-02: Photo upload presign API now working at /api/dating/uploads/presign
 - 2026-02-02: Image serving uses GCS streaming at /api/images/storage/*
