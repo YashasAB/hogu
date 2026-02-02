@@ -41,9 +41,13 @@ args = "Development Server"
 name = "Development Server"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm dev"
+waitForPort = 5000
 
 [[ports]]
 localPort = 3001
@@ -52,10 +56,6 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5555
-externalPort = 3000
 
 [[ports]]
 localPort = 8080
