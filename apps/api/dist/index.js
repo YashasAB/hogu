@@ -45,6 +45,7 @@ const discover_1 = __importDefault(require("./routes/discover"));
 const restaurants_1 = __importDefault(require("./routes/restaurants"));
 const reservations_1 = __importDefault(require("./routes/reservations"));
 const admin_1 = __importDefault(require("./routes/admin"));
+const db_admin_1 = __importDefault(require("./routes/db-admin"));
 const routes_1 = __importDefault(require("./dating/auth/routes"));
 const routes_2 = __importDefault(require("./dating/uploads/routes"));
 const prisma = new client_1.PrismaClient({
@@ -115,6 +116,7 @@ app.use("/api/restaurants", restaurants_1.default);
 app.use("/api/reservations", reservations_1.default);
 app.use("/api/discover", discover_1.default);
 app.use("/api/admin", admin_1.default);
+app.use("/api/db-admin", db_admin_1.default);
 app.use("/api/dating/auth", routes_1.default);
 app.use("/api/dating/uploads", routes_2.default);
 // In production, serve the React app for all non-API routes

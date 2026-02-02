@@ -19,6 +19,7 @@ import DropDetail from '../sections/restaurant/DropDetail'
 
 // Admin sections
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
+import DbAdmin from '../sections/admin/DbAdmin'
 
 
 export const router = createBrowserRouter([
@@ -86,5 +87,9 @@ export const router = createBrowserRouter([
   {
     path: '/admin/:restaurantId',
     element: <RestaurantAdminPanel />
+  },
+  {
+    path: '/db-admin',
+    element: <DbAdmin />
   }
 ])

@@ -7,6 +7,7 @@ import discoverRoutes from "./routes/discover";
 import restaurantRoutes from "./routes/restaurants";
 import reservationRoutes from "./routes/reservations";
 import adminRoutes from "./routes/admin";
+import dbAdminRoutes from "./routes/db-admin";
 import datingAuthRouter from "./dating/auth/routes";
 import datingUploadsRouter from "./dating/uploads/routes";
 
@@ -88,6 +89,7 @@ app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/discover", discoverRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/db-admin", dbAdminRoutes);
 app.use("/api/dating/auth", datingAuthRouter);
 app.use("/api/dating/uploads", datingUploadsRouter);
 
