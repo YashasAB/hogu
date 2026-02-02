@@ -235,3 +235,17 @@ model DatingUserLanguage {
   @@map("dating_user_languages")
 }
 
+model DatingMatch {
+  id            String   @id @default(cuid())
+  user1_id      String
+  user2_id      String
+  status        String   @default("MATCHED") // MATCHED, UNMATCHED
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([user1_id, user2_id])
+  @@index([user1_id])
+  @@index([user2_id])
+  @@map("dating_matches")
+}
+
