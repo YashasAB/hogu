@@ -26,6 +26,7 @@ interface Profile {
   phoneE164: string;
   dob: string;
   profession: string | null;
+  height: string | null;
   dreams: string | null;
   fiveYearGoal: string | null;
   whatIWantInPartner: string | null;
