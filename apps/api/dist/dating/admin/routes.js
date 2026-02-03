@@ -4,8 +4,14 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+    console.error("WARNING: ADMIN_PASSWORD environment variable is not set. Admin portal will be inaccessible.");
+}
 function requireAdminAuth(req, res, next) {
+    if (!ADMIN_PASSWORD) {
+        return res.status(503).json({ ok: false, error: "Admin portal not configured" });
+    }
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({ ok: false, error: "Unauthorized" });
