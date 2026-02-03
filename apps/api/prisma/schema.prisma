@@ -164,6 +164,7 @@ model DatingUser {
   diet                  String?
   drinking              String?
   smoking               String?
+  height                String?
 
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")
@@ -236,7 +237,7 @@ model DatingMatch {
   id            String   @id @default(cuid())
   user1_id      String
   user2_id      String
-  status        String   @default("MATCHED") // MATCHED, UNMATCHED
+  status        String   @default("MATCHED") // MATCHED, INTERESTED, SCHEDULING, CONFIRMED, COMPLETED, UNMATCHED
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
@@ -244,5 +245,17 @@ model DatingMatch {
   @@index([user1_id])
   @@index([user2_id])
   @@map("dating_matches")
+}
+
+model AdminMessage {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  fromAdmin   Boolean  @default(true) @map("from_admin")
+  content     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("admin_messages")
 }
 

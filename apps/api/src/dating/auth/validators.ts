@@ -34,8 +34,8 @@ export function requireSignupBody(body: any) {
     }))
     .filter((p: any) => p.objectKey);
 
-  if (photos.length !== 3) {
-    errors.photos = "Exactly 3 photo objectKeys required";
+  if (photos.length < 1) {
+    errors.photos = "At least 1 photo objectKey required";
   }
 
   if (Object.keys(errors).length) {
@@ -63,6 +63,7 @@ export function requireSignupBody(body: any) {
     diet: pick("diet"),
     drinking: pick("drinking"),
     smoking: pick("smoking"),
+    height: pick("height"),
     photos,
   };
 }

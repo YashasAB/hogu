@@ -7,6 +7,17 @@ interface Match {
   dob: string;
   photos: { objectKey: string; sortOrder: number }[];
   matchedAt: string;
+  status: string;
+  matchId: string;
+}
+
+interface AdminMessage {
+  id: string;
+  userId: string;
+  fromAdmin: boolean;
+  content: string;
+  read: boolean;
+  createdAt: string;
 }
 
 interface Profile {
@@ -32,7 +43,9 @@ interface Profile {
   languages: string[];
 }
 
-type Tab = "matches" | "profile" | "edit";
+type Tab = "matches" | "profile" | "edit" | "messages";
+
+const MATCH_STATUS_ORDER = ["CONFIRMED", "SCHEDULING", "INTERESTED", "MATCHED", "COMPLETED"];
 
 export default function DatingApp() {
   const [tab, setTab] = useState<Tab>("matches");
@@ -42,10 +55,14 @@ export default function DatingApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [messages, setMessages] = useState<AdminMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchMatches();
     fetchMyProfile();
+    fetchUnreadCount();
   }, []);
 
   async function fetchMatches() {
@@ -97,6 +114,56 @@ export default function DatingApp() {
     await fetch("/api/dating/auth/logout", { method: "POST", credentials: "include" });
     window.location.href = "/";
   }
+
+  async function fetchUnreadCount() {
+    try {
+      const res = await fetch("/api/dating/profile/messages/unread-count", { credentials: "include" });
+      const data = await res.json();
+      if (data.ok) {
+        setUnreadCount(data.count);
+      }
+    } catch (err) {
+      console.error("Failed to fetch unread count:", err);
+    }
+  }
+
+  async function fetchMessages() {
+    try {
+      const res = await fetch("/api/dating/profile/messages", { credentials: "include" });
+      const data = await res.json();
+      if (data.ok) {
+        setMessages(data.messages);
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch messages:", err);
+    }
+  }
+
+  async function sendMessage() {
+    if (!newMessage.trim()) return;
+    try {
+      const res = await fetch("/api/dating/profile/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: newMessage }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setNewMessage("");
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+    }
+  }
+
+  useEffect(() => {
+    if (tab === "messages") {
+      fetchMessages();
+    }
+  }, [tab]);
 
   async function saveProfile(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -180,6 +247,12 @@ export default function DatingApp() {
           >
             My Profile
           </button>
+          <button
+            className={`hogu-tab ${tab === "messages" ? "hogu-tab--active" : ""}`}
+            onClick={() => setTab("messages")}
+          >
+            Messages {unreadCount > 0 && <span className="hogu-badge">{unreadCount}</span>}
+          </button>
           <button className="hogu-link" onClick={handleLogout}>
             Log out
           </button>
@@ -198,27 +271,41 @@ export default function DatingApp() {
                 <p className="hogu-muted">We'll notify you when you get a match.</p>
               </div>
             ) : (
-              <div className="hogu-match-grid">
-                {matches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="hogu-match-card"
-                    onClick={() => viewMatchProfile(match.id)}
-                  >
-                    {match.photos[0] && (
-                      <img
-                        src={getPhotoUrl(match.photos[0].objectKey)}
-                        alt={match.name}
-                        className="hogu-match-photo"
-                      />
-                    )}
-                    <div className="hogu-match-info">
-                      <h3>{match.name}, {calculateAge(match.dob)}</h3>
-                      {match.profession && <p>{match.profession}</p>}
+              <>
+                {MATCH_STATUS_ORDER.map((status) => {
+                  const statusMatches = matches.filter((m) => m.status === status);
+                  if (statusMatches.length === 0) return null;
+                  return (
+                    <div key={status} className="hogu-status-group">
+                      <h3 className="hogu-status-title">
+                        <span className={`status-badge status-${status.toLowerCase()}`}>{status}</span>
+                        ({statusMatches.length})
+                      </h3>
+                      <div className="hogu-match-grid">
+                        {statusMatches.map((match) => (
+                          <div
+                            key={match.id}
+                            className="hogu-match-card"
+                            onClick={() => viewMatchProfile(match.id)}
+                          >
+                            {match.photos[0] && (
+                              <img
+                                src={getPhotoUrl(match.photos[0].objectKey)}
+                                alt={match.name}
+                                className="hogu-match-photo"
+                              />
+                            )}
+                            <div className="hogu-match-info">
+                              <h3>{match.name}, {calculateAge(match.dob)}</h3>
+                              {match.profession && <p>{match.profession}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  );
+                })}
+              </>
             )}
           </section>
         )}
@@ -364,23 +451,28 @@ export default function DatingApp() {
               </div>
 
               <div className="hogu-form-group">
+                <label>Height (optional)</label>
+                <input type="text" name="height" placeholder="e.g., 5'10&quot; or 178cm" defaultValue={myProfile.height || ""} />
+              </div>
+
+              <div className="hogu-form-group">
                 <label>Dreams</label>
-                <textarea name="dreams" rows={3} defaultValue={myProfile.dreams || ""} />
+                <textarea name="dreams" rows={3} placeholder="Share your biggest dreams and aspirations. What do you hope to achieve in life? What drives and motivates you? (Try writing at least 100 characters to give your matches a real sense of who you are)" defaultValue={myProfile.dreams || ""} />
               </div>
 
               <div className="hogu-form-group">
                 <label>5 Year Goal</label>
-                <textarea name="fiveYearGoal" rows={3} defaultValue={myProfile.fiveYearGoal || ""} />
+                <textarea name="fiveYearGoal" rows={3} placeholder="Where do you see yourself in 5 years? What are you working toward in your career, personal life, or relationships? Be specific! (Aim for 100+ characters)" defaultValue={myProfile.fiveYearGoal || ""} />
               </div>
 
               <div className="hogu-form-group">
                 <label>What I Want in a Partner</label>
-                <textarea name="whatIWantInPartner" rows={3} defaultValue={myProfile.whatIWantInPartner || ""} />
+                <textarea name="whatIWantInPartner" rows={3} placeholder="Describe the qualities you're looking for in a partner. What values, personality traits, or lifestyle factors matter most to you? (100+ characters helps us find better matches)" defaultValue={myProfile.whatIWantInPartner || ""} />
               </div>
 
               <div className="hogu-form-group">
                 <label>Why You'd Like Me</label>
-                <textarea name="whyPartnerWouldLikeMe" rows={3} defaultValue={myProfile.whyPartnerWouldLikeMe || ""} />
+                <textarea name="whyPartnerWouldLikeMe" rows={3} placeholder="What makes you a great partner? Share your personality, interests, and what you bring to a relationship. Help potential matches understand what makes you special! (100+ characters recommended)" defaultValue={myProfile.whyPartnerWouldLikeMe || ""} />
               </div>
 
               <div className="hogu-form-row">
@@ -450,6 +542,44 @@ export default function DatingApp() {
                 </button>
               </div>
             </form>
+          </section>
+        )}
+
+        {tab === "messages" && (
+          <section className="hogu-messages">
+            <h2>Messages from Your Matchmaker</h2>
+            <p className="hogu-muted">Chat with your personal matchmaker for advice, scheduling help, and updates on your matches.</p>
+            
+            <div className="hogu-messages-list">
+              {messages.length === 0 ? (
+                <div className="hogu-empty">
+                  <p>No messages yet.</p>
+                  <p className="hogu-muted">Send a message to start a conversation with your matchmaker!</p>
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className={`hogu-message ${msg.fromAdmin ? "from-admin" : "from-me"}`}>
+                    <div className="hogu-message-header">
+                      <span className="hogu-message-sender">{msg.fromAdmin ? "Matchmaker" : "You"}</span>
+                      <span className="hogu-message-time">{new Date(msg.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="hogu-message-content">{msg.content}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="hogu-message-input">
+              <textarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type a message to your matchmaker..."
+                rows={3}
+              />
+              <button className="hogu-btn hogu-btn--primary" onClick={sendMessage}>
+                Send
+              </button>
+            </div>
           </section>
         )}
       </main>
@@ -715,6 +845,92 @@ export default function DatingApp() {
         }
         .hogu-btn--ghost:hover {
           background: rgba(255,255,255,0.05);
+        }
+        .hogu-badge {
+          background: #e94560;
+          color: #fff;
+          font-size: 0.7rem;
+          padding: 2px 6px;
+          border-radius: 10px;
+          margin-left: 4px;
+        }
+        .hogu-status-group {
+          margin-bottom: 2rem;
+        }
+        .hogu-status-title {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+          font-size: 1.1rem;
+        }
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+        .status-confirmed { background: #4CAF50; color: #fff; }
+        .status-scheduling { background: #FF9800; color: #000; }
+        .status-interested { background: #2196F3; color: #fff; }
+        .status-matched { background: #9C27B0; color: #fff; }
+        .status-completed { background: #607D8B; color: #fff; }
+        .hogu-messages {
+          max-width: 700px;
+        }
+        .hogu-messages-list {
+          background: rgba(255,255,255,0.05);
+          border-radius: 12px;
+          padding: 1rem;
+          margin: 1.5rem 0;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+        .hogu-message {
+          margin-bottom: 1rem;
+          padding: 0.75rem 1rem;
+          border-radius: 12px;
+        }
+        .hogu-message.from-admin {
+          background: rgba(233,69,96,0.2);
+          margin-left: 2rem;
+        }
+        .hogu-message.from-me {
+          background: rgba(255,255,255,0.1);
+          margin-right: 2rem;
+        }
+        .hogu-message-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+        }
+        .hogu-message-sender {
+          font-weight: 600;
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.7);
+        }
+        .hogu-message-time {
+          font-size: 0.75rem;
+          color: rgba(255,255,255,0.5);
+        }
+        .hogu-message-content {
+          margin: 0;
+          line-height: 1.5;
+        }
+        .hogu-message-input {
+          display: flex;
+          gap: 1rem;
+          align-items: flex-end;
+        }
+        .hogu-message-input textarea {
+          flex: 1;
+          padding: 0.75rem;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 8px;
+          background: rgba(255,255,255,0.05);
+          color: #fff;
+          font-size: 1rem;
+          resize: vertical;
         }
         @media (max-width: 768px) {
           .hogu-header {

@@ -72,6 +72,7 @@ export default function Signup() {
 
   const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]); // previews
   const [files, setFiles] = useState<(File | null)[]>([null, null, null]); // actual files
+  const [height, setHeight] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -143,7 +144,7 @@ export default function Signup() {
     if (form.password.length < 8) e.password = "Min 8 characters";
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.dob) e.dob = "Date of birth required";
-    if (files.filter(Boolean).length !== 3) e.photos = "Add exactly 3 photos";
+    if (files.filter(Boolean).length < 1) e.photos = "Add at least 1 photo";
     if (form.cuisines.length < 1) e.cuisines = "Pick at least one cuisine";
     if (form.firstDateTypes.length < 1)
       e.firstDateTypes = "Pick at least one preferred first date";
@@ -164,7 +165,7 @@ export default function Signup() {
       const realFiles = files.filter(Boolean) as File[];
       const presigned = await presignPhotos(realFiles);
 
-      if (presigned.length !== 3) throw new Error("Failed to presign 3 uploads");
+      if (presigned.length < 1) throw new Error("Failed to presign uploads");
 
       // 2) PUT uploads
       await Promise.all(
@@ -188,6 +189,7 @@ export default function Signup() {
         diet: form.diet,
         drinking: form.drinking,
         smoking: form.smoking,
+        height: height,
 
         // multi-selects serialized to strings arrays on backend later if needed
         // but for photos we pass objectKeys now:
@@ -309,9 +311,21 @@ export default function Signup() {
             </div>
           </div>
 
+          {/* Height */}
+          <div className="hogu-field">
+            <label>Height (optional)</label>
+            <input
+              className="hogu-input"
+              type="text"
+              placeholder="e.g., 5'10&quot; or 178cm"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+            />
+          </div>
+
           {/* Photos */}
           <div className="hogu-field">
-            <label>Photos (3)</label>
+            <label>Photos (at least 1, up to 3)</label>
             <div className="photo-grid">
               {[0, 1, 2].map((i) => (
                 <label key={i} className="photo-slot">
@@ -400,8 +414,8 @@ export default function Signup() {
               <textarea
                 className="hogu-input"
                 rows={3}
-                maxLength={200}
-                placeholder="Kindness, ambition, active lifestyle…"
+                maxLength={500}
+                placeholder="Please enter 100+ chars... the more you share, the better we can help match you!"
                 value={form.wantInPartner}
                 onChange={(e) => set("wantInPartner", e.target.value)}
               />
@@ -411,8 +425,8 @@ export default function Signup() {
               <textarea
                 className="hogu-input"
                 rows={3}
-                maxLength={200}
-                placeholder="What makes you a great partner?"
+                maxLength={500}
+                placeholder="Please enter 100+ chars... the more you share, the better we can help match you!"
                 value={form.whyTheyLikeMe}
                 onChange={(e) => set("whyTheyLikeMe", e.target.value)}
               />
@@ -425,7 +439,7 @@ export default function Signup() {
               <textarea
                 className="hogu-input"
                 rows={3}
-                maxLength={200}
+                maxLength={500}
                 placeholder="A vision you’re chasing…"
                 value={form.dreams}
                 onChange={(e) => set("dreams", e.target.value)}
@@ -436,8 +450,8 @@ export default function Signup() {
               <textarea
                 className="hogu-input"
                 rows={3}
-                maxLength={200}
-                placeholder="Where do you want to be?"
+                maxLength={500}
+                placeholder="Please enter 100+ chars... the more you share, the better we can help match you!"
                 value={form.fiveYearGoal}
                 onChange={(e) => set("fiveYearGoal", e.target.value)}
               />

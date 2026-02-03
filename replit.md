@@ -136,6 +136,13 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-03: Added admin portal at /dating-admin for matchmakers to browse users, create/manage matches, update status, and send messages
+- 2026-02-03: Created AdminMessage table for two-way matchmaker-user messaging with read status tracking
+- 2026-02-03: Expanded DatingMatch statuses: MATCHED → INTERESTED → SCHEDULING → CONFIRMED → COMPLETED (plus UNMATCHED)
+- 2026-02-03: Updated /app dashboard to group matches by status with colored badges and Messages tab with unread count
+- 2026-02-03: Added height field to DatingUser (optional) and updated signup + profile edit forms
+- 2026-02-03: Reduced photo requirement from 3 to 1 minimum for signup flexibility
+- 2026-02-03: Enhanced profile field placeholders to encourage 100+ character responses
 - 2026-02-02: Added dating app dashboard at /app with matches view, profile viewing, and profile editing
 - 2026-02-02: Created DatingMatch table for tracking user matches (status: MATCHED, UNMATCHED)
 - 2026-02-02: Added profile API endpoints: GET /api/dating/profile/matches, GET /api/dating/profile/me, PUT /api/dating/profile/me
@@ -147,3 +154,7 @@ The system uses a comprehensive schema covering:
 - 2025-12-25: Reorganized app structure - dating promoted to homepage (/), restaurant reservations moved to /restaurant-reservations
 - 2025-12-25: Created feature-based folder structure (sections/dating/, sections/restaurant/, sections/admin/)
 - 2025-12-25: Updated all routing and navigation links for new URL structure
+
+# Future Enhancements
+
+- Twilio OTP integration for phone verification during signup and password reset (credentials needed)

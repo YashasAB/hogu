@@ -38,6 +38,7 @@ export const AuthController = {
           diet: data.diet,
           drinking: data.drinking,
           smoking: data.smoking,
+          height: data.height,
         },
         select: { id: true, name: true, phoneE164: true },
       });

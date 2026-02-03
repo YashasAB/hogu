@@ -37,8 +37,8 @@ function requireSignupBody(body) {
         sortOrder: Number(p?.sortOrder ?? i),
     }))
         .filter((p) => p.objectKey);
-    if (photos.length !== 3) {
-        errors.photos = "Exactly 3 photo objectKeys required";
+    if (photos.length < 1) {
+        errors.photos = "At least 1 photo objectKey required";
     }
     if (Object.keys(errors).length) {
         const err = new Error("Validation failed");
@@ -63,6 +63,7 @@ function requireSignupBody(body) {
         diet: pick("diet"),
         drinking: pick("drinking"),
         smoking: pick("smoking"),
+        height: pick("height"),
         photos,
     };
 }

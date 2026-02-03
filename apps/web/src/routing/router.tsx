@@ -21,6 +21,7 @@ import DropDetail from '../sections/restaurant/DropDetail'
 // Admin sections
 import RestaurantAdminPanel from '../sections/admin/RestaurantAdminPanel'
 import DbAdmin from '../sections/admin/DbAdmin'
+import DatingAdminPortal from '../sections/dating/AdminPortal'
 
 
 export const router = createBrowserRouter([
@@ -96,5 +97,9 @@ export const router = createBrowserRouter([
   {
     path: '/db-admin',
     element: <DbAdmin />
+  },
+  {
+    path: '/dating-admin',
+    element: <DatingAdminPortal />
   }
 ])
