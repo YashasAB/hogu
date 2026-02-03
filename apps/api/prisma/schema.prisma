@@ -145,6 +145,88 @@ model UserDetail {
 // DATING MODULE TABLES
 // ======================
 
+// Option tables (admin-managed lookup tables)
+model CuisineOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users DatingUserCuisine[]
+
+  @@map("cuisine_options")
+}
+
+model FirstDateTypeOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users DatingUserFirstDateType[]
+
+  @@map("first_date_type_options")
+}
+
+model DietOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("diet_options")
+}
+
+model DrinkingOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("drinking_options")
+}
+
+model SmokingOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("smoking_options")
+}
+
+model PhysicalActivityOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("physical_activity_options")
+}
+
+model DateBudgetOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("date_budget_options")
+}
+
 model DatingUser {
   id                    String   @id @default(cuid())
   phoneE164             String   @unique @map("phoneE164")
@@ -169,6 +251,13 @@ model DatingUser {
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")
 
+  // Relations
+  photos         DatingUserPhoto[]
+  cuisines       DatingUserCuisine[]
+  interests      DatingUserInterest[]
+  firstDateTypes DatingUserFirstDateType[]
+  languages      DatingUserLanguage[]
+
   @@map("dating_users")
 }
 
@@ -181,18 +270,23 @@ model DatingUserPhoto {
   createdAt   DateTime @default(now()) @map("createdAt")
   updatedAt   DateTime @updatedAt @map("updatedAt")
 
+  user DatingUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@map("dating_user_photos")
 }
 
 model DatingUserCuisine {
-  id        String   @id @default(cuid())
-  userId    String   @map("userId")
-  cuisine   String
-  createdAt DateTime @default(now()) @map("createdAt")
-  updatedAt DateTime @updatedAt @map("updatedAt")
+  id             String   @id @default(cuid())
+  userId         String   @map("userId")
+  cuisineOptionId String  @map("cuisineOptionId")
+  createdAt      DateTime @default(now()) @map("createdAt")
+  updatedAt      DateTime @updatedAt @map("updatedAt")
 
-  @@unique([userId, cuisine])
+  user          DatingUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cuisineOption CuisineOption @relation(fields: [cuisineOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cuisineOptionId])
   @@index([userId])
   @@map("dating_user_cuisines")
 }
@@ -204,19 +298,24 @@ model DatingUserInterest {
   createdAt DateTime @default(now()) @map("createdAt")
   updatedAt DateTime @updatedAt @map("updatedAt")
 
+  user DatingUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, tag])
   @@index([userId])
   @@map("dating_user_interests")
 }
 
 model DatingUserFirstDateType {
-  id            String   @id @default(cuid())
-  userId        String   @map("userId")
-  firstDateType String   @map("firstDateType")
-  createdAt     DateTime @default(now()) @map("createdAt")
-  updatedAt     DateTime @updatedAt @map("updatedAt")
+  id                   String   @id @default(cuid())
+  userId               String   @map("userId")
+  firstDateTypeOptionId String  @map("firstDateTypeOptionId")
+  createdAt            DateTime @default(now()) @map("createdAt")
+  updatedAt            DateTime @updatedAt @map("updatedAt")
 
-  @@unique([userId, firstDateType])
+  user                DatingUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstDateTypeOption FirstDateTypeOption @relation(fields: [firstDateTypeOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, firstDateTypeOptionId])
   @@index([userId])
   @@map("dating_user_first_date_types")
 }
@@ -227,6 +326,8 @@ model DatingUserLanguage {
   lang      String
   createdAt DateTime @default(now()) @map("createdAt")
   updatedAt DateTime @updatedAt @map("updatedAt")
+
+  user DatingUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lang])
   @@index([userId])
