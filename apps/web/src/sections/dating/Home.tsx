@@ -71,15 +71,6 @@ export default function DatingHome() {
           </article>
 
           <article className="hogu-card">
-            <div className="hogu-chip">Neighborhoods</div>
-            <h3>Built for BLR</h3>
-            <p>
-              Indiranagar • Koramangala • HSR • Whitefield • Central BLR •
-              Kalyan Nagar
-            </p>
-          </article>
-
-          <article className="hogu-card">
             <div className="hogu-chip">Intent</div>
             <h3>Only serious people</h3>
             <p>Clear preferences, aligned goals, respectful culture.</p>
