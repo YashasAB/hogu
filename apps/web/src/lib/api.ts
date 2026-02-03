@@ -20,3 +20,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 export function postJson<T>(path: string, body: any) {
   return api<T>(path, { method: "POST", body: JSON.stringify(body) });
 }
+
+/** GET JSON */
+export function fetchJson<T>(path: string) {
+  return api<T>(path, { method: "GET" });
+}

@@ -40,6 +40,7 @@ exports.AuthController = {
                 },
                 select: { id: true, name: true, phoneE164: true },
             });
+            // Save photos
             await Promise.all(data.photos.map((p) => prisma.datingUserPhoto.create({
                 data: {
                     userId: user.id,
@@ -48,6 +49,38 @@ exports.AuthController = {
                 },
                 select: { id: true },
             })));
+            // Save cuisines (lookup by value, create junction records)
+            if (data.cuisines && data.cuisines.length > 0) {
+                const cuisineOptions = await prisma.cuisineOption.findMany({
+                    where: { value: { in: data.cuisines } },
+                    select: { id: true },
+                });
+                await Promise.all(cuisineOptions.map((opt) => prisma.datingUserCuisine.create({
+                    data: { userId: user.id, cuisineOptionId: opt.id },
+                })));
+            }
+            // Save first date types (lookup by value, create junction records)
+            if (data.firstDateTypes && data.firstDateTypes.length > 0) {
+                const firstDateOptions = await prisma.firstDateTypeOption.findMany({
+                    where: { value: { in: data.firstDateTypes } },
+                    select: { id: true },
+                });
+                await Promise.all(firstDateOptions.map((opt) => prisma.datingUserFirstDateType.create({
+                    data: { userId: user.id, firstDateTypeOptionId: opt.id },
+                })));
+            }
+            // Save interests (free-form tags)
+            if (data.interests && data.interests.length > 0) {
+                await Promise.all(data.interests.map((tag) => prisma.datingUserInterest.create({
+                    data: { userId: user.id, tag },
+                })));
+            }
+            // Save languages (free-form)
+            if (data.languages && data.languages.length > 0) {
+                await Promise.all(data.languages.map((lang) => prisma.datingUserLanguage.create({
+                    data: { userId: user.id, lang },
+                })));
+            }
             (0, session_1.setSessionCookie)(res, user.id);
             return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
         }

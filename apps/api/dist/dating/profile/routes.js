@@ -90,7 +90,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
         });
         const cuisines = await prisma.datingUserCuisine.findMany({
             where: { userId },
-            select: { cuisine: true },
+            include: { cuisineOption: { select: { value: true, label: true } } },
         });
         const interests = await prisma.datingUserInterest.findMany({
             where: { userId },
@@ -98,7 +98,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
         });
         const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
             where: { userId },
-            select: { firstDateType: true },
+            include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
         const languages = await prisma.datingUserLanguage.findMany({
             where: { userId },
@@ -113,9 +113,9 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                     objectKey: p.objectKey,
                     sortOrder: p.sortOrder,
                 })),
-                cuisines: cuisines.map((c) => c.cuisine),
+                cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
-                firstDateTypes: firstDateTypes.map((f) => f.firstDateType),
+                firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
             },
         });
@@ -170,7 +170,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
         });
         const cuisines = await prisma.datingUserCuisine.findMany({
             where: { userId: targetUserId },
-            select: { cuisine: true },
+            include: { cuisineOption: { select: { value: true, label: true } } },
         });
         const interests = await prisma.datingUserInterest.findMany({
             where: { userId: targetUserId },
@@ -178,7 +178,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
         });
         const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
             where: { userId: targetUserId },
-            select: { firstDateType: true },
+            include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
         const languages = await prisma.datingUserLanguage.findMany({
             where: { userId: targetUserId },
@@ -192,9 +192,9 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                     objectKey: p.objectKey,
                     sortOrder: p.sortOrder,
                 })),
-                cuisines: cuisines.map((c) => c.cuisine),
+                cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
-                firstDateTypes: firstDateTypes.map((f) => f.firstDateType),
+                firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
             },
         });
@@ -230,8 +230,12 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
         if (cuisines !== undefined) {
             await prisma.datingUserCuisine.deleteMany({ where: { userId } });
             if (cuisines.length > 0) {
+                const cuisineOptions = await prisma.cuisineOption.findMany({
+                    where: { value: { in: cuisines } },
+                    select: { id: true },
+                });
                 await prisma.datingUserCuisine.createMany({
-                    data: cuisines.map((c) => ({ userId, cuisine: c })),
+                    data: cuisineOptions.map((opt) => ({ userId, cuisineOptionId: opt.id })),
                 });
             }
         }
@@ -246,8 +250,12 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
         if (firstDateTypes !== undefined) {
             await prisma.datingUserFirstDateType.deleteMany({ where: { userId } });
             if (firstDateTypes.length > 0) {
+                const firstDateTypeOptions = await prisma.firstDateTypeOption.findMany({
+                    where: { value: { in: firstDateTypes } },
+                    select: { id: true },
+                });
                 await prisma.datingUserFirstDateType.createMany({
-                    data: firstDateTypes.map((t) => ({ userId, firstDateType: t })),
+                    data: firstDateTypeOptions.map((opt) => ({ userId, firstDateTypeOptionId: opt.id })),
                 });
             }
         }

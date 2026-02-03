@@ -47,6 +47,12 @@ export function requireSignupBody(body: any) {
 
   const pick = (k: string) =>
     body[k] === undefined ? undefined : String(body[k]);
+  
+  const pickArray = (k: string): string[] => {
+    if (!Array.isArray(body[k])) return [];
+    return body[k].filter((v: any) => typeof v === "string" && v.trim()).map((v: string) => v.trim());
+  };
+
   return {
     phoneE164: phone.startsWith("+") ? phone : `+${phone}`,
     password,
@@ -65,6 +71,10 @@ export function requireSignupBody(body: any) {
     smoking: pick("smoking"),
     height: pick("height"),
     photos,
+    cuisines: pickArray("cuisines"),
+    interests: pickArray("interests"),
+    firstDateTypes: pickArray("firstDateTypes"),
+    languages: pickArray("languages"),
   };
 }
 

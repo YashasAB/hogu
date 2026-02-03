@@ -19,12 +19,24 @@ function requireAdminAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 const TABLE_MAP: Record<string, Prisma.ModelName> = {
+  // Dating option tables (admin-managed)
+  cuisine_options: "CuisineOption",
+  first_date_type_options: "FirstDateTypeOption",
+  diet_options: "DietOption",
+  drinking_options: "DrinkingOption",
+  smoking_options: "SmokingOption",
+  physical_activity_options: "PhysicalActivityOption",
+  date_budget_options: "DateBudgetOption",
+  // Dating user tables
   dating_users: "DatingUser",
   dating_user_photos: "DatingUserPhoto",
   dating_user_interests: "DatingUserInterest",
   dating_user_languages: "DatingUserLanguage",
   dating_user_cuisines: "DatingUserCuisine",
   dating_user_first_date_types: "DatingUserFirstDateType",
+  dating_matches: "DatingMatch",
+  admin_messages: "AdminMessage",
+  // Restaurant tables
   restaurants: "Restaurant",
   restaurant_auth: "RestaurantAuth",
   restaurant_cuisine_tags: "RestaurantCuisineTag",

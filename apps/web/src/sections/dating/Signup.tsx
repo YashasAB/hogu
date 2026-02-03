@@ -1,48 +1,32 @@
-import React, { useMemo, useState } from "react";
-import { postJson } from "../../lib/api";
+import React, { useEffect, useMemo, useState } from "react";
+import { postJson, fetchJson } from "../../lib/api";
 import { presignPhotos, putToPresignedUrl } from "../../lib/uploads";
 
-const CUISINES = [
-  "NORTH_INDIAN",
-  "SOUTH_INDIAN",
-  "ITALIAN",
-  "JAPANESE",
-  "THAI",
-  "MEXICAN",
-  "MIDDLE_EASTERN",
-  "VEGETARIAN_ONLY",
-  "VEGAN",
-  "JAIN",
-] as const;
+interface Option {
+  value: string;
+  label: string;
+}
 
-const FIRST_DATE_TYPES = [
-  "COFFEE",
-  "QUICK_COCKTAIL",
-  "BREAKFAST",
-  "LUNCH",
-  "DINNER",
-  "GO_KARTING",
-  "PAINT_DATE",
-  "BOWLING",
-  "MUSEUM_WALK",
-  "LIVE_MUSIC",
-  "ICECREAM_WALK",
-] as const;
-
-const PHYSICAL = ["RARELY", "SOMETIMES", "REGULAR", "ATHLETE"] as const;
-
-const DIET = ["VEG", "EGG", "NON_VEG", "VEGAN", "JAIN"] as const;
-const DRINKING = ["NEVER", "SOCIALLY", "OFTEN"] as const;
-const SMOKING = ["NO", "SOCIALLY", "YES"] as const;
-
-const BUDGET = [
-  "₹500–1,000",
-  "₹1,000–2,500",
-  "₹2,500–5,000",
-  "₹5,000+",
-] as const;
+interface OptionsData {
+  cuisines: Option[];
+  firstDateTypes: Option[];
+  diets: Option[];
+  drinking: Option[];
+  smoking: Option[];
+  physicalActivity: Option[];
+  dateBudget: Option[];
+}
 
 export default function Signup() {
+  const [options, setOptions] = useState<OptionsData | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJson<OptionsData>("/api/dating/options")
+      .then((data) => setOptions(data))
+      .catch((err) => console.error("Failed to load options:", err))
+      .finally(() => setOptionsLoading(false));
+  }, []);
   const [form, setForm] = useState({
     phone: "",
     password: "",
@@ -297,9 +281,9 @@ export default function Signup() {
                 onChange={(e) => set("dateBudget", e.target.value)}
               >
                 <option value="">Select</option>
-                {BUDGET.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
+                {(options?.dateBudget || []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -315,9 +299,9 @@ export default function Signup() {
                 value={form.physicalActivity}
                 onChange={(e) => set("physicalActivity", e.target.value)}
               >
-                {PHYSICAL.map((p) => (
-                  <option key={p} value={p}>
-                    {p.replaceAll("_", " ")}
+                {(options?.physicalActivity || []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -367,16 +351,16 @@ export default function Signup() {
           <div className="hogu-field">
             <label>Favourite cuisines</label>
             <div className="chip-row">
-              {CUISINES.map((c) => {
-                const active = form.cuisines.includes(c);
+              {(options?.cuisines || []).map((opt) => {
+                const active = form.cuisines.includes(opt.value);
                 return (
                   <button
-                    key={c}
+                    key={opt.value}
                     type="button"
                     className={`chip ${active ? "chip--active" : ""}`}
-                    onClick={() => toggleFromArray("cuisines", c)}
+                    onClick={() => toggleFromArray("cuisines", opt.value)}
                   >
-                    {c.replaceAll("_", " ")}
+                    {opt.label}
                   </button>
                 );
               })}
@@ -475,16 +459,16 @@ export default function Signup() {
           <div className="hogu-field">
             <label>Preferred first date</label>
             <div className="chip-row">
-              {FIRST_DATE_TYPES.map((t) => {
-                const active = form.firstDateTypes.includes(t);
+              {(options?.firstDateTypes || []).map((opt) => {
+                const active = form.firstDateTypes.includes(opt.value);
                 return (
                   <button
-                    key={t}
+                    key={opt.value}
                     type="button"
                     className={`chip ${active ? "chip--active" : ""}`}
-                    onClick={() => toggleFromArray("firstDateTypes", t)}
+                    onClick={() => toggleFromArray("firstDateTypes", opt.value)}
                   >
-                    {t.replaceAll("_", " ")}
+                    {opt.label}
                   </button>
                 );
               })}
@@ -504,9 +488,9 @@ export default function Signup() {
                 onChange={(e) => set("diet", e.target.value)}
               >
                 <option value="">Select</option>
-                {DIET.map((d) => (
-                  <option key={d} value={d}>
-                    {d.replaceAll("_", " ")}
+                {(options?.diets || []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -519,9 +503,9 @@ export default function Signup() {
                 onChange={(e) => set("drinking", e.target.value)}
               >
                 <option value="">Select</option>
-                {DRINKING.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
+                {(options?.drinking || []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -534,9 +518,9 @@ export default function Signup() {
                 onChange={(e) => set("smoking", e.target.value)}
               >
                 <option value="">Select</option>
-                {SMOKING.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                {(options?.smoking || []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>

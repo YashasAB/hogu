@@ -76,7 +76,7 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
         });
         const cuisines = await prisma.datingUserCuisine.findMany({
             where: { userId },
-            select: { cuisine: true },
+            include: { cuisineOption: { select: { value: true, label: true } } },
         });
         const interests = await prisma.datingUserInterest.findMany({
             where: { userId },
@@ -84,7 +84,7 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
         });
         const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
             where: { userId },
-            select: { firstDateType: true },
+            include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
         const languages = await prisma.datingUserLanguage.findMany({
             where: { userId },
@@ -99,9 +99,9 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
                     objectKey: p.objectKey,
                     sortOrder: p.sortOrder,
                 })),
-                cuisines: cuisines.map((c) => c.cuisine),
+                cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
-                firstDateTypes: firstDateTypes.map((f) => f.firstDateType),
+                firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
             },
         });
