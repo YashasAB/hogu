@@ -75,6 +75,7 @@ export default function Signup() {
   const [height, setHeight] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -156,7 +157,15 @@ export default function Signup() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
-    if (Object.keys(errors).length) return;
+    setShowValidation(true);
+    
+    if (Object.keys(errors).length) {
+      // Scroll to error summary
+      setTimeout(() => {
+        document.getElementById("validation-errors")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -540,6 +549,21 @@ export default function Signup() {
             />
           </div>
 
+          {showValidation && Object.keys(errors).length > 0 && (
+            <div id="validation-errors" className="hogu-validation-summary">
+              <strong>Please fix the following:</strong>
+              <ul>
+                {errors.phone && <li>{errors.phone}</li>}
+                {errors.password && <li>{errors.password}</li>}
+                {errors.name && <li>{errors.name}</li>}
+                {errors.dob && <li>{errors.dob}</li>}
+                {errors.photos && <li>{errors.photos}</li>}
+                {errors.cuisines && <li>{errors.cuisines}</li>}
+                {errors.firstDateTypes && <li>{errors.firstDateTypes}</li>}
+                {errors.dateBudget && <li>{errors.dateBudget}</li>}
+              </ul>
+            </div>
+          )}
           {submitError && <div className="hogu-error" style={{marginTop:8}}>{submitError}</div>}
           <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating..." : "Create account"}
@@ -682,4 +706,28 @@ textarea.hogu-input { resize: vertical; }
 /* misc */
 .hogu-link { color: #eaeaea; text-decoration: underline; }
 .hogu-error { color: #ffb3c6; font-size: 12px; }
+
+/* validation summary */
+.hogu-validation-summary {
+  background: rgba(255, 100, 100, 0.15);
+  border: 1px solid rgba(255, 100, 100, 0.4);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 8px;
+}
+.hogu-validation-summary strong {
+  color: #ffb3c6;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 8px;
+}
+.hogu-validation-summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.hogu-validation-summary li {
+  color: #ffb3c6;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
 `;
