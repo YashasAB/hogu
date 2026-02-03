@@ -75,6 +75,7 @@ export default function Signup() {
   const [height, setHeight] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -153,9 +154,21 @@ export default function Signup() {
     return e;
   }, [form, files]);
 
+  const errorLabels: Record<string, string> = {
+    phone: "Phone number",
+    password: "Password",
+    name: "Name",
+    dob: "Date of birth",
+    photos: "Photos",
+    cuisines: "Favourite cuisines",
+    firstDateTypes: "Preferred first date",
+    dateBudget: "Date budget",
+  };
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
+    setHasAttemptedSubmit(true);
     if (Object.keys(errors).length) return;
 
     try {
@@ -540,6 +553,16 @@ export default function Signup() {
             />
           </div>
 
+          {hasAttemptedSubmit && Object.keys(errors).length > 0 && (
+            <div className="validation-summary">
+              <strong>Please complete the following:</strong>
+              <ul>
+                {Object.keys(errors).map((key) => (
+                  <li key={key}>{errorLabels[key] || key}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {submitError && <div className="hogu-error" style={{marginTop:8}}>{submitError}</div>}
           <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating..." : "Create account"}
@@ -682,4 +705,26 @@ textarea.hogu-input { resize: vertical; }
 /* misc */
 .hogu-link { color: #eaeaea; text-decoration: underline; }
 .hogu-error { color: #ffb3c6; font-size: 12px; }
+
+/* validation summary */
+.validation-summary {
+  background: rgba(255, 107, 129, 0.15);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: #ffb3c6;
+  font-size: 14px;
+}
+.validation-summary strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #fff;
+}
+.validation-summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.validation-summary li {
+  margin-bottom: 4px;
+}
 `;
