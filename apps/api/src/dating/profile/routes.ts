@@ -143,6 +143,74 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
   }
 });
 
+router.get("/messages", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string | null;
+  if (!userId)
+    return res.status(401).json({ ok: false, error: "Not authenticated" });
+
+  try {
+    const messages = await prisma.adminMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+    });
+
+    await prisma.adminMessage.updateMany({
+      where: { userId, fromAdmin: true, read: false },
+      data: { read: true },
+    });
+
+    return res.json({ ok: true, messages });
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+    return res.status(500).json({ ok: false, error: "Failed to fetch messages" });
+  }
+});
+
+router.post("/messages", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string | null;
+  if (!userId)
+    return res.status(401).json({ ok: false, error: "Not authenticated" });
+
+  try {
+    const { content } = req.body;
+
+    if (!content || typeof content !== "string") {
+      return res.status(400).json({ ok: false, error: "Content required" });
+    }
+
+    const message = await prisma.adminMessage.create({
+      data: {
+        userId,
+        content,
+        fromAdmin: false,
+        read: false,
+      },
+    });
+
+    return res.status(201).json({ ok: true, message });
+  } catch (err) {
+    console.error("Error sending message:", err);
+    return res.status(500).json({ ok: false, error: "Failed to send message" });
+  }
+});
+
+router.get("/messages/unread-count", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string | null;
+  if (!userId)
+    return res.status(401).json({ ok: false, error: "Not authenticated" });
+
+  try {
+    const count = await prisma.adminMessage.count({
+      where: { userId, fromAdmin: true, read: false },
+    });
+
+    return res.json({ ok: true, count });
+  } catch (err) {
+    console.error("Error fetching unread count:", err);
+    return res.status(500).json({ ok: false, error: "Failed to fetch unread count" });
+  }
+});
+
 router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
   const currentUserId = req.datingUserId as string | null;
   if (!currentUserId)
@@ -324,74 +392,6 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
   } catch (err) {
     console.error("Error updating profile:", err);
     return res.status(500).json({ ok: false, error: "Failed to update profile" });
-  }
-});
-
-router.get("/messages", datingSessionMiddleware, async (req: any, res: any) => {
-  const userId = req.datingUserId as string | null;
-  if (!userId)
-    return res.status(401).json({ ok: false, error: "Not authenticated" });
-
-  try {
-    const messages = await prisma.adminMessage.findMany({
-      where: { userId },
-      orderBy: { createdAt: "asc" },
-    });
-
-    await prisma.adminMessage.updateMany({
-      where: { userId, fromAdmin: true, read: false },
-      data: { read: true },
-    });
-
-    return res.json({ ok: true, messages });
-  } catch (err) {
-    console.error("Error fetching messages:", err);
-    return res.status(500).json({ ok: false, error: "Failed to fetch messages" });
-  }
-});
-
-router.post("/messages", datingSessionMiddleware, async (req: any, res: any) => {
-  const userId = req.datingUserId as string | null;
-  if (!userId)
-    return res.status(401).json({ ok: false, error: "Not authenticated" });
-
-  try {
-    const { content } = req.body;
-
-    if (!content || typeof content !== "string") {
-      return res.status(400).json({ ok: false, error: "Content required" });
-    }
-
-    const message = await prisma.adminMessage.create({
-      data: {
-        userId,
-        content,
-        fromAdmin: false,
-        read: false,
-      },
-    });
-
-    return res.status(201).json({ ok: true, message });
-  } catch (err) {
-    console.error("Error sending message:", err);
-    return res.status(500).json({ ok: false, error: "Failed to send message" });
-  }
-});
-
-router.get("/messages/unread-count", datingSessionMiddleware, async (req: any, res: any) => {
-  const userId = req.datingUserId as string | null;
-  if (!userId)
-    return res.status(401).json({ ok: false, error: "Not authenticated" });
-
-  try {
-    const count = await prisma.adminMessage.count({
-      where: { userId, fromAdmin: true, read: false },
-    });
-
-    return res.json({ ok: true, count });
-  } catch (err) {
-    console.error("Error fetching unread count:", err);
-    return res.status(500).json({ ok: false, error: "Failed to fetch unread count" });
   }
 });
 
