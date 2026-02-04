@@ -202,11 +202,27 @@ export default function AdminPortal() {
     }
   }, [authenticated, tab]);
 
+  async function loadFullUser(userId: string) {
+    try {
+      const data = await fetchWithAuth(`${API_BASE}/users/${userId}`);
+      if (data.ok && data.user) {
+        setSelectedUser(data.user);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleViewUser(user: DatingUser) {
+    setSelectedUser(user);
+    loadFullUser(user.id);
+  }
+
   useEffect(() => {
     if (selectedUser) {
       loadUserMessages(selectedUser.id);
     }
-  }, [selectedUser]);
+  }, [selectedUser?.id]);
 
   if (!authenticated) {
     return (
@@ -282,7 +298,7 @@ export default function AdminPortal() {
                     <td>{u.height || "-"}</td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <button onClick={() => setSelectedUser(u)}>View / Message</button>
+                      <button onClick={() => handleViewUser(u)}>View / Message</button>
                     </td>
                   </tr>
                 ))}
