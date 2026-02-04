@@ -64,6 +64,10 @@ export default function DatingApp() {
     fetchMatches();
     fetchMyProfile();
     fetchUnreadCount();
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   async function fetchMatches() {
@@ -163,6 +167,10 @@ export default function DatingApp() {
   useEffect(() => {
     if (tab === "messages") {
       fetchMessages();
+      const interval = setInterval(() => {
+        fetchMessages();
+      }, 15000);
+      return () => clearInterval(interval);
     }
   }, [tab]);
 
