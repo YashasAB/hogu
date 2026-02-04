@@ -109,6 +109,36 @@ export const AuthController = {
         );
       }
 
+      // Check if profile essays are incomplete and auto-message user
+      const hasIncompleteProfile = 
+        !data.dreams || data.dreams.trim().length < 20 ||
+        !data.fiveYearGoal || data.fiveYearGoal.trim().length < 20 ||
+        !data.whatIWantInPartner || data.whatIWantInPartner.trim().length < 20 ||
+        !data.whyPartnerWouldLikeMe || data.whyPartnerWouldLikeMe.trim().length < 20;
+
+      if (hasIncompleteProfile) {
+        await prisma.adminMessage.create({
+          data: {
+            userId: user.id,
+            fromAdmin: true,
+            content: `Hey ${user.name}! Welcome to Hogu! 🎉
+
+We noticed your profile is missing some important details that help us find your perfect match.
+
+Please take a few minutes to complete these sections in your profile:
+• Your dreams and aspirations
+• Your 5-year goals
+• What you're looking for in a partner
+• Why your partner would love dating you
+
+The more you share, the better we can match you with someone truly compatible. Head to your profile and tap "Edit Profile" to add these details!
+
+Your matchmaker`,
+            read: false,
+          },
+        });
+      }
+
       setSessionCookie(res, user.id);
       return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     } catch (err) {
