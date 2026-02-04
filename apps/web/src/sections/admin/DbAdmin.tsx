@@ -307,28 +307,23 @@ export default function DbAdmin() {
               )}
 
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="min-w-max border-collapse">
                   <thead>
                     <tr className="bg-gray-800">
-                      {tableData.columns.slice(0, 6).map((col) => (
-                        <th key={col} className="px-4 py-2 text-left text-sm text-gray-400 border-b border-gray-700">
+                      <th className="px-4 py-2 text-left text-sm text-gray-400 border-b border-gray-700 sticky left-0 bg-gray-800 z-10">
+                        Actions
+                      </th>
+                      {tableData.columns.map((col) => (
+                        <th key={col} className="px-4 py-2 text-left text-sm text-gray-400 border-b border-gray-700 whitespace-nowrap">
                           {col}
                         </th>
                       ))}
-                      <th className="px-4 py-2 text-left text-sm text-gray-400 border-b border-gray-700">
-                        Actions
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableData.records.map((record, idx) => (
                       <tr key={record.id || idx} className="hover:bg-gray-800/50">
-                        {tableData.columns.slice(0, 6).map((col) => (
-                          <td key={col} className="px-4 py-2 text-sm border-b border-gray-700">
-                            {truncateValue(record[col])}
-                          </td>
-                        ))}
-                        <td className="px-4 py-2 text-sm border-b border-gray-700">
+                        <td className="px-4 py-2 text-sm border-b border-gray-700 sticky left-0 bg-gray-900 z-10">
                           <button
                             onClick={() => handleEdit(record)}
                             className="text-blue-400 hover:text-blue-300 mr-3"
@@ -342,6 +337,13 @@ export default function DbAdmin() {
                             Delete
                           </button>
                         </td>
+                        {tableData.columns.map((col) => (
+                          <td key={col} className="px-4 py-2 text-sm border-b border-gray-700 max-w-xs">
+                            <div className="truncate" title={formatValue(record[col])}>
+                              {truncateValue(record[col], 40)}
+                            </div>
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
