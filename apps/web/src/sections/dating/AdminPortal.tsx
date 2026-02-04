@@ -11,6 +11,20 @@ interface DatingUser {
   height?: string;
   createdAt: string;
   photos: { objectKey: string; sortOrder: number }[];
+  instagramHandle?: string;
+  diet?: string;
+  drinking?: string;
+  smoking?: string;
+  physicalActivity?: string;
+  dateBudget?: string;
+  dreams?: string;
+  fiveYearGoal?: string;
+  whatIWantInPartner?: string;
+  whyPartnerWouldLikeMe?: string;
+  cuisines?: string[];
+  firstDateTypes?: string[];
+  interests?: string[];
+  languages?: string[];
 }
 
 interface Match {
@@ -284,9 +298,8 @@ export default function AdminPortal() {
             </button>
             <div className="user-profile">
               <h2>{selectedUser.name}</h2>
-              <p>{selectedUser.phoneE164}</p>
-              <p>Profession: {selectedUser.profession || "-"}</p>
-              <p>Height: {selectedUser.height || "-"}</p>
+              <p className="user-phone">{selectedUser.phoneE164}</p>
+              
               <div className="photos-row">
                 {selectedUser.photos.map((p) => (
                   <img
@@ -296,6 +309,52 @@ export default function AdminPortal() {
                     className="photo"
                   />
                 ))}
+              </div>
+
+              <div className="profile-grid">
+                <div className="profile-section">
+                  <h4>Basic Info</h4>
+                  <p><strong>Profession:</strong> {selectedUser.profession || "-"}</p>
+                  <p><strong>Date of Birth:</strong> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : "-"}</p>
+                  <p><strong>Height:</strong> {selectedUser.height || "-"}</p>
+                  <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : "-"}</p>
+                </div>
+
+                <div className="profile-section">
+                  <h4>Lifestyle</h4>
+                  <p><strong>Diet:</strong> {selectedUser.diet || "-"}</p>
+                  <p><strong>Drinking:</strong> {selectedUser.drinking || "-"}</p>
+                  <p><strong>Smoking:</strong> {selectedUser.smoking || "-"}</p>
+                  <p><strong>Physical Activity:</strong> {selectedUser.physicalActivity || "-"}</p>
+                  <p><strong>Date Budget:</strong> {selectedUser.dateBudget || "-"}</p>
+                </div>
+
+                <div className="profile-section">
+                  <h4>Interests</h4>
+                  <p><strong>Cuisines:</strong> {selectedUser.cuisines?.join(", ") || "-"}</p>
+                  <p><strong>First Date Ideas:</strong> {selectedUser.firstDateTypes?.join(", ") || "-"}</p>
+                  <p><strong>Interests:</strong> {selectedUser.interests?.join(", ") || "-"}</p>
+                  <p><strong>Languages:</strong> {selectedUser.languages?.join(", ") || "-"}</p>
+                </div>
+              </div>
+
+              <div className="profile-essays">
+                <div className="essay">
+                  <h4>Dreams</h4>
+                  <p>{selectedUser.dreams || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>Five Year Goal</h4>
+                  <p>{selectedUser.fiveYearGoal || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>What I Want in a Partner</h4>
+                  <p>{selectedUser.whatIWantInPartner || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>Why My Partner Would Like Me</h4>
+                  <p>{selectedUser.whyPartnerWouldLikeMe || "-"}</p>
+                </div>
               </div>
             </div>
 
@@ -523,16 +582,68 @@ th { color: #999; font-weight: 600; }
 }
 
 .user-profile { margin-bottom: 32px; }
+.user-phone { color: #999; margin-bottom: 16px; }
 .photos-row {
   display: flex;
   gap: 12px;
-  margin-top: 16px;
+  margin: 16px 0 24px;
+  flex-wrap: wrap;
 }
 .photo {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 12px;
   object-fit: cover;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.profile-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+}
+.profile-section h4 {
+  color: #E32995;
+  margin: 0 0 12px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.profile-section p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #ccc;
+}
+.profile-section p strong {
+  color: #fff;
+}
+.profile-essays {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.essay {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.essay h4 {
+  color: #E32995;
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+.essay p {
+  margin: 0;
+  font-size: 14px;
+  color: #ddd;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .messages-section { margin-top: 32px; }
