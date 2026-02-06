@@ -221,6 +221,9 @@ export default function Signup() {
           <div className="grid-two">
             <div className="hogu-field">
               <label>Phone number</label>
+              <div className="phone-notice">
+                Your real phone number is essential — your matchmaker will use it to contact you and schedule dates. It's also the only way to log back in. We will never share it with anyone. If you enter a fake number, you'll lose access to your account.
+              </div>
               <input
                 className="hogu-input"
                 type="tel"
@@ -689,6 +692,17 @@ textarea.hogu-input { resize: vertical; }
 /* misc */
 .hogu-link { color: #eaeaea; text-decoration: underline; }
 .hogu-error { color: #ffb3c6; font-size: 12px; }
+
+.phone-notice {
+  background: rgba(227, 41, 149, 0.12);
+  border: 1px solid rgba(227, 41, 149, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f0c0d8;
+}
 
 /* validation summary */
 .validation-summary {
