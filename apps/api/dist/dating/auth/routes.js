@@ -6,6 +6,7 @@ const session_1 = require("../session");
 const router = (0, express_1.Router)();
 router.post("/signup", controller_1.AuthController.signup);
 router.post("/login", controller_1.AuthController.login);
+router.post("/reset-password", controller_1.AuthController.resetPassword);
 router.get("/me", session_1.datingSessionMiddleware, controller_1.AuthController.me);
 router.post("/logout", session_1.datingSessionMiddleware, controller_1.AuthController.logout);
 exports.default = router;

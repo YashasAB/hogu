@@ -78,6 +78,11 @@ export default function Login() {
           </button>
 
           <p className="muted tiny">
+            <a className="hogu-link" href="/reset-password">
+              Forgot your password?
+            </a>
+          </p>
+          <p className="muted tiny">
             New to Hogu?{" "}
             <a className="hogu-link" href="/signup">
               Create an account

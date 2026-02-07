@@ -6,6 +6,7 @@ const password_1 = require("../password");
 const session_1 = require("../session");
 const validators_1 = require("./validators");
 const prisma = new client_1.PrismaClient();
+const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
 exports.AuthController = {
     async signup(req, res, next) {
         try {
@@ -166,5 +167,39 @@ Your matchmaker`,
     async logout(_req, res) {
         (0, session_1.clearSessionCookie)(res);
         return res.status(200).json({ ok: true });
+    },
+    async resetPassword(req, res, next) {
+        try {
+            const { phone, resetToken, newPassword } = req.body;
+            if (!phone || !resetToken || !newPassword) {
+                return res.status(400).json({ ok: false, error: "Phone number, reset token, and new password are required" });
+            }
+            if (!PASSWORD_RESET_TOKEN) {
+                return res.status(503).json({ ok: false, error: "Password reset is not configured" });
+            }
+            if (resetToken !== PASSWORD_RESET_TOKEN) {
+                return res.status(403).json({ ok: false, error: "Invalid reset token. Please contact your matchmaker for the correct token." });
+            }
+            if (newPassword.length < 8) {
+                return res.status(400).json({ ok: false, error: "New password must be at least 8 characters" });
+            }
+            const phoneE164 = phone.startsWith("+") ? phone : `+${phone}`;
+            const user = await prisma.datingUser.findFirst({
+                where: { phoneE164 },
+                select: { id: true, name: true },
+            });
+            if (!user) {
+                return res.status(404).json({ ok: false, error: "No account found with this phone number" });
+            }
+            const hash = await (0, password_1.hashPassword)(newPassword);
+            await prisma.datingUser.update({
+                where: { id: user.id },
+                data: { passwordHash: hash },
+            });
+            return res.status(200).json({ ok: true, message: "Password has been reset successfully. You can now log in with your new password." });
+        }
+        catch (err) {
+            return next(err);
+        }
     },
 };
