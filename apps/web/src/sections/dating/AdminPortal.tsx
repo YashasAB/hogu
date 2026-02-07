@@ -213,6 +213,22 @@ export default function AdminPortal() {
     }
   }
 
+  async function deleteUser(userId: string, userName: string) {
+    if (!confirm(`Are you sure you want to delete ${userName}? This will permanently remove their profile, photos, matches, and messages. This cannot be undone.`)) return;
+    try {
+      const res = await fetchWithAuth(`${API_BASE}/users/${userId}`, { method: "DELETE" });
+      if (res.ok) {
+        setSelectedUser(null);
+        loadUsers();
+      } else {
+        alert(res.error || "Failed to delete user");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete user");
+    }
+  }
+
   async function handleViewUser(user: DatingUser) {
     setSelectedUser(user);
     loadFullUser(user.id);
@@ -309,9 +325,14 @@ export default function AdminPortal() {
 
         {tab === "users" && selectedUser && (
           <div className="user-detail">
-            <button className="back-btn" onClick={() => setSelectedUser(null)}>
-              ← Back to Users
-            </button>
+            <div className="detail-actions">
+              <button className="back-btn" onClick={() => setSelectedUser(null)}>
+                ← Back to Users
+              </button>
+              <button className="delete-btn" onClick={() => deleteUser(selectedUser.id, selectedUser.name)}>
+                Delete User
+              </button>
+            </div>
             <div className="user-profile">
               <h2>{selectedUser.name}</h2>
               <p className="user-phone">{selectedUser.phoneE164}</p>
@@ -588,12 +609,17 @@ th { color: #999; font-weight: 600; }
   object-fit: cover;
 }
 
+.detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
 .back-btn {
   background: transparent;
   color: #e32995;
   border: none;
   cursor: pointer;
-  margin-bottom: 16px;
   font-size: 14px;
 }
 

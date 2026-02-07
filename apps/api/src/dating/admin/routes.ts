@@ -232,6 +232,35 @@ router.delete("/matches/:matchId", requireAdminAuth, async (req: any, res: any) 
   }
 });
 
+router.delete("/users/:userId", requireAdminAuth, async (req: any, res: any) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.datingUser.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ ok: false, error: "User not found" });
+    }
+
+    await prisma.$transaction([
+      prisma.adminMessage.deleteMany({ where: { userId } }),
+      prisma.datingMatch.deleteMany({
+        where: { OR: [{ user1_id: userId }, { user2_id: userId }] },
+      }),
+      prisma.datingUserCuisine.deleteMany({ where: { userId } }),
+      prisma.datingUserInterest.deleteMany({ where: { userId } }),
+      prisma.datingUserFirstDateType.deleteMany({ where: { userId } }),
+      prisma.datingUserLanguage.deleteMany({ where: { userId } }),
+      prisma.datingUserPhoto.deleteMany({ where: { userId } }),
+      prisma.datingUser.delete({ where: { id: userId } }),
+    ]);
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    return res.status(500).json({ ok: false, error: "Failed to delete user" });
+  }
+});
+
 router.get("/messages", requireAdminAuth, async (req: any, res: any) => {
   try {
     const messages = await prisma.adminMessage.findMany({
