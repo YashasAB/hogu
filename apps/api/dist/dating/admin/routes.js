@@ -61,6 +61,115 @@ router.get("/users", requireAdminAuth, async (req, res) => {
         return res.status(500).json({ ok: false, error: "Failed to fetch users" });
     }
 });
+router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
+    try {
+        const users = await prisma.datingUser.findMany({
+            orderBy: { createdAt: "desc" },
+        });
+        const userIds = users.map((u) => u.id);
+        const [photos, cuisines, interests, firstDateTypes, languages] = await Promise.all([
+            prisma.datingUserPhoto.findMany({
+                where: { userId: { in: userIds } },
+                orderBy: { sortOrder: "asc" },
+            }),
+            prisma.datingUserCuisine.findMany({
+                where: { userId: { in: userIds } },
+                include: { cuisineOption: { select: { label: true } } },
+            }),
+            prisma.datingUserInterest.findMany({
+                where: { userId: { in: userIds } },
+                select: { userId: true, tag: true },
+            }),
+            prisma.datingUserFirstDateType.findMany({
+                where: { userId: { in: userIds } },
+                include: { firstDateTypeOption: { select: { label: true } } },
+            }),
+            prisma.datingUserLanguage.findMany({
+                where: { userId: { in: userIds } },
+                select: { userId: true, lang: true },
+            }),
+        ]);
+        const photosByUser = new Map();
+        photos.forEach((p) => {
+            photosByUser.set(p.userId, (photosByUser.get(p.userId) || 0) + 1);
+        });
+        const groupBy = (items) => {
+            const map = new Map();
+            items.forEach((item) => {
+                if (!map.has(item.userId))
+                    map.set(item.userId, []);
+                map.get(item.userId).push(item);
+            });
+            return map;
+        };
+        const cuisinesByUser = groupBy(cuisines);
+        const interestsByUser = groupBy(interests);
+        const firstDatesByUser = groupBy(firstDateTypes);
+        const langsByUser = groupBy(languages);
+        const columns = [
+            "Name", "Phone", "Date of Birth", "Age", "Profession", "Height",
+            "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
+            "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
+            "Dreams", "Five Year Goal", "What I Want in a Partner",
+            "Why My Partner Would Like Me", "Photos Count", "Joined"
+        ];
+        function escCsv(val) {
+            if (val === null || val === undefined)
+                return "";
+            const str = String(val);
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+        function calcAge(dob) {
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate()))
+                age--;
+            return age;
+        }
+        const rows = users.map((u) => {
+            const uCuisines = (cuisinesByUser.get(u.id) || []).map((c) => c.cuisineOption.label).join("; ");
+            const uInterests = (interestsByUser.get(u.id) || []).map((i) => i.tag).join("; ");
+            const uFirstDates = (firstDatesByUser.get(u.id) || []).map((f) => f.firstDateTypeOption.label).join("; ");
+            const uLangs = (langsByUser.get(u.id) || []).map((l) => l.lang).join("; ");
+            return [
+                u.name,
+                u.phoneE164,
+                new Date(u.dob).toLocaleDateString("en-IN"),
+                String(calcAge(new Date(u.dob))),
+                u.profession || "",
+                u.height || "",
+                u.instagramHandle || "",
+                u.diet || "",
+                u.drinking || "",
+                u.smoking || "",
+                u.physicalActivity || "",
+                u.dateBudget || "",
+                uCuisines,
+                uFirstDates,
+                uInterests,
+                uLangs,
+                u.dreams || "",
+                u.fiveYearGoal || "",
+                u.whatIWantInPartner || "",
+                u.whyPartnerWouldLikeMe || "",
+                String(photosByUser.get(u.id) || 0),
+                new Date(u.createdAt).toLocaleDateString("en-IN"),
+            ].map(escCsv).join(",");
+        });
+        const csv = [columns.join(","), ...rows].join("\n");
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="hogu-users-${new Date().toISOString().slice(0, 10)}.csv"`);
+        return res.send(csv);
+    }
+    catch (err) {
+        console.error("Error exporting users:", err);
+        return res.status(500).json({ ok: false, error: "Failed to export users" });
+    }
+});
 router.get("/users/:userId", requireAdminAuth, async (req, res) => {
     try {
         const { userId } = req.params;

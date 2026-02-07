@@ -229,6 +229,25 @@ export default function AdminPortal() {
     }
   }
 
+  async function downloadCsv() {
+    try {
+      const res = await fetch(`${API_BASE}/users/export/csv`, {
+        headers: { Authorization: `Bearer ${password}` },
+      });
+      if (!res.ok) throw new Error("Failed to download");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hogu-users-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download spreadsheet");
+    }
+  }
+
   async function handleViewUser(user: DatingUser) {
     setSelectedUser(user);
     loadFullUser(user.id);
@@ -283,7 +302,12 @@ export default function AdminPortal() {
 
         {tab === "users" && !selectedUser && (
           <div className="users-list">
-            <h2>All Users ({users.length})</h2>
+            <div className="users-header">
+              <h2>All Users ({users.length})</h2>
+              <button className="export-btn" onClick={downloadCsv}>
+                Download Spreadsheet
+              </button>
+            </div>
             <table>
               <thead>
                 <tr>
@@ -774,6 +798,27 @@ th { color: #999; font-weight: 600; }
   border-radius: 12px;
 }
 .status-group h3 { margin: 0 0 12px 0; }
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.users-header h2 { margin: 0; }
+.export-btn {
+  padding: 8px 16px;
+  background: #2a7d4f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+.export-btn:hover {
+  background: #34a063;
+}
 
 .delete-btn {
   background: #ff4444;
