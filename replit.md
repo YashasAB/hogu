@@ -136,6 +136,8 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-07: Added CSV export/download of all user data from dating admin (Download Spreadsheet button)
+- 2026-02-07: Added user deletion from dating admin with cascade to all related tables
 - 2026-02-07: Added password reset page at /reset-password with token-based authentication (PASSWORD_RESET_TOKEN secret)
 - 2026-02-07: Added "Forgot your password?" link on login page
 - 2026-02-07: Added phone number disclaimer on signup page explaining importance of real phone numbers
