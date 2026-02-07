@@ -136,6 +136,12 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-07: Added password reset page at /reset-password with token-based authentication (PASSWORD_RESET_TOKEN secret)
+- 2026-02-07: Added "Forgot your password?" link on login page
+- 2026-02-07: Added phone number disclaimer on signup page explaining importance of real phone numbers
+- 2026-02-07: Updated dating admin to fetch and display full user profiles (essays, lifestyle, interests)
+- 2026-02-07: Updated db-admin to show all columns with horizontal scrolling
+- 2026-02-07: Added auto-welcome message for users with incomplete profile essays on signup
 - 2026-02-03: Added admin portal at /dating-admin for matchmakers to browse users, create/manage matches, update status, and send messages
 - 2026-02-03: Created AdminMessage table for two-way matchmaker-user messaging with read status tracking
 - 2026-02-03: Expanded DatingMatch statuses: MATCHED → INTERESTED → SCHEDULING → CONFIRMED → COMPLETED (plus UNMATCHED)
