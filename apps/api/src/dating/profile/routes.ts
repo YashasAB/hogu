@@ -253,6 +253,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         drinking: true,
         smoking: true,
         height: true,
+        relationshipType: true,
       },
     });
 

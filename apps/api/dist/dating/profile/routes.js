@@ -222,6 +222,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                 drinking: true,
                 smoking: true,
                 height: true,
+                relationshipType: true,
             },
         });
         if (!user)

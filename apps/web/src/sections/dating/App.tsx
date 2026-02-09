@@ -343,8 +343,16 @@ export default function DatingApp() {
             <div className="hogu-profile-details">
               <h2>{selectedMatch.name}, {calculateAge(selectedMatch.dob)}</h2>
               {selectedMatch.profession && <p className="hogu-profession">{selectedMatch.profession}</p>}
+              {selectedMatch.height && <p className="hogu-detail-line">Height: {selectedMatch.height}</p>}
               {selectedMatch.instagramHandle && (
-                <p className="hogu-instagram">@{selectedMatch.instagramHandle}</p>
+                <p className="hogu-detail-line">Instagram: @{selectedMatch.instagramHandle.replace(/^@/, "")}</p>
+              )}
+
+              {selectedMatch.relationshipType && (
+                <div className="hogu-section">
+                  <h4>Looking for</h4>
+                  <p>{selectedMatch.relationshipType === "serious" ? "Serious relationship" : "Casual dating"}</p>
+                </div>
               )}
 
               {selectedMatch.dreams && (
@@ -375,32 +383,46 @@ export default function DatingApp() {
                 </div>
               )}
 
-              <div className="hogu-tags">
-                {selectedMatch.cuisines.length > 0 && (
-                  <div className="hogu-tag-group">
-                    <span className="hogu-tag-label">Cuisines:</span>
-                    {selectedMatch.cuisines.map((c) => (
-                      <span key={c} className="hogu-tag">{c}</span>
-                    ))}
+              {(selectedMatch.diet || selectedMatch.drinking || selectedMatch.smoking || selectedMatch.physicalActivity || selectedMatch.dateBudget) && (
+                <div className="hogu-section">
+                  <h4>Lifestyle</h4>
+                  <div className="hogu-lifestyle-tags">
+                    {selectedMatch.diet && <span>Diet: {selectedMatch.diet.replace(/_/g, " ")}</span>}
+                    {selectedMatch.drinking && <span>Drinking: {selectedMatch.drinking}</span>}
+                    {selectedMatch.smoking && <span>Smoking: {selectedMatch.smoking}</span>}
+                    {selectedMatch.physicalActivity && <span>Activity: {selectedMatch.physicalActivity.replace(/_/g, " ")}</span>}
+                    {selectedMatch.dateBudget && <span>Date budget: {selectedMatch.dateBudget}</span>}
                   </div>
-                )}
-                {selectedMatch.firstDateTypes.length > 0 && (
-                  <div className="hogu-tag-group">
-                    <span className="hogu-tag-label">First date ideas:</span>
-                    {selectedMatch.firstDateTypes.map((t) => (
-                      <span key={t} className="hogu-tag">{t}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              <div className="hogu-lifestyle">
-                {selectedMatch.diet && <span>Diet: {selectedMatch.diet}</span>}
-                {selectedMatch.drinking && <span>Drinking: {selectedMatch.drinking}</span>}
-                {selectedMatch.smoking && <span>Smoking: {selectedMatch.smoking}</span>}
-                {selectedMatch.physicalActivity && <span>Activity: {selectedMatch.physicalActivity}</span>}
-                {selectedMatch.dateBudget && <span>Budget: {selectedMatch.dateBudget}</span>}
-              </div>
+              {selectedMatch.cuisines.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Favourite Cuisines</h4>
+                  <div className="hogu-tags">{selectedMatch.cuisines.map((c) => <span key={c} className="hogu-tag">{c}</span>)}</div>
+                </div>
+              )}
+
+              {selectedMatch.firstDateTypes.length > 0 && (
+                <div className="hogu-section">
+                  <h4>First Date Ideas</h4>
+                  <div className="hogu-tags">{selectedMatch.firstDateTypes.map((f) => <span key={f} className="hogu-tag">{f}</span>)}</div>
+                </div>
+              )}
+
+              {selectedMatch.interests.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Interests</h4>
+                  <div className="hogu-tags">{selectedMatch.interests.map((i) => <span key={i} className="hogu-tag">{i}</span>)}</div>
+                </div>
+              )}
+
+              {selectedMatch.languages.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Languages</h4>
+                  <div className="hogu-tags">{selectedMatch.languages.map((l) => <span key={l} className="hogu-tag">{l}</span>)}</div>
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -428,6 +450,28 @@ export default function DatingApp() {
             <div className="hogu-profile-details">
               <h3>{myProfile.name}, {calculateAge(myProfile.dob)}</h3>
               {myProfile.profession && <p className="hogu-profession">{myProfile.profession}</p>}
+              {myProfile.height && <p className="hogu-detail-line">Height: {myProfile.height}</p>}
+              {myProfile.instagramHandle && <p className="hogu-detail-line">Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}</p>}
+
+              {myProfile.relationshipType && (
+                <div className="hogu-section">
+                  <h4>Looking for</h4>
+                  <p>{myProfile.relationshipType === "serious" ? "Serious relationship" : "Casual dating"}</p>
+                </div>
+              )}
+
+              {(myProfile.agePreferenceMin || myProfile.agePreferenceMax) && (
+                <div className="hogu-section">
+                  <h4>Age preference</h4>
+                  <p>
+                    {myProfile.agePreferenceMin && myProfile.agePreferenceMax
+                      ? `${myProfile.agePreferenceMin} – ${myProfile.agePreferenceMax}`
+                      : myProfile.agePreferenceMin
+                        ? `${myProfile.agePreferenceMin}+`
+                        : `Up to ${myProfile.agePreferenceMax}`}
+                  </p>
+                </div>
+              )}
 
               {myProfile.dreams && (
                 <div className="hogu-section">
@@ -440,6 +484,61 @@ export default function DatingApp() {
                 <div className="hogu-section">
                   <h4>5 Year Goal</h4>
                   <p>{myProfile.fiveYearGoal}</p>
+                </div>
+              )}
+
+              {myProfile.whatIWantInPartner && (
+                <div className="hogu-section">
+                  <h4>What I Want in a Partner</h4>
+                  <p>{myProfile.whatIWantInPartner}</p>
+                </div>
+              )}
+
+              {myProfile.whyPartnerWouldLikeMe && (
+                <div className="hogu-section">
+                  <h4>Why You'd Like Me</h4>
+                  <p>{myProfile.whyPartnerWouldLikeMe}</p>
+                </div>
+              )}
+
+              {(myProfile.diet || myProfile.drinking || myProfile.smoking || myProfile.physicalActivity || myProfile.dateBudget) && (
+                <div className="hogu-section">
+                  <h4>Lifestyle</h4>
+                  <div className="hogu-lifestyle-tags">
+                    {myProfile.diet && <span>Diet: {myProfile.diet.replace(/_/g, " ")}</span>}
+                    {myProfile.drinking && <span>Drinking: {myProfile.drinking}</span>}
+                    {myProfile.smoking && <span>Smoking: {myProfile.smoking}</span>}
+                    {myProfile.physicalActivity && <span>Activity: {myProfile.physicalActivity.replace(/_/g, " ")}</span>}
+                    {myProfile.dateBudget && <span>Date budget: {myProfile.dateBudget}</span>}
+                  </div>
+                </div>
+              )}
+
+              {myProfile.cuisines.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Favourite Cuisines</h4>
+                  <div className="hogu-tags">{myProfile.cuisines.map((c) => <span key={c} className="hogu-tag">{c}</span>)}</div>
+                </div>
+              )}
+
+              {myProfile.firstDateTypes.length > 0 && (
+                <div className="hogu-section">
+                  <h4>First Date Ideas</h4>
+                  <div className="hogu-tags">{myProfile.firstDateTypes.map((f) => <span key={f} className="hogu-tag">{f}</span>)}</div>
+                </div>
+              )}
+
+              {myProfile.interests.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Interests</h4>
+                  <div className="hogu-tags">{myProfile.interests.map((i) => <span key={i} className="hogu-tag">{i}</span>)}</div>
+                </div>
+              )}
+
+              {myProfile.languages.length > 0 && (
+                <div className="hogu-section">
+                  <h4>Languages</h4>
+                  <div className="hogu-tags">{myProfile.languages.map((l) => <span key={l} className="hogu-tag">{l}</span>)}</div>
                 </div>
               )}
             </div>

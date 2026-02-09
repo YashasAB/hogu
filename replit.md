@@ -136,6 +136,8 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-09: Expanded profile preview and match profile views to show all fields (height, relationship type, age prefs, lifestyle, cuisines, interests, languages, essays)
+- 2026-02-09: Fixed session cookie to dynamically detect HTTPS for proper cross-origin iframe support
 - 2026-02-09: Added age preference (min/max) fields across full stack: schema, signup, profile edit, admin list/detail, CSV export
 - 2026-02-07: Added CSV export/download of all user data from dating admin (Download Spreadsheet button)
 - 2026-02-07: Added user deletion from dating admin with cascade to all related tables
