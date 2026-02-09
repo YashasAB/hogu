@@ -47,32 +47,28 @@ export function parseSessionValue(
 
 export function setSessionCookie(res: Response, userId: string) {
   const value = makeSessionValue(userId);
-  const secure = process.env.NODE_ENV === "production";
   const cookie = [
     `${COOKIE_NAME}=${value}`,
     `Path=/`,
     `HttpOnly`,
-    `SameSite=Lax`,
+    `SameSite=None`,
+    `Secure`,
     `Max-Age=${MAX_AGE}`,
-    secure ? `Secure` : ``,
   ]
-    .filter(Boolean)
     .join("; ");
   res.setHeader("Set-Cookie", cookie);
 }
 
 export function clearSessionCookie(res: Response) {
-  const secure = process.env.NODE_ENV === "production";
   const cookie = [
     `${COOKIE_NAME}=;`,
     `Path=/`,
     `HttpOnly`,
-    `SameSite=Lax`,
+    `SameSite=None`,
+    `Secure`,
     `Max-Age=0`,
     `Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
-    secure ? `Secure` : ``,
   ]
-    .filter(Boolean)
     .join("; ");
   res.setHeader("Set-Cookie", cookie);
 }
