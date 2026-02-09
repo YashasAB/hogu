@@ -247,6 +247,7 @@ model DatingUser {
   drinking              String?
   smoking               String?
   height                String?
+  relationshipType      String   @default("serious") @map("relationshipType")
 
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")

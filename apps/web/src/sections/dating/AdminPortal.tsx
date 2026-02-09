@@ -25,6 +25,7 @@ interface DatingUser {
   firstDateTypes?: string[];
   interests?: string[];
   languages?: string[];
+  relationshipType?: string;
 }
 
 interface Match {
@@ -316,6 +317,8 @@ export default function AdminPortal() {
                   <th>Phone</th>
                   <th>Profession</th>
                   <th>Height</th>
+                  <th>Looking for</th>
+                  <th>DOB</th>
                   <th>Joined</th>
                   <th>Actions</th>
                 </tr>
@@ -336,6 +339,8 @@ export default function AdminPortal() {
                     <td>{u.phoneE164}</td>
                     <td>{u.profession || "-"}</td>
                     <td>{u.height || "-"}</td>
+                    <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
+                    <td>{u.dob ? new Date(u.dob).toLocaleDateString() : "-"}</td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td>
                       <button onClick={() => handleViewUser(u)}>View / Message</button>
@@ -378,6 +383,7 @@ export default function AdminPortal() {
                   <p><strong>Profession:</strong> {selectedUser.profession || "-"}</p>
                   <p><strong>Date of Birth:</strong> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : "-"}</p>
                   <p><strong>Height:</strong> {selectedUser.height || "-"}</p>
+                  <p><strong>Looking for:</strong> {selectedUser.relationshipType === "casual" ? "Casual dating" : "Serious relationship"}</p>
                   <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : "-"}</p>
                 </div>
 
@@ -827,6 +833,21 @@ th { color: #999; font-weight: 600; }
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.rel-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rel-serious {
+  background: rgba(74, 144, 226, 0.2);
+  color: #6cb4ee;
+}
+.rel-casual {
+  background: rgba(255, 165, 0, 0.2);
+  color: #ffa500;
 }
 
 .unread { background: rgba(227, 41, 149, 0.1); }

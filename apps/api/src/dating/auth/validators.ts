@@ -70,6 +70,7 @@ export function requireSignupBody(body: any) {
     drinking: pick("drinking"),
     smoking: pick("smoking"),
     height: pick("height"),
+    relationshipType: pick("relationshipType") || "serious",
     photos,
     cuisines: pickArray("cuisines"),
     interests: pickArray("interests"),

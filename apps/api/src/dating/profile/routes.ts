@@ -91,6 +91,7 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         drinking: true,
         smoking: true,
         height: true,
+        relationshipType: true,
       },
     });
 
@@ -320,6 +321,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
       diet,
       drinking,
       smoking,
+      relationshipType,
       cuisines,
       interests,
       firstDateTypes,
@@ -341,6 +343,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         diet,
         drinking,
         smoking,
+        relationshipType,
       },
     });
 

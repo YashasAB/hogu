@@ -41,6 +41,7 @@ export const AuthController = {
           drinking: data.drinking,
           smoking: data.smoking,
           height: data.height,
+          relationshipType: data.relationshipType,
         },
         select: { id: true, name: true, phoneE164: true },
       });

@@ -46,6 +46,8 @@ export default function Signup() {
     firstDateTypes: [] as string[],
     dateBudget: "",
 
+    relationshipType: "serious",
+
     // optional extras for better matching
     instagram: "",
     languages: [] as string[],
@@ -187,6 +189,7 @@ export default function Signup() {
         drinking: form.drinking,
         smoking: form.smoking,
         height: height,
+        relationshipType: form.relationshipType,
 
         // multi-selects serialized to strings arrays on backend later if needed
         // but for photos we pass objectKeys now:
@@ -272,6 +275,25 @@ export default function Signup() {
                 onChange={(e) => set("dob", e.target.value)}
               />
               {errors.dob && <span className="hogu-error">{errors.dob}</span>}
+            </div>
+          </div>
+
+          <div className="hogu-field">
+            <label>What are you looking for?</label>
+            <div className="chip-row">
+              {[
+                { value: "serious", label: "Serious relationship" },
+                { value: "casual", label: "Casual dating" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`chip ${form.relationshipType === opt.value ? "chip--active" : ""}`}
+                  onClick={() => set("relationshipType", opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 

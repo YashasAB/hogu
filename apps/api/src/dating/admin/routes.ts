@@ -36,6 +36,7 @@ router.get("/users", requireAdminAuth, async (req: any, res: any) => {
         dob: true,
         profession: true,
         height: true,
+        relationshipType: true,
         createdAt: true,
       },
     });
@@ -119,7 +120,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
 
     const columns = [
       "Name", "Phone", "Date of Birth", "Age", "Profession", "Height",
-      "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
+      "Looking For", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
       "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
       "Dreams", "Five Year Goal", "What I Want in a Partner",
       "Why My Partner Would Like Me", "Photos Count", "Joined"
@@ -155,6 +156,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
         String(calcAge(new Date(u.dob))),
         u.profession || "",
         u.height || "",
+        u.relationshipType === "casual" ? "Casual" : "Serious",
         u.instagramHandle || "",
         u.diet || "",
         u.drinking || "",

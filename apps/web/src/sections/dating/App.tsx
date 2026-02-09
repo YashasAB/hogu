@@ -37,6 +37,7 @@ interface Profile {
   diet: string | null;
   drinking: string | null;
   smoking: string | null;
+  relationshipType: string | null;
   photos: { id: string; objectKey: string; sortOrder: number }[];
   cuisines: string[];
   interests: string[];
@@ -195,6 +196,7 @@ export default function DatingApp() {
       diet: formData.get("diet"),
       drinking: formData.get("drinking"),
       smoking: formData.get("smoking"),
+      relationshipType: formData.get("relationshipType"),
     };
 
     try {
@@ -462,6 +464,14 @@ export default function DatingApp() {
               <div className="hogu-form-group">
                 <label>Height (optional)</label>
                 <input type="text" name="height" placeholder="e.g., 5'10&quot; or 178cm" defaultValue={myProfile.height || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>What are you looking for?</label>
+                <select name="relationshipType" defaultValue={myProfile.relationshipType || "serious"}>
+                  <option value="serious">Serious relationship</option>
+                  <option value="casual">Casual dating</option>
+                </select>
               </div>
 
               <div className="hogu-form-group">
