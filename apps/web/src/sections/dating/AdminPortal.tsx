@@ -35,6 +35,8 @@ interface Match {
   user1: { id: string; name: string; phoneE164: string };
   user2: { id: string; name: string; phoneE164: string };
   status: string;
+  user1Interested: boolean;
+  user2Interested: boolean;
   createdAt: string;
 }
 
@@ -148,6 +150,18 @@ export default function AdminPortal() {
       });
       setNewMessage("");
       loadUserMessages(userId);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function updateMatchInterest(matchId: string, user: "user1" | "user2", interested: boolean) {
+    try {
+      await fetchWithAuth(`${API_BASE}/matches/${matchId}/interest`, {
+        method: "PUT",
+        body: JSON.stringify({ user, interested }),
+      });
+      loadMatches();
     } catch (err) {
       console.error(err);
     }
@@ -492,6 +506,7 @@ export default function AdminPortal() {
                         <th>User 1</th>
                         <th>User 2</th>
                         <th>Status</th>
+                        <th>Interest</th>
                         <th>Created</th>
                         <th>Actions</th>
                       </tr>
@@ -512,6 +527,22 @@ export default function AdminPortal() {
                                 </option>
                               ))}
                             </select>
+                          </td>
+                          <td>
+                            <div className="interest-toggles">
+                              <button
+                                className={`interest-btn ${m.user1Interested ? "interested" : ""}`}
+                                onClick={() => updateMatchInterest(m.id, "user1", !m.user1Interested)}
+                              >
+                                {m.user1Interested ? "✓" : "✗"} {m.user1?.name || "U1"}
+                              </button>
+                              <button
+                                className={`interest-btn ${m.user2Interested ? "interested" : ""}`}
+                                onClick={() => updateMatchInterest(m.id, "user2", !m.user2Interested)}
+                              >
+                                {m.user2Interested ? "✓" : "✗"} {m.user2?.name || "U2"}
+                              </button>
+                            </div>
                           </td>
                           <td>{new Date(m.createdAt).toLocaleDateString()}</td>
                           <td>
@@ -863,5 +894,26 @@ select {
   border-radius: 4px;
   background: #1a1a1a;
   color: #fff;
+}
+
+.interest-toggles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.interest-btn {
+  padding: 4px 10px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: #999;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.interest-btn.interested {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border-color: #4CAF50;
 }
 `;

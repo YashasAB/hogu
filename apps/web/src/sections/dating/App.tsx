@@ -9,6 +9,11 @@ interface Match {
   matchedAt: string;
   status: string;
   matchId: string;
+  user1Interested: boolean;
+  user2Interested: boolean;
+  user1_id: string;
+  user2_id: string;
+  myUserId: string;
 }
 
 interface AdminMessage {
@@ -100,6 +105,21 @@ export default function DatingApp() {
       }
     } catch (err) {
       console.error("Failed to fetch profile:", err);
+    }
+  }
+
+  async function expressInterest(matchId: string) {
+    try {
+      const res = await fetch(`/api/dating/profile/matches/${matchId}/interested`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        fetchMatches();
+      }
+    } catch (err) {
+      console.error("Failed to express interest:", err);
     }
   }
 
@@ -297,7 +317,11 @@ export default function DatingApp() {
                         ({statusMatches.length})
                       </h3>
                       <div className="hogu-match-grid">
-                        {statusMatches.map((match) => (
+                        {statusMatches.map((match) => {
+                          const isUser1 = match.myUserId === match.user1_id;
+                          const myInterested = isUser1 ? match.user1Interested : match.user2Interested;
+                          const theirInterested = isUser1 ? match.user2Interested : match.user1Interested;
+                          return (
                           <div
                             key={match.id}
                             className="hogu-match-card"
@@ -314,8 +338,23 @@ export default function DatingApp() {
                               <h3>{match.name}, {calculateAge(match.dob)}</h3>
                               {match.profession && <p>{match.profession}</p>}
                             </div>
+                            {(match.status === "MATCHED" || match.status === "INTERESTED") && !myInterested && (
+                              <button
+                                className="hogu-btn hogu-btn--interest"
+                                onClick={(e) => { e.stopPropagation(); expressInterest(match.matchId); }}
+                              >
+                                {theirInterested ? "They're interested! I am too" : "I'm Interested"}
+                              </button>
+                            )}
+                            {(match.status === "MATCHED" || match.status === "INTERESTED") && myInterested && !theirInterested && (
+                              <div className="hogu-interest-waiting">You're interested - waiting for them</div>
+                            )}
+                            {(match.status === "MATCHED" || match.status === "INTERESTED") && !myInterested && theirInterested && (
+                              <div className="hogu-interest-indicator">They're interested!</div>
+                            )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -976,6 +1015,30 @@ export default function DatingApp() {
         }
         .hogu-btn--ghost:hover {
           background: rgba(255,255,255,0.05);
+        }
+        .hogu-btn--interest {
+          background: #e94560;
+          color: #fff;
+          width: 100%;
+          margin-top: 0.5rem;
+          font-weight: 600;
+        }
+        .hogu-btn--interest:hover {
+          background: #d13350;
+        }
+        .hogu-interest-waiting {
+          text-align: center;
+          color: rgba(255,255,255,0.6);
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
+          font-style: italic;
+        }
+        .hogu-interest-indicator {
+          text-align: center;
+          color: #4CAF50;
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
+          font-weight: 600;
         }
         .hogu-badge {
           background: #e94560;

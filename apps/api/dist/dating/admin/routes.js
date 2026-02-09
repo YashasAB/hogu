@@ -246,6 +246,8 @@ router.get("/matches", requireAdminAuth, async (req, res) => {
             user1: userMap.get(m.user1_id),
             user2: userMap.get(m.user2_id),
             status: m.status,
+            user1Interested: m.user1Interested,
+            user2Interested: m.user2Interested,
             createdAt: m.created_at,
             updatedAt: m.updated_at,
         }));
@@ -303,6 +305,51 @@ router.put("/matches/:matchId", requireAdminAuth, async (req, res) => {
     catch (err) {
         console.error("Error updating match:", err);
         return res.status(500).json({ ok: false, error: "Failed to update match" });
+    }
+});
+router.put("/matches/:matchId/interest", requireAdminAuth, async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const { user, interested } = req.body;
+        if (!user || (user !== "user1" && user !== "user2")) {
+            return res.status(400).json({ ok: false, error: "user must be 'user1' or 'user2'" });
+        }
+        if (typeof interested !== "boolean") {
+            return res.status(400).json({ ok: false, error: "interested must be a boolean" });
+        }
+        const match = await prisma.datingMatch.findUnique({
+            where: { id: matchId },
+        });
+        if (!match) {
+            return res.status(404).json({ ok: false, error: "Match not found" });
+        }
+        const updateData = {};
+        if (user === "user1") {
+            updateData.user1Interested = interested;
+        }
+        else {
+            updateData.user2Interested = interested;
+        }
+        const newUser1Interested = user === "user1" ? interested : match.user1Interested;
+        const newUser2Interested = user === "user2" ? interested : match.user2Interested;
+        if (newUser1Interested && newUser2Interested && (match.status === "MATCHED" || match.status === "INTERESTED")) {
+            updateData.status = "SCHEDULING";
+        }
+        else if (!newUser1Interested && !newUser2Interested && (match.status === "MATCHED" || match.status === "INTERESTED")) {
+            updateData.status = "MATCHED";
+        }
+        else if ((newUser1Interested || newUser2Interested) && (match.status === "MATCHED" || match.status === "INTERESTED")) {
+            updateData.status = "INTERESTED";
+        }
+        const updated = await prisma.datingMatch.update({
+            where: { id: matchId },
+            data: updateData,
+        });
+        return res.json({ ok: true, match: updated });
+    }
+    catch (err) {
+        console.error("Error updating match interest:", err);
+        return res.status(500).json({ ok: false, error: "Failed to update match interest" });
     }
 });
 router.delete("/matches/:matchId", requireAdminAuth, async (req, res) => {

@@ -56,6 +56,11 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
         matchedAt: match?.created_at,
         status: match?.status || "MATCHED",
         matchId: match?.id,
+        user1Interested: match?.user1Interested ?? false,
+        user2Interested: match?.user2Interested ?? false,
+        user1_id: match?.user1_id,
+        user2_id: match?.user2_id,
+        myUserId: userId,
       };
     });
 
@@ -63,6 +68,66 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
   } catch (err) {
     console.error("Error fetching matches:", err);
     return res.status(500).json({ ok: false, error: "Failed to fetch matches" });
+  }
+});
+
+router.post("/matches/:matchId/interested", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string | null;
+  if (!userId)
+    return res.status(401).json({ ok: false, error: "Not authenticated" });
+
+  try {
+    const { matchId } = req.params;
+
+    const match = await prisma.datingMatch.findUnique({
+      where: { id: matchId },
+    });
+
+    if (!match)
+      return res.status(404).json({ ok: false, error: "Match not found" });
+
+    if (match.user1_id !== userId && match.user2_id !== userId)
+      return res.status(403).json({ ok: false, error: "Not part of this match" });
+
+    const isUser1 = match.user1_id === userId;
+    const updateData: any = {};
+
+    if (isUser1) {
+      updateData.user1Interested = true;
+    } else {
+      updateData.user2Interested = true;
+    }
+
+    const newUser1Interested = isUser1 ? true : match.user1Interested;
+    const newUser2Interested = isUser1 ? match.user2Interested : true;
+
+    if (match.status !== "MATCHED" && match.status !== "INTERESTED") {
+      return res.status(400).json({ ok: false, error: "Cannot express interest at this stage" });
+    }
+
+    if (newUser1Interested && newUser2Interested) {
+      updateData.status = "SCHEDULING";
+    } else if (match.status === "MATCHED") {
+      updateData.status = "INTERESTED";
+    }
+
+    const updated = await prisma.datingMatch.update({
+      where: { id: matchId },
+      data: updateData,
+    });
+
+    return res.json({
+      ok: true,
+      match: {
+        id: updated.id,
+        user1Interested: updated.user1Interested,
+        user2Interested: updated.user2Interested,
+        status: updated.status,
+      },
+    });
+  } catch (err) {
+    console.error("Error expressing interest:", err);
+    return res.status(500).json({ ok: false, error: "Failed to express interest" });
   }
 });
 
@@ -228,7 +293,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
           { user1_id: currentUserId, user2_id: targetUserId },
           { user1_id: targetUserId, user2_id: currentUserId },
         ],
-        status: "MATCHED",
+        status: { in: ["MATCHED", "INTERESTED", "SCHEDULING", "CONFIRMED", "COMPLETED"] },
       },
     });
 
