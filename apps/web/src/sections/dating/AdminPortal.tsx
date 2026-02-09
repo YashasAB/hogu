@@ -9,6 +9,7 @@ interface DatingUser {
   dob: string;
   profession?: string;
   height?: string;
+  gender?: string;
   createdAt: string;
   photos: { objectKey: string; sortOrder: number }[];
   instagramHandle?: string;
@@ -325,48 +326,66 @@ export default function AdminPortal() {
                 Download Spreadsheet
               </button>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Photo</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Profession</th>
-                  <th>Height</th>
-                  <th>Looking for</th>
-                  <th>Age Pref</th>
-                  <th>DOB</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      {u.photos[0] && (
-                        <img
-                          src={`/api/images/storage/${u.photos[0].objectKey}`}
-                          alt=""
-                          className="thumb"
-                        />
-                      )}
-                    </td>
-                    <td>{u.name}</td>
-                    <td>{u.phoneE164}</td>
-                    <td>{u.profession || "-"}</td>
-                    <td>{u.height || "-"}</td>
-                    <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
-                    <td>{u.agePreferenceMin || u.agePreferenceMax ? `${u.agePreferenceMin ?? "?"}–${u.agePreferenceMax ?? "?"}` : "-"}</td>
-                    <td>{u.dob ? new Date(u.dob).toLocaleDateString() : "-"}</td>
-                    <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <button onClick={() => handleViewUser(u)}>View / Message</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {(() => {
+              const maleUsers = users.filter((u) => (u.gender || "Male") === "Male");
+              const femaleUsers = users.filter((u) => (u.gender || "Male") === "Female");
+              const renderUserTable = (userList: DatingUser[]) => (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Photo</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Profession</th>
+                      <th>Height</th>
+                      <th>Looking for</th>
+                      <th>Age Pref</th>
+                      <th>DOB</th>
+                      <th>Joined</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userList.map((u) => (
+                      <tr key={u.id}>
+                        <td>
+                          {u.photos[0] && (
+                            <img
+                              src={`/api/images/storage/${u.photos[0].objectKey}`}
+                              alt=""
+                              className="thumb"
+                            />
+                          )}
+                        </td>
+                        <td>{u.name}</td>
+                        <td>{u.phoneE164}</td>
+                        <td>{u.profession || "-"}</td>
+                        <td>{u.height || "-"}</td>
+                        <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
+                        <td>{u.agePreferenceMin || u.agePreferenceMax ? `${u.agePreferenceMin ?? "?"}–${u.agePreferenceMax ?? "?"}` : "-"}</td>
+                        <td>{u.dob ? new Date(u.dob).toLocaleDateString() : "-"}</td>
+                        <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          <button onClick={() => handleViewUser(u)}>View / Message</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+              return (
+                <>
+                  <div className="gender-section">
+                    <h3 className="gender-heading">Men ({maleUsers.length})</h3>
+                    {maleUsers.length > 0 ? renderUserTable(maleUsers) : <p className="no-users">No male users</p>}
+                  </div>
+                  <div className="gender-section">
+                    <h3 className="gender-heading">Women ({femaleUsers.length})</h3>
+                    {femaleUsers.length > 0 ? renderUserTable(femaleUsers) : <p className="no-users">No female users</p>}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
 
@@ -398,6 +417,7 @@ export default function AdminPortal() {
               <div className="profile-grid">
                 <div className="profile-section">
                   <h4>Basic Info</h4>
+                  <p><strong>Gender:</strong> {selectedUser.gender || "Male"}</p>
                   <p><strong>Profession:</strong> {selectedUser.profession || "-"}</p>
                   <p><strong>Date of Birth:</strong> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : "-"}</p>
                   <p><strong>Height:</strong> {selectedUser.height || "-"}</p>
@@ -598,6 +618,23 @@ const adminCss = `
   background: #0f1115;
   color: #eaeaea;
   font-family: system-ui, sans-serif;
+}
+
+.gender-section {
+  margin-bottom: 32px;
+}
+.gender-heading {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e32995;
+  color: #e32995;
+}
+.no-users {
+  color: #888;
+  font-style: italic;
+  padding: 12px 0;
 }
 
 .admin-login {

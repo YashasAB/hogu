@@ -32,6 +32,7 @@ interface Profile {
   dob: string;
   profession: string | null;
   height: string | null;
+  gender: string | null;
   dreams: string | null;
   fiveYearGoal: string | null;
   whatIWantInPartner: string | null;
@@ -218,6 +219,7 @@ export default function DatingApp() {
       diet: formData.get("diet"),
       drinking: formData.get("drinking"),
       smoking: formData.get("smoking"),
+      gender: formData.get("gender"),
       relationshipType: formData.get("relationshipType"),
       agePreferenceMin: formData.get("agePreferenceMin") || null,
       agePreferenceMax: formData.get("agePreferenceMax") || null,
@@ -382,6 +384,7 @@ export default function DatingApp() {
             <div className="hogu-profile-details">
               <h2>{selectedMatch.name}, {calculateAge(selectedMatch.dob)}</h2>
               {selectedMatch.profession && <p className="hogu-profession">{selectedMatch.profession}</p>}
+              {selectedMatch.gender && <p className="hogu-detail-line">Gender: {selectedMatch.gender}</p>}
               {selectedMatch.height && <p className="hogu-detail-line">Height: {selectedMatch.height}</p>}
               {selectedMatch.instagramHandle && (
                 <p className="hogu-detail-line">Instagram: @{selectedMatch.instagramHandle.replace(/^@/, "")}</p>
@@ -489,6 +492,7 @@ export default function DatingApp() {
             <div className="hogu-profile-details">
               <h3>{myProfile.name}, {calculateAge(myProfile.dob)}</h3>
               {myProfile.profession && <p className="hogu-profession">{myProfile.profession}</p>}
+              {myProfile.gender && <p className="hogu-detail-line">Gender: {myProfile.gender}</p>}
               {myProfile.height && <p className="hogu-detail-line">Height: {myProfile.height}</p>}
               {myProfile.instagramHandle && <p className="hogu-detail-line">Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}</p>}
 
@@ -606,6 +610,14 @@ export default function DatingApp() {
               <div className="hogu-form-group">
                 <label>Height (optional)</label>
                 <input type="text" name="height" placeholder="e.g., 5'10&quot; or 178cm" defaultValue={myProfile.height || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Gender</label>
+                <select name="gender" defaultValue={myProfile.gender || "Male"}>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
               </div>
 
               <div className="hogu-form-group">

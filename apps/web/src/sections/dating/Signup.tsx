@@ -46,6 +46,7 @@ export default function Signup() {
     firstDateTypes: [] as string[],
     dateBudget: "",
 
+    gender: "Male",
     relationshipType: "serious",
     agePreferenceMin: "",
     agePreferenceMax: "",
@@ -191,6 +192,7 @@ export default function Signup() {
         drinking: form.drinking,
         smoking: form.smoking,
         height: height,
+        gender: form.gender,
         relationshipType: form.relationshipType,
         agePreferenceMin: form.agePreferenceMin ? parseInt(form.agePreferenceMin) : null,
         agePreferenceMax: form.agePreferenceMax ? parseInt(form.agePreferenceMax) : null,
@@ -279,6 +281,25 @@ export default function Signup() {
                 onChange={(e) => set("dob", e.target.value)}
               />
               {errors.dob && <span className="hogu-error">{errors.dob}</span>}
+            </div>
+          </div>
+
+          <div className="hogu-field">
+            <label>Gender</label>
+            <div className="chip-row">
+              {[
+                { value: "Male", label: "Male" },
+                { value: "Female", label: "Female" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`chip ${form.gender === opt.value ? "chip--active" : ""}`}
+                  onClick={() => set("gender", opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 

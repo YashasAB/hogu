@@ -121,7 +121,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
     const langsByUser = groupBy(languages);
 
     const columns = [
-      "Name", "Phone", "Date of Birth", "Age", "Profession", "Height",
+      "Name", "Phone", "Gender", "Date of Birth", "Age", "Profession", "Height",
       "Looking For", "Age Pref Min", "Age Pref Max", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
       "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
       "Dreams", "Five Year Goal", "What I Want in a Partner",
@@ -154,6 +154,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
       return [
         u.name,
         u.phoneE164,
+        u.gender || "Male",
         new Date(u.dob).toLocaleDateString("en-IN"),
         String(calcAge(new Date(u.dob))),
         u.profession || "",

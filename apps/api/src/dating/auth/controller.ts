@@ -41,6 +41,7 @@ export const AuthController = {
           drinking: data.drinking,
           smoking: data.smoking,
           height: data.height,
+          gender: data.gender,
           relationshipType: data.relationshipType,
           agePreferenceMin: data.agePreferenceMin,
           agePreferenceMax: data.agePreferenceMax,

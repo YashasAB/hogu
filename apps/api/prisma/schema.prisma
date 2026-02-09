@@ -247,6 +247,7 @@ model DatingUser {
   drinking              String?
   smoking               String?
   height                String?
+  gender                String   @default("Male")
   relationshipType      String   @default("serious") @map("relationshipType")
   agePreferenceMin      Int?     @map("agePreferenceMin")
   agePreferenceMax      Int?     @map("agePreferenceMax")
