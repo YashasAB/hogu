@@ -71,6 +71,8 @@ export function requireSignupBody(body: any) {
     smoking: pick("smoking"),
     height: pick("height"),
     relationshipType: pick("relationshipType") || "serious",
+    agePreferenceMin: body.agePreferenceMin !== undefined && body.agePreferenceMin !== null && body.agePreferenceMin !== "" ? parseInt(String(body.agePreferenceMin), 10) : null,
+    agePreferenceMax: body.agePreferenceMax !== undefined && body.agePreferenceMax !== null && body.agePreferenceMax !== "" ? parseInt(String(body.agePreferenceMax), 10) : null,
     photos,
     cuisines: pickArray("cuisines"),
     interests: pickArray("interests"),

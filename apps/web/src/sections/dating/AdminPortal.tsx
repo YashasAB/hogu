@@ -26,6 +26,8 @@ interface DatingUser {
   interests?: string[];
   languages?: string[];
   relationshipType?: string;
+  agePreferenceMin?: number | null;
+  agePreferenceMax?: number | null;
 }
 
 interface Match {
@@ -318,6 +320,7 @@ export default function AdminPortal() {
                   <th>Profession</th>
                   <th>Height</th>
                   <th>Looking for</th>
+                  <th>Age Pref</th>
                   <th>DOB</th>
                   <th>Joined</th>
                   <th>Actions</th>
@@ -340,6 +343,7 @@ export default function AdminPortal() {
                     <td>{u.profession || "-"}</td>
                     <td>{u.height || "-"}</td>
                     <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
+                    <td>{u.agePreferenceMin || u.agePreferenceMax ? `${u.agePreferenceMin ?? "?"}–${u.agePreferenceMax ?? "?"}` : "-"}</td>
                     <td>{u.dob ? new Date(u.dob).toLocaleDateString() : "-"}</td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td>
@@ -384,6 +388,7 @@ export default function AdminPortal() {
                   <p><strong>Date of Birth:</strong> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : "-"}</p>
                   <p><strong>Height:</strong> {selectedUser.height || "-"}</p>
                   <p><strong>Looking for:</strong> {selectedUser.relationshipType === "casual" ? "Casual dating" : "Serious relationship"}</p>
+                  <p><strong>Age preference:</strong> {selectedUser.agePreferenceMin || selectedUser.agePreferenceMax ? `${selectedUser.agePreferenceMin ?? "?"} – ${selectedUser.agePreferenceMax ?? "?"}` : "Not set"}</p>
                   <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : "-"}</p>
                 </div>
 

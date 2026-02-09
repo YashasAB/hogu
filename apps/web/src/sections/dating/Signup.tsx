@@ -47,6 +47,8 @@ export default function Signup() {
     dateBudget: "",
 
     relationshipType: "serious",
+    agePreferenceMin: "",
+    agePreferenceMax: "",
 
     // optional extras for better matching
     instagram: "",
@@ -190,6 +192,8 @@ export default function Signup() {
         smoking: form.smoking,
         height: height,
         relationshipType: form.relationshipType,
+        agePreferenceMin: form.agePreferenceMin ? parseInt(form.agePreferenceMin) : null,
+        agePreferenceMax: form.agePreferenceMax ? parseInt(form.agePreferenceMax) : null,
 
         // multi-selects serialized to strings arrays on backend later if needed
         // but for photos we pass objectKeys now:
@@ -294,6 +298,33 @@ export default function Signup() {
                   {opt.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="hogu-field">
+            <label>Age preference for dates</label>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <input
+                type="number"
+                className="hogu-input"
+                placeholder="Min age"
+                min={18}
+                max={99}
+                value={form.agePreferenceMin}
+                onChange={(e) => set("agePreferenceMin", e.target.value)}
+                style={{ width: "120px" }}
+              />
+              <span style={{ color: "#888" }}>to</span>
+              <input
+                type="number"
+                className="hogu-input"
+                placeholder="Max age"
+                min={18}
+                max={99}
+                value={form.agePreferenceMax}
+                onChange={(e) => set("agePreferenceMax", e.target.value)}
+                style={{ width: "120px" }}
+              />
             </div>
           </div>
 

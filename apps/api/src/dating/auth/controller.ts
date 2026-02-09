@@ -42,6 +42,8 @@ export const AuthController = {
           smoking: data.smoking,
           height: data.height,
           relationshipType: data.relationshipType,
+          agePreferenceMin: data.agePreferenceMin,
+          agePreferenceMax: data.agePreferenceMax,
         },
         select: { id: true, name: true, phoneE164: true },
       });

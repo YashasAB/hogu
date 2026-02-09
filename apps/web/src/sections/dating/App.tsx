@@ -38,6 +38,8 @@ interface Profile {
   drinking: string | null;
   smoking: string | null;
   relationshipType: string | null;
+  agePreferenceMin: number | null;
+  agePreferenceMax: number | null;
   photos: { id: string; objectKey: string; sortOrder: number }[];
   cuisines: string[];
   interests: string[];
@@ -197,6 +199,8 @@ export default function DatingApp() {
       drinking: formData.get("drinking"),
       smoking: formData.get("smoking"),
       relationshipType: formData.get("relationshipType"),
+      agePreferenceMin: formData.get("agePreferenceMin") || null,
+      agePreferenceMax: formData.get("agePreferenceMax") || null,
     };
 
     try {
@@ -472,6 +476,15 @@ export default function DatingApp() {
                   <option value="serious">Serious relationship</option>
                   <option value="casual">Casual dating</option>
                 </select>
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Age preference for dates</label>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                  <input type="number" name="agePreferenceMin" placeholder="Min age" min={18} max={99} defaultValue={myProfile.agePreferenceMin ?? ""} style={{ width: "120px" }} />
+                  <span style={{ color: "#888" }}>to</span>
+                  <input type="number" name="agePreferenceMax" placeholder="Max age" min={18} max={99} defaultValue={myProfile.agePreferenceMax ?? ""} style={{ width: "120px" }} />
+                </div>
               </div>
 
               <div className="hogu-form-group">

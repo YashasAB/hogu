@@ -37,6 +37,8 @@ router.get("/users", requireAdminAuth, async (req: any, res: any) => {
         profession: true,
         height: true,
         relationshipType: true,
+        agePreferenceMin: true,
+        agePreferenceMax: true,
         createdAt: true,
       },
     });
@@ -120,7 +122,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
 
     const columns = [
       "Name", "Phone", "Date of Birth", "Age", "Profession", "Height",
-      "Looking For", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
+      "Looking For", "Age Pref Min", "Age Pref Max", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
       "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
       "Dreams", "Five Year Goal", "What I Want in a Partner",
       "Why My Partner Would Like Me", "Photos Count", "Joined"
@@ -157,6 +159,8 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
         u.profession || "",
         u.height || "",
         u.relationshipType === "casual" ? "Casual" : "Serious",
+        u.agePreferenceMin !== null ? String(u.agePreferenceMin) : "",
+        u.agePreferenceMax !== null ? String(u.agePreferenceMax) : "",
         u.instagramHandle || "",
         u.diet || "",
         u.drinking || "",

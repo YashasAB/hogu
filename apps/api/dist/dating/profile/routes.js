@@ -81,6 +81,8 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 smoking: true,
                 height: true,
                 relationshipType: true,
+                agePreferenceMin: true,
+                agePreferenceMax: true,
             },
         });
         if (!user)
@@ -269,7 +271,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, cuisines, interests, firstDateTypes, languages, } = req.body;
+        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, } = req.body;
         await prisma.datingUser.update({
             where: { id: userId },
             data: {
@@ -286,6 +288,8 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 drinking,
                 smoking,
                 relationshipType,
+                agePreferenceMin: agePreferenceMin === undefined ? undefined : (agePreferenceMin !== null && agePreferenceMin !== "" ? parseInt(String(agePreferenceMin), 10) : null),
+                agePreferenceMax: agePreferenceMax === undefined ? undefined : (agePreferenceMax !== null && agePreferenceMax !== "" ? parseInt(String(agePreferenceMax), 10) : null),
             },
         });
         if (cuisines !== undefined) {

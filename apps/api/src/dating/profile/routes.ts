@@ -92,6 +92,8 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         smoking: true,
         height: true,
         relationshipType: true,
+        agePreferenceMin: true,
+        agePreferenceMax: true,
       },
     });
 
@@ -322,6 +324,8 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
       drinking,
       smoking,
       relationshipType,
+      agePreferenceMin,
+      agePreferenceMax,
       cuisines,
       interests,
       firstDateTypes,
@@ -344,6 +348,8 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         drinking,
         smoking,
         relationshipType,
+        agePreferenceMin: agePreferenceMin === undefined ? undefined : (agePreferenceMin !== null && agePreferenceMin !== "" ? parseInt(String(agePreferenceMin), 10) : null),
+        agePreferenceMax: agePreferenceMax === undefined ? undefined : (agePreferenceMax !== null && agePreferenceMax !== "" ? parseInt(String(agePreferenceMax), 10) : null),
       },
     });
 
