@@ -36,6 +36,7 @@ router.get("/users", requireAdminAuth, async (req: any, res: any) => {
         dob: true,
         profession: true,
         height: true,
+        gender: true,
         relationshipType: true,
         agePreferenceMin: true,
         agePreferenceMax: true,

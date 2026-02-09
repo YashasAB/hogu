@@ -156,6 +156,7 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         drinking: true,
         smoking: true,
         height: true,
+        gender: true,
         relationshipType: true,
         agePreferenceMin: true,
         agePreferenceMax: true,
@@ -318,6 +319,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         drinking: true,
         smoking: true,
         height: true,
+        gender: true,
         relationshipType: true,
       },
     });

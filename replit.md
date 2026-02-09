@@ -136,6 +136,7 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-09: Added gender field (Male/Female) across full stack: schema, signup, profile edit, admin list/detail, CSV export; admin users organized by gender
 - 2026-02-09: Added two-sided interest tracking: user1Interested/user2Interested fields on matches with auto-promote to SCHEDULING when both interested
 - 2026-02-09: Added user "I'm interested" button on match cards with status indicators for mutual interest
 - 2026-02-09: Added admin per-user interest toggle buttons in matches table with demotion support
