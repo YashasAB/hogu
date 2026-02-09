@@ -5,11 +5,14 @@ export default function Login() {
   const [form, setForm] = useState({ phone: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [hasAttempted, setHasAttempted] = useState(false);
+
+  const cleanPhone = form.phone.replace(/[\s\-()]/g, "");
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
-    // Basic phone validation: E.164-ish or 10–15 digits
-    if (!/^\+?[0-9]{10,15}$/.test(form.phone))
+    const stripped = form.phone.replace(/[\s\-()]/g, "");
+    if (!stripped || !/^\+?[0-9]{10,15}$/.test(stripped))
       e.phone = "Enter a valid phone number";
     if (!form.password || form.password.length < 8)
       e.password = "Min 8 characters";
@@ -18,12 +21,13 @@ export default function Login() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setHasAttempted(true);
     setSubmitError(null);
     if (Object.keys(errors).length) return;
     try {
       setIsSubmitting(true);
       await postJson("/api/dating/auth/login", {
-        phone: form.phone,
+        phone: cleanPhone,
         password: form.password,
       });
       window.location.href = "/app";
@@ -53,7 +57,7 @@ export default function Login() {
                 setForm((f) => ({ ...f, phone: e.target.value.trim() }))
               }
             />
-            {errors.phone && <span className="hogu-error">{errors.phone}</span>}
+            {hasAttempted && errors.phone && <span className="hogu-error">{errors.phone}</span>}
           </div>
 
           <div className="hogu-field">
@@ -67,7 +71,7 @@ export default function Login() {
                 setForm((f) => ({ ...f, password: e.target.value }))
               }
             />
-            {errors.password && (
+            {hasAttempted && errors.password && (
               <span className="hogu-error">{errors.password}</span>
             )}
           </div>
