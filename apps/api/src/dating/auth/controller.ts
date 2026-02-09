@@ -144,7 +144,7 @@ Your matchmaker`,
         });
       }
 
-      setSessionCookie(res, user.id);
+      setSessionCookie(req, res, user.id);
       return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     } catch (err) {
       if ((err as any).details)
@@ -177,7 +177,7 @@ Your matchmaker`,
           .status(401)
           .json({ ok: false, error: "Invalid credentials" });
 
-      setSessionCookie(res, user.id);
+      setSessionCookie(req, res, user.id);
       return res
         .status(200)
         .json({
@@ -202,8 +202,8 @@ Your matchmaker`,
     return res.status(200).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
   },
 
-  async logout(_req: any, res: any) {
-    clearSessionCookie(res);
+  async logout(req: any, res: any) {
+    clearSessionCookie(req, res);
     return res.status(200).json({ ok: true });
   },
 

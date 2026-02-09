@@ -112,7 +112,7 @@ Your matchmaker`,
                     },
                 });
             }
-            (0, session_1.setSessionCookie)(res, user.id);
+            (0, session_1.setSessionCookie)(req, res, user.id);
             return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
         }
         catch (err) {
@@ -143,7 +143,7 @@ Your matchmaker`,
                 return res
                     .status(401)
                     .json({ ok: false, error: "Invalid credentials" });
-            (0, session_1.setSessionCookie)(res, user.id);
+            (0, session_1.setSessionCookie)(req, res, user.id);
             return res
                 .status(200)
                 .json({
@@ -167,8 +167,8 @@ Your matchmaker`,
             return res.status(401).json({ ok: false, error: "Not authenticated" });
         return res.status(200).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     },
-    async logout(_req, res) {
-        (0, session_1.clearSessionCookie)(res);
+    async logout(req, res) {
+        (0, session_1.clearSessionCookie)(req, res);
         return res.status(200).json({ ok: true });
     },
     async resetPassword(req, res, next) {

@@ -47,31 +47,44 @@ function parseSessionValue(val) {
         return null;
     }
 }
-function setSessionCookie(res, userId) {
+function isSecureRequest(req) {
+    return (req.protocol === "https" ||
+        req.headers["x-forwarded-proto"] === "https" ||
+        !!req.headers["x-replit-user-id"]);
+}
+function setSessionCookie(req, res, userId) {
     const value = makeSessionValue(userId);
-    const cookie = [
+    const secure = isSecureRequest(req);
+    const parts = [
         `${COOKIE_NAME}=${value}`,
         `Path=/`,
         `HttpOnly`,
-        `SameSite=None`,
-        `Secure`,
         `Max-Age=${MAX_AGE}`,
-    ]
-        .join("; ");
-    res.setHeader("Set-Cookie", cookie);
+    ];
+    if (secure) {
+        parts.push("SameSite=None", "Secure");
+    }
+    else {
+        parts.push("SameSite=Lax");
+    }
+    res.setHeader("Set-Cookie", parts.join("; "));
 }
-function clearSessionCookie(res) {
-    const cookie = [
+function clearSessionCookie(req, res) {
+    const secure = isSecureRequest(req);
+    const parts = [
         `${COOKIE_NAME}=;`,
         `Path=/`,
         `HttpOnly`,
-        `SameSite=None`,
-        `Secure`,
         `Max-Age=0`,
         `Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
-    ]
-        .join("; ");
-    res.setHeader("Set-Cookie", cookie);
+    ];
+    if (secure) {
+        parts.push("SameSite=None", "Secure");
+    }
+    else {
+        parts.push("SameSite=Lax");
+    }
+    res.setHeader("Set-Cookie", parts.join("; "));
 }
 /** Optional middleware to read session; attaches req.datingUserId if present */
 function datingSessionMiddleware(req, _res, next) {

@@ -32,6 +32,7 @@ async function testDatabaseConnection() {
 testDatabaseConnection();
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = Number(process.env.API_PORT || process.env.PORT) || 8080;
 
 console.log("Environment check:");

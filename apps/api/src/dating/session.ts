@@ -45,32 +45,46 @@ export function parseSessionValue(
   }
 }
 
-export function setSessionCookie(res: Response, userId: string) {
+function isSecureRequest(req: Request): boolean {
+  return (
+    req.protocol === "https" ||
+    req.headers["x-forwarded-proto"] === "https" ||
+    !!req.headers["x-replit-user-id"]
+  );
+}
+
+export function setSessionCookie(req: Request, res: Response, userId: string) {
   const value = makeSessionValue(userId);
-  const cookie = [
+  const secure = isSecureRequest(req);
+  const parts = [
     `${COOKIE_NAME}=${value}`,
     `Path=/`,
     `HttpOnly`,
-    `SameSite=None`,
-    `Secure`,
     `Max-Age=${MAX_AGE}`,
-  ]
-    .join("; ");
-  res.setHeader("Set-Cookie", cookie);
+  ];
+  if (secure) {
+    parts.push("SameSite=None", "Secure");
+  } else {
+    parts.push("SameSite=Lax");
+  }
+  res.setHeader("Set-Cookie", parts.join("; "));
 }
 
-export function clearSessionCookie(res: Response) {
-  const cookie = [
+export function clearSessionCookie(req: Request, res: Response) {
+  const secure = isSecureRequest(req);
+  const parts = [
     `${COOKIE_NAME}=;`,
     `Path=/`,
     `HttpOnly`,
-    `SameSite=None`,
-    `Secure`,
     `Max-Age=0`,
     `Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
-  ]
-    .join("; ");
-  res.setHeader("Set-Cookie", cookie);
+  ];
+  if (secure) {
+    parts.push("SameSite=None", "Secure");
+  } else {
+    parts.push("SameSite=Lax");
+  }
+  res.setHeader("Set-Cookie", parts.join("; "));
 }
 
 /** Optional middleware to read session; attaches req.datingUserId if present */
