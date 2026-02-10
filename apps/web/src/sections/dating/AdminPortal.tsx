@@ -308,6 +308,11 @@ export default function AdminPortal() {
     loadFullUser(user.id);
   }
 
+  async function goToUserConversation(userId: string) {
+    setTab("users");
+    await loadFullUser(userId);
+  }
+
   useEffect(() => {
     if (selectedUser) {
       loadUserMessages(selectedUser.id);
@@ -698,6 +703,7 @@ export default function AdminPortal() {
                   <th>From</th>
                   <th>Message</th>
                   <th>Time</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -707,6 +713,9 @@ export default function AdminPortal() {
                     <td>{m.fromAdmin ? "Admin" : "User"}</td>
                     <td>{m.content.slice(0, 100)}...</td>
                     <td>{new Date(m.createdAt).toLocaleString()}</td>
+                    <td>
+                      <button onClick={() => goToUserConversation(m.userId)}>Reply</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
