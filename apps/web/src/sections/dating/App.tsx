@@ -386,10 +386,6 @@ export default function DatingApp() {
               {selectedMatch.profession && <p className="hogu-profession">{selectedMatch.profession}</p>}
               {selectedMatch.gender && <p className="hogu-detail-line">Gender: {selectedMatch.gender}</p>}
               {selectedMatch.height && <p className="hogu-detail-line">Height: {selectedMatch.height}</p>}
-              {selectedMatch.instagramHandle && (
-                <p className="hogu-detail-line">Instagram: @{selectedMatch.instagramHandle.replace(/^@/, "")}</p>
-              )}
-
               {selectedMatch.relationshipType && (
                 <div className="hogu-section">
                   <h4>Looking for</h4>
