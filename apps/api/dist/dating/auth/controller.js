@@ -42,6 +42,8 @@ exports.AuthController = {
                     relationshipType: data.relationshipType,
                     agePreferenceMin: data.agePreferenceMin,
                     agePreferenceMax: data.agePreferenceMax,
+                    dateCity: data.dateCity,
+                    dateNeighborhoods: data.dateNeighborhoods,
                 },
                 select: { id: true, name: true, phoneE164: true },
             });

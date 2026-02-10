@@ -56,6 +56,8 @@ interface Profile {
   relationshipType: string | null;
   agePreferenceMin: number | null;
   agePreferenceMax: number | null;
+  dateCity: string | null;
+  dateNeighborhoods: string | null;
   photos: { id: string; objectKey: string; sortOrder: number }[];
   cuisines: string[];
   interests: string[];
@@ -303,6 +305,8 @@ export default function DatingApp() {
       relationshipType: formData.get("relationshipType"),
       agePreferenceMin: formData.get("agePreferenceMin") || null,
       agePreferenceMax: formData.get("agePreferenceMax") || null,
+      dateCity: formData.get("dateCity"),
+      dateNeighborhoods: formData.get("dateNeighborhoods"),
     };
 
     try {
@@ -650,6 +654,8 @@ export default function DatingApp() {
               {myProfile.gender && <p className="hogu-detail-line">Gender: {myProfile.gender}</p>}
               {myProfile.height && <p className="hogu-detail-line">Height: {myProfile.height}</p>}
               {myProfile.instagramHandle && <p className="hogu-detail-line">Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}</p>}
+              {myProfile.dateCity && <p className="hogu-detail-line">Date City: {myProfile.dateCity}</p>}
+              {myProfile.dateNeighborhoods && <p className="hogu-detail-line">Date Neighborhoods: {myProfile.dateNeighborhoods}</p>}
 
               {myProfile.relationshipType && (
                 <div className="hogu-section">
@@ -765,6 +771,16 @@ export default function DatingApp() {
               <div className="hogu-form-group">
                 <label>Height (optional)</label>
                 <input type="text" name="height" placeholder="e.g., 5'10&quot; or 178cm" defaultValue={myProfile.height || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>City you want to go on dates in</label>
+                <input type="text" name="dateCity" placeholder="e.g., Bengaluru" defaultValue={myProfile.dateCity || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Neighborhoods you prefer for dates</label>
+                <textarea name="dateNeighborhoods" rows={2} placeholder="e.g., Koramangala, Indiranagar, HSR Layout" defaultValue={myProfile.dateNeighborhoods || ""} />
               </div>
 
               <div className="hogu-form-group">

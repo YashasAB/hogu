@@ -29,6 +29,8 @@ interface DatingUser {
   relationshipType?: string;
   agePreferenceMin?: number | null;
   agePreferenceMax?: number | null;
+  dateCity?: string;
+  dateNeighborhoods?: string;
 }
 
 interface Match {
@@ -265,6 +267,23 @@ export default function AdminPortal() {
     }
   }
 
+  async function downloadMatchCsv() {
+    try {
+      const res = await fetch(`${API_BASE}/matches/export/csv`, {
+        headers: { Authorization: `Bearer ${password}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hogu-matches-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Failed to download match data");
+    }
+  }
+
   async function downloadCsv() {
     try {
       const res = await fetch(`${API_BASE}/users/export/csv`, {
@@ -343,6 +362,9 @@ export default function AdminPortal() {
               <button className="export-btn" onClick={downloadCsv}>
                 Download Spreadsheet
               </button>
+                <button className="export-btn" onClick={downloadMatchCsv} style={{ marginLeft: "8px" }}>
+                  Export Match Data
+                </button>
             </div>
             {(() => {
               const maleUsers = users.filter((u) => (u.gender || "Male") === "Male");
@@ -442,6 +464,8 @@ export default function AdminPortal() {
                   <p><strong>Looking for:</strong> {selectedUser.relationshipType === "casual" ? "Casual dating" : "Serious relationship"}</p>
                   <p><strong>Age preference:</strong> {selectedUser.agePreferenceMin || selectedUser.agePreferenceMax ? `${selectedUser.agePreferenceMin ?? "?"} – ${selectedUser.agePreferenceMax ?? "?"}` : "Not set"}</p>
                   <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : "-"}</p>
+                  <p><strong>Date City:</strong> {selectedUser.dateCity || "-"}</p>
+                  <p><strong>Date Neighborhoods:</strong> {selectedUser.dateNeighborhoods || "-"}</p>
                 </div>
 
                 <div className="profile-section">

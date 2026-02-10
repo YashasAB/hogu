@@ -57,6 +57,8 @@ export default function Signup() {
     diet: "",
     drinking: "",
     smoking: "",
+    dateCity: "",
+    dateNeighborhoods: "",
   });
 
   const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]); // previews
@@ -196,6 +198,8 @@ export default function Signup() {
         relationshipType: form.relationshipType,
         agePreferenceMin: form.agePreferenceMin ? parseInt(form.agePreferenceMin) : null,
         agePreferenceMax: form.agePreferenceMax ? parseInt(form.agePreferenceMax) : null,
+        dateCity: form.dateCity,
+        dateNeighborhoods: form.dateNeighborhoods,
 
         // multi-selects serialized to strings arrays on backend later if needed
         // but for photos we pass objectKeys now:
@@ -456,6 +460,30 @@ export default function Signup() {
               onAdd={addInterest}
               onRemove={removeInterest}
             />
+          </div>
+
+          {/* City & Neighborhoods */}
+          <div className="grid-two">
+            <div className="hogu-field">
+              <label>City you want to go on dates in</label>
+              <input
+                className="hogu-input"
+                type="text"
+                placeholder="e.g., Bengaluru"
+                value={form.dateCity}
+                onChange={(e) => set("dateCity", e.target.value)}
+              />
+            </div>
+            <div className="hogu-field">
+              <label>Neighborhoods you prefer for dates</label>
+              <textarea
+                className="hogu-input"
+                rows={2}
+                placeholder="e.g., Koramangala, Indiranagar, HSR Layout"
+                value={form.dateNeighborhoods}
+                onChange={(e) => set("dateNeighborhoods", e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Profession & Persona */}

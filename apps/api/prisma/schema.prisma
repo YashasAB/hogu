@@ -251,6 +251,8 @@ model DatingUser {
   relationshipType      String   @default("serious") @map("relationshipType")
   agePreferenceMin      Int?     @map("agePreferenceMin")
   agePreferenceMax      Int?     @map("agePreferenceMax")
+  dateCity              String?  @map("dateCity")
+  dateNeighborhoods     String?  @map("dateNeighborhoods")
 
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")

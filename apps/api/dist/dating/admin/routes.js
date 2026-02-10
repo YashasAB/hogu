@@ -37,6 +37,8 @@ router.get("/users", requireAdminAuth, async (req, res) => {
                 relationshipType: true,
                 agePreferenceMin: true,
                 agePreferenceMax: true,
+                dateCity: true,
+                dateNeighborhoods: true,
                 createdAt: true,
             },
         });
@@ -112,7 +114,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
         const langsByUser = groupBy(languages);
         const columns = [
             "Name", "Phone", "Gender", "Date of Birth", "Age", "Profession", "Height",
-            "Looking For", "Age Pref Min", "Age Pref Max", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
+            "Looking For", "Age Pref Min", "Age Pref Max", "Date City", "Date Neighborhoods", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
             "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
             "Dreams", "Five Year Goal", "What I Want in a Partner",
             "Why My Partner Would Like Me", "Photos Count", "Joined"
@@ -150,6 +152,8 @@ router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
                 u.relationshipType === "casual" ? "Casual" : "Serious",
                 u.agePreferenceMin !== null ? String(u.agePreferenceMin) : "",
                 u.agePreferenceMax !== null ? String(u.agePreferenceMax) : "",
+                u.dateCity || "",
+                u.dateNeighborhoods || "",
                 u.instagramHandle || "",
                 u.diet || "",
                 u.drinking || "",
@@ -486,6 +490,87 @@ router.post("/messages", requireAdminAuth, async (req, res) => {
     catch (err) {
         console.error("Error sending message:", err);
         return res.status(500).json({ ok: false, error: "Failed to send message" });
+    }
+});
+router.get("/matches/export/csv", requireAdminAuth, async (req, res) => {
+    try {
+        const matches = await prisma.datingMatch.findMany({
+            orderBy: { created_at: "desc" },
+            include: {
+                availability: true,
+            },
+        });
+        const userIds = new Set();
+        matches.forEach((m) => {
+            userIds.add(m.user1_id);
+            userIds.add(m.user2_id);
+        });
+        const users = await prisma.datingUser.findMany({
+            where: { id: { in: Array.from(userIds) } },
+            select: { id: true, name: true, phoneE164: true },
+        });
+        const userMap = new Map(users.map((u) => [u.id, u]));
+        function escCsv(val) {
+            if (val === null || val === undefined)
+                return "";
+            const str = String(val);
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+        const matchColumns = [
+            "Match ID", "User 1 Name", "User 1 Phone", "User 2 Name", "User 2 Phone",
+            "Status", "User 1 Interested", "User 2 Interested", "Created At", "Updated At"
+        ];
+        const matchRows = matches.map((m) => {
+            const u1 = userMap.get(m.user1_id);
+            const u2 = userMap.get(m.user2_id);
+            return [
+                m.id,
+                u1?.name || "Unknown",
+                u1?.phoneE164 || "",
+                u2?.name || "Unknown",
+                u2?.phoneE164 || "",
+                m.status,
+                m.user1Interested ? "Yes" : "No",
+                m.user2Interested ? "Yes" : "No",
+                new Date(m.created_at).toLocaleDateString("en-IN") + " " + new Date(m.created_at).toLocaleTimeString("en-IN"),
+                new Date(m.updated_at).toLocaleDateString("en-IN") + " " + new Date(m.updated_at).toLocaleTimeString("en-IN"),
+            ].map(escCsv).join(",");
+        });
+        const availColumns = [
+            "Match ID", "User Name", "User Phone", "Dates Free", "Times Free", "Neighborhoods", "Submitted At"
+        ];
+        const allAvailability = matches.flatMap((m) => m.availability.map((a) => {
+            const u = userMap.get(a.userId);
+            return [
+                m.id,
+                u?.name || "Unknown",
+                u?.phoneE164 || "",
+                a.datesFree,
+                a.timesFree,
+                a.neighborhoods,
+                new Date(a.createdAt).toLocaleDateString("en-IN") + " " + new Date(a.createdAt).toLocaleTimeString("en-IN"),
+            ].map(escCsv).join(",");
+        }));
+        const csvParts = [
+            "=== MATCHES ===",
+            matchColumns.join(","),
+            ...matchRows,
+            "",
+            "=== SCHEDULING AVAILABILITY ===",
+            availColumns.join(","),
+            ...allAvailability,
+        ];
+        const csv = csvParts.join("\n");
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="hogu-matches-${new Date().toISOString().slice(0, 10)}.csv"`);
+        return res.send(csv);
+    }
+    catch (err) {
+        console.error("Error exporting matches:", err);
+        return res.status(500).json({ ok: false, error: "Failed to export matches" });
     }
 });
 exports.default = router;
