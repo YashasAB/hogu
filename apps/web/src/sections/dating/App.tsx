@@ -16,6 +16,16 @@ interface Match {
   myUserId: string;
 }
 
+interface AvailabilityEntry {
+  id: string;
+  matchId: string;
+  userId: string;
+  datesFree: string;
+  timesFree: string;
+  neighborhoods: string;
+  createdAt: string;
+}
+
 interface AdminMessage {
   id: string;
   userId: string;
@@ -68,6 +78,8 @@ export default function DatingApp() {
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [availabilityByMatch, setAvailabilityByMatch] = useState<Record<string, AvailabilityEntry[]>>({});
+  const [schedForm, setSchedForm] = useState<{ matchId: string; datesFree: string; timesFree: string; neighborhoods: string; editId?: string } | null>(null);
 
   useEffect(() => {
     fetchMatches();
@@ -123,6 +135,74 @@ export default function DatingApp() {
       console.error("Failed to express interest:", err);
     }
   }
+
+  async function fetchAvailability(matchId: string) {
+    try {
+      const res = await fetch(`/api/dating/profile/matches/${matchId}/availability`, { credentials: "include" });
+      const data = await res.json();
+      if (data.ok) {
+        setAvailabilityByMatch((prev) => ({ ...prev, [matchId]: data.availability }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch availability:", err);
+    }
+  }
+
+  async function saveAvailability() {
+    if (!schedForm) return;
+    setSaving(true);
+    try {
+      if (schedForm.editId) {
+        const res = await fetch(`/api/dating/profile/availability/${schedForm.editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ datesFree: schedForm.datesFree, timesFree: schedForm.timesFree, neighborhoods: schedForm.neighborhoods }),
+        });
+        const data = await res.json();
+        if (!data.ok) { setError(data.error); return; }
+      } else {
+        const res = await fetch(`/api/dating/profile/matches/${schedForm.matchId}/availability`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ datesFree: schedForm.datesFree, timesFree: schedForm.timesFree, neighborhoods: schedForm.neighborhoods }),
+        });
+        const data = await res.json();
+        if (!data.ok) { setError(data.error); return; }
+      }
+      setSchedForm(null);
+      fetchAvailability(schedForm.matchId);
+    } catch (err) {
+      setError("Failed to save availability");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteAvailability(entryId: string, matchId: string) {
+    try {
+      const res = await fetch(`/api/dating/profile/availability/${entryId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        fetchAvailability(matchId);
+      }
+    } catch (err) {
+      console.error("Failed to delete availability:", err);
+    }
+  }
+
+  useEffect(() => {
+    const schedulingMatches = matches.filter((m) => m.status === "SCHEDULING" || m.status === "CONFIRMED");
+    schedulingMatches.forEach((m) => {
+      if (!availabilityByMatch[m.matchId]) {
+        fetchAvailability(m.matchId);
+      }
+    });
+  }, [matches]);
 
   async function viewMatchProfile(userId: string) {
     setError(null);
@@ -353,6 +433,85 @@ export default function DatingApp() {
                             )}
                             {(match.status === "MATCHED" || match.status === "INTERESTED") && !myInterested && theirInterested && (
                               <div className="hogu-interest-indicator">They're interested!</div>
+                            )}
+
+                            {(match.status === "SCHEDULING" || match.status === "CONFIRMED") && (
+                              <div className="hogu-scheduling-section" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="hogu-sched-title">Your Availability</h4>
+                                {(availabilityByMatch[match.matchId] || []).length > 0 ? (
+                                  <div className="hogu-avail-list">
+                                    {(availabilityByMatch[match.matchId] || []).map((entry) => (
+                                      <div key={entry.id} className="hogu-avail-entry">
+                                        <div className="hogu-avail-detail"><strong>Dates:</strong> {entry.datesFree}</div>
+                                        <div className="hogu-avail-detail"><strong>Times:</strong> {entry.timesFree}</div>
+                                        <div className="hogu-avail-detail"><strong>Neighborhoods:</strong> {entry.neighborhoods}</div>
+                                        <div className="hogu-avail-actions">
+                                          <button
+                                            className="hogu-btn hogu-btn--small"
+                                            onClick={() => setSchedForm({ matchId: match.matchId, datesFree: entry.datesFree, timesFree: entry.timesFree, neighborhoods: entry.neighborhoods, editId: entry.id })}
+                                          >
+                                            Edit
+                                          </button>
+                                          <button
+                                            className="hogu-btn hogu-btn--small hogu-btn--danger"
+                                            onClick={() => deleteAvailability(entry.id, match.matchId)}
+                                          >
+                                            Remove
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="hogu-muted" style={{ fontSize: "0.85rem", margin: "4px 0" }}>No availability added yet</p>
+                                )}
+
+                                {schedForm && schedForm.matchId === match.matchId ? (
+                                  <div className="hogu-sched-form">
+                                    <label>
+                                      Dates you're free
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. Feb 15, Feb 16, any weekend"
+                                        value={schedForm.datesFree}
+                                        onChange={(e) => setSchedForm({ ...schedForm, datesFree: e.target.value })}
+                                      />
+                                    </label>
+                                    <label>
+                                      Times you're free
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. 7pm-10pm, evenings, after 6pm"
+                                        value={schedForm.timesFree}
+                                        onChange={(e) => setSchedForm({ ...schedForm, timesFree: e.target.value })}
+                                      />
+                                    </label>
+                                    <label>
+                                      Preferred neighborhoods
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. Indiranagar, Koramangala, HSR Layout"
+                                        value={schedForm.neighborhoods}
+                                        onChange={(e) => setSchedForm({ ...schedForm, neighborhoods: e.target.value })}
+                                      />
+                                    </label>
+                                    <div className="hogu-sched-btns">
+                                      <button className="hogu-btn hogu-btn--primary" onClick={saveAvailability} disabled={saving}>
+                                        {saving ? "Saving..." : schedForm.editId ? "Update" : "Save"}
+                                      </button>
+                                      <button className="hogu-btn" onClick={() => setSchedForm(null)}>Cancel</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="hogu-btn hogu-btn--interest"
+                                    style={{ marginTop: "8px" }}
+                                    onClick={() => setSchedForm({ matchId: match.matchId, datesFree: "", timesFree: "", neighborhoods: "" })}
+                                  >
+                                    + Add Availability
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                           );
@@ -1133,6 +1292,89 @@ export default function DatingApp() {
           color: #fff;
           font-size: 1rem;
           resize: vertical;
+        }
+        .hogu-scheduling-section {
+          padding: 0.75rem 1rem 1rem;
+          border-top: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.03);
+        }
+        .hogu-sched-title {
+          margin: 0 0 0.5rem;
+          font-size: 0.95rem;
+          color: #FF9800;
+        }
+        .hogu-avail-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .hogu-avail-entry {
+          background: rgba(255,255,255,0.06);
+          border-radius: 8px;
+          padding: 0.6rem 0.75rem;
+        }
+        .hogu-avail-detail {
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.8);
+          margin-bottom: 2px;
+        }
+        .hogu-avail-detail strong {
+          color: rgba(255,255,255,0.5);
+          font-weight: 500;
+        }
+        .hogu-avail-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+        .hogu-btn--small {
+          padding: 0.3rem 0.7rem;
+          font-size: 0.8rem;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border: none;
+          cursor: pointer;
+        }
+        .hogu-btn--small:hover {
+          background: rgba(255,255,255,0.2);
+        }
+        .hogu-btn--danger {
+          background: rgba(233,69,96,0.3);
+          color: #e94560;
+        }
+        .hogu-btn--danger:hover {
+          background: rgba(233,69,96,0.5);
+        }
+        .hogu-sched-form {
+          margin-top: 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+        }
+        .hogu-sched-form label {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.6);
+        }
+        .hogu-sched-form input {
+          padding: 0.5rem 0.65rem;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 6px;
+          background: rgba(255,255,255,0.05);
+          color: #fff;
+          font-size: 0.9rem;
+        }
+        .hogu-sched-form input:focus {
+          outline: none;
+          border-color: #FF9800;
+        }
+        .hogu-sched-btns {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.25rem;
         }
         @media (max-width: 768px) {
           .hogu-header {

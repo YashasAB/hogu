@@ -136,6 +136,11 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-10: Added MatchAvailability table for scheduling: users enter dates free, times free, neighborhoods for SCHEDULING matches
+- 2026-02-10: Auto-message sent to both users when match moves to SCHEDULING (triggered by mutual interest)
+- 2026-02-10: User match cards show availability form with add/edit/remove for SCHEDULING status
+- 2026-02-10: Admin portal shows "View Availability" button on SCHEDULING matches with per-user fill status and details
+- 2026-02-10: Hidden Instagram handle from match profile view (only admin can see it)
 - 2026-02-09: Added gender field (Male/Female) across full stack: schema, signup, profile edit, admin list/detail, CSV export; admin users organized by gender
 - 2026-02-09: Added two-sided interest tracking: user1Interested/user2Interested fields on matches with auto-promote to SCHEDULING when both interested
 - 2026-02-09: Added user "I'm interested" button on match cards with status indicators for mutual interest

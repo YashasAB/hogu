@@ -376,8 +376,10 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req: any, res:
     const newUser1Interested = user === "user1" ? interested : match.user1Interested;
     const newUser2Interested = user === "user2" ? interested : match.user2Interested;
 
+    let promotedToScheduling = false;
     if (newUser1Interested && newUser2Interested && (match.status === "MATCHED" || match.status === "INTERESTED")) {
       updateData.status = "SCHEDULING";
+      promotedToScheduling = true;
     } else if (!newUser1Interested && !newUser2Interested && (match.status === "MATCHED" || match.status === "INTERESTED")) {
       updateData.status = "MATCHED";
     } else if ((newUser1Interested || newUser2Interested) && (match.status === "MATCHED" || match.status === "INTERESTED")) {
@@ -389,10 +391,49 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req: any, res:
       data: updateData,
     });
 
+    if (promotedToScheduling) {
+      const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
+      await prisma.adminMessage.createMany({
+        data: [
+          { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
+          { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
+        ],
+      });
+    }
+
     return res.json({ ok: true, match: updated });
   } catch (err) {
     console.error("Error updating match interest:", err);
     return res.status(500).json({ ok: false, error: "Failed to update match interest" });
+  }
+});
+
+router.get("/matches/:matchId/availability", requireAdminAuth, async (req: any, res: any) => {
+  try {
+    const { matchId } = req.params;
+
+    const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+    if (!match)
+      return res.status(404).json({ ok: false, error: "Match not found" });
+
+    const entries = await prisma.matchAvailability.findMany({
+      where: { matchId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const user1Entries = entries.filter((e) => e.userId === match.user1_id);
+    const user2Entries = entries.filter((e) => e.userId === match.user2_id);
+
+    return res.json({
+      ok: true,
+      user1Filled: user1Entries.length > 0,
+      user2Filled: user2Entries.length > 0,
+      user1Availability: user1Entries,
+      user2Availability: user2Entries,
+    });
+  } catch (err) {
+    console.error("Error fetching match availability:", err);
+    return res.status(500).json({ ok: false, error: "Failed to fetch availability" });
   }
 });
 
@@ -422,6 +463,7 @@ router.delete("/users/:userId", requireAdminAuth, async (req: any, res: any) => 
 
     await prisma.$transaction([
       prisma.adminMessage.deleteMany({ where: { userId } }),
+      prisma.matchAvailability.deleteMany({ where: { userId } }),
       prisma.datingMatch.deleteMany({
         where: { OR: [{ user1_id: userId }, { user2_id: userId }] },
       }),

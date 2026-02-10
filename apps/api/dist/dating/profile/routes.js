@@ -87,8 +87,10 @@ router.post("/matches/:matchId/interested", session_1.datingSessionMiddleware, a
         if (match.status !== "MATCHED" && match.status !== "INTERESTED") {
             return res.status(400).json({ ok: false, error: "Cannot express interest at this stage" });
         }
+        let promotedToScheduling = false;
         if (newUser1Interested && newUser2Interested) {
             updateData.status = "SCHEDULING";
+            promotedToScheduling = true;
         }
         else if (match.status === "MATCHED") {
             updateData.status = "INTERESTED";
@@ -97,6 +99,15 @@ router.post("/matches/:matchId/interested", session_1.datingSessionMiddleware, a
             where: { id: matchId },
             data: updateData,
         });
+        if (promotedToScheduling) {
+            const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
+            await prisma.adminMessage.createMany({
+                data: [
+                    { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
+                    { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
+                ],
+            });
+        }
         return res.json({
             ok: true,
             match: {
@@ -397,6 +408,102 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     catch (err) {
         console.error("Error updating profile:", err);
         return res.status(500).json({ ok: false, error: "Failed to update profile" });
+    }
+});
+router.get("/matches/:matchId/availability", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { matchId } = req.params;
+        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        if (!match)
+            return res.status(404).json({ ok: false, error: "Match not found" });
+        if (match.user1_id !== userId && match.user2_id !== userId)
+            return res.status(403).json({ ok: false, error: "Not part of this match" });
+        const entries = await prisma.matchAvailability.findMany({
+            where: { matchId, userId },
+            orderBy: { createdAt: "desc" },
+        });
+        return res.json({ ok: true, availability: entries });
+    }
+    catch (err) {
+        console.error("Error fetching availability:", err);
+        return res.status(500).json({ ok: false, error: "Failed to fetch availability" });
+    }
+});
+router.post("/matches/:matchId/availability", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { matchId } = req.params;
+        const { datesFree, timesFree, neighborhoods } = req.body;
+        if (!datesFree || !timesFree || !neighborhoods) {
+            return res.status(400).json({ ok: false, error: "All fields are required: datesFree, timesFree, neighborhoods" });
+        }
+        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        if (!match)
+            return res.status(404).json({ ok: false, error: "Match not found" });
+        if (match.user1_id !== userId && match.user2_id !== userId)
+            return res.status(403).json({ ok: false, error: "Not part of this match" });
+        if (match.status !== "SCHEDULING" && match.status !== "CONFIRMED") {
+            return res.status(400).json({ ok: false, error: "Match is not in scheduling stage" });
+        }
+        const entry = await prisma.matchAvailability.create({
+            data: { matchId, userId, datesFree, timesFree, neighborhoods },
+        });
+        return res.status(201).json({ ok: true, availability: entry });
+    }
+    catch (err) {
+        console.error("Error creating availability:", err);
+        return res.status(500).json({ ok: false, error: "Failed to save availability" });
+    }
+});
+router.put("/availability/:entryId", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { entryId } = req.params;
+        const { datesFree, timesFree, neighborhoods } = req.body;
+        const entry = await prisma.matchAvailability.findUnique({ where: { id: entryId } });
+        if (!entry)
+            return res.status(404).json({ ok: false, error: "Availability entry not found" });
+        if (entry.userId !== userId)
+            return res.status(403).json({ ok: false, error: "Not your availability entry" });
+        const updated = await prisma.matchAvailability.update({
+            where: { id: entryId },
+            data: {
+                ...(datesFree !== undefined && { datesFree }),
+                ...(timesFree !== undefined && { timesFree }),
+                ...(neighborhoods !== undefined && { neighborhoods }),
+            },
+        });
+        return res.json({ ok: true, availability: updated });
+    }
+    catch (err) {
+        console.error("Error updating availability:", err);
+        return res.status(500).json({ ok: false, error: "Failed to update availability" });
+    }
+});
+router.delete("/availability/:entryId", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { entryId } = req.params;
+        const entry = await prisma.matchAvailability.findUnique({ where: { id: entryId } });
+        if (!entry)
+            return res.status(404).json({ ok: false, error: "Availability entry not found" });
+        if (entry.userId !== userId)
+            return res.status(403).json({ ok: false, error: "Not your availability entry" });
+        await prisma.matchAvailability.delete({ where: { id: entryId } });
+        return res.json({ ok: true });
+    }
+    catch (err) {
+        console.error("Error deleting availability:", err);
+        return res.status(500).json({ ok: false, error: "Failed to delete availability" });
     }
 });
 exports.default = router;

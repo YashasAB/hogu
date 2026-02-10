@@ -261,6 +261,7 @@ model DatingUser {
   interests      DatingUserInterest[]
   firstDateTypes DatingUserFirstDateType[]
   languages      DatingUserLanguage[]
+  matchAvailability MatchAvailability[]
 
   @@map("dating_users")
 }
@@ -348,10 +349,30 @@ model DatingMatch {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  availability MatchAvailability[]
+
   @@unique([user1_id, user2_id])
   @@index([user1_id])
   @@index([user2_id])
   @@map("dating_matches")
+}
+
+model MatchAvailability {
+  id             String   @id @default(cuid())
+  matchId        String   @map("match_id")
+  userId         String   @map("user_id")
+  datesFree      String   @map("dates_free")
+  timesFree      String   @map("times_free")
+  neighborhoods  String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  match DatingMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  DatingUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@index([userId])
+  @@map("match_availability")
 }
 
 model AdminMessage {

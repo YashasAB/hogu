@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const API_BASE = "/api/dating/admin";
 
@@ -41,6 +41,13 @@ interface Match {
   createdAt: string;
 }
 
+interface AvailabilityData {
+  user1Filled: boolean;
+  user2Filled: boolean;
+  user1Availability: { id: string; datesFree: string; timesFree: string; neighborhoods: string; createdAt: string }[];
+  user2Availability: { id: string; datesFree: string; timesFree: string; neighborhoods: string; createdAt: string }[];
+}
+
 interface Message {
   id: string;
   userId: string;
@@ -67,6 +74,8 @@ export default function AdminPortal() {
   const [newMessage, setNewMessage] = useState("");
   const [createMatchUser1, setCreateMatchUser1] = useState("");
   const [createMatchUser2, setCreateMatchUser2] = useState("");
+  const [matchAvailability, setMatchAvailability] = useState<Record<string, AvailabilityData>>({});
+  const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
 
   async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const res = await fetch(url, {
@@ -187,6 +196,15 @@ export default function AdminPortal() {
       loadMatches();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function fetchMatchAvailability(matchId: string) {
+    try {
+      const data = await fetchWithAuth(`${API_BASE}/matches/${matchId}/availability`);
+      setMatchAvailability((prev) => ({ ...prev, [matchId]: data }));
+    } catch (err) {
+      console.error("Failed to fetch availability:", err);
     }
   }
 
@@ -532,8 +550,12 @@ export default function AdminPortal() {
                       </tr>
                     </thead>
                     <tbody>
-                      {statusMatches.map((m) => (
-                        <tr key={m.id}>
+                      {statusMatches.map((m) => {
+                        const avail = matchAvailability[m.id];
+                        const isScheduling = m.status === "SCHEDULING" || m.status === "CONFIRMED";
+                        return (
+                        <React.Fragment key={m.id}>
+                        <tr>
                           <td>{m.user1?.name || "Unknown"}</td>
                           <td>{m.user2?.name || "Unknown"}</td>
                           <td>
@@ -569,9 +591,71 @@ export default function AdminPortal() {
                             <button className="delete-btn" onClick={() => deleteMatch(m.id)}>
                               Delete
                             </button>
+                            {isScheduling && (
+                              <button
+                                className="avail-btn"
+                                onClick={() => {
+                                  if (expandedAvailMatch === m.id) {
+                                    setExpandedAvailMatch(null);
+                                  } else {
+                                    setExpandedAvailMatch(m.id);
+                                    if (!avail) fetchMatchAvailability(m.id);
+                                  }
+                                }}
+                              >
+                                {expandedAvailMatch === m.id ? "Hide" : "View"} Availability
+                              </button>
+                            )}
                           </td>
                         </tr>
-                      ))}
+                        {isScheduling && expandedAvailMatch === m.id && (
+                          <tr>
+                            <td colSpan={6}>
+                              <div className="avail-panel">
+                                {!avail ? (
+                                  <p style={{ color: "#aaa" }}>Loading availability...</p>
+                                ) : (
+                                  <div className="avail-grid">
+                                    <div className="avail-user-col">
+                                      <h4>{m.user1?.name || "User 1"}</h4>
+                                      {avail.user1Filled ? (
+                                        avail.user1Availability.map((a) => (
+                                          <div key={a.id} className="avail-card">
+                                            <div><strong>Dates:</strong> {a.datesFree}</div>
+                                            <div><strong>Times:</strong> {a.timesFree}</div>
+                                            <div><strong>Neighborhoods:</strong> {a.neighborhoods}</div>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <p className="avail-pending">Not yet filled</p>
+                                      )}
+                                    </div>
+                                    <div className="avail-user-col">
+                                      <h4>{m.user2?.name || "User 2"}</h4>
+                                      {avail.user2Filled ? (
+                                        avail.user2Availability.map((a) => (
+                                          <div key={a.id} className="avail-card">
+                                            <div><strong>Dates:</strong> {a.datesFree}</div>
+                                            <div><strong>Times:</strong> {a.timesFree}</div>
+                                            <div><strong>Neighborhoods:</strong> {a.neighborhoods}</div>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <p className="avail-pending">Not yet filled</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                <button className="avail-refresh" onClick={() => fetchMatchAvailability(m.id)}>
+                                  Refresh
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -952,5 +1036,73 @@ select {
   background: rgba(76, 175, 80, 0.2);
   color: #4CAF50;
   border-color: #4CAF50;
+}
+
+.avail-btn {
+  background: #FF9800;
+  color: #000;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.avail-btn:hover {
+  background: #e68a00;
+}
+
+.avail-panel {
+  background: rgba(255, 152, 0, 0.05);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.avail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.avail-user-col h4 {
+  margin: 0 0 0.5rem;
+  color: #FF9800;
+  font-size: 0.95rem;
+}
+
+.avail-card {
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.avail-card strong {
+  color: rgba(255,255,255,0.5);
+}
+
+.avail-pending {
+  color: #ff6b6b;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.avail-refresh {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 0.75rem;
+}
+.avail-refresh:hover {
+  background: rgba(255,255,255,0.2);
 }
 `;
