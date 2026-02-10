@@ -136,6 +136,9 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-10: Added dateCity and dateNeighborhoods fields to user profile (signup, edit, admin view, CSV export)
+- 2026-02-10: Added separate Export Match Data button in admin portal (exports matches + scheduling availability in legible CSV)
+- 2026-02-10: User CSV export does not include scheduling data; match export is separate
 - 2026-02-10: Added MatchAvailability table for scheduling: users enter dates free, times free, neighborhoods for SCHEDULING matches
 - 2026-02-10: Auto-message sent to both users when match moves to SCHEDULING (triggered by mutual interest)
 - 2026-02-10: User match cards show availability form with add/edit/remove for SCHEDULING status
