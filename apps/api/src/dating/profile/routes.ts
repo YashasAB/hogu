@@ -11,6 +11,12 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
     return res.status(401).json({ ok: false, error: "Not authenticated" });
 
   try {
+    const currentUser = await prisma.datingUser.findUnique({
+      where: { id: userId },
+      select: { gender: true },
+    });
+    const isMale = (currentUser?.gender || "Male") === "Male";
+
     const matches = await prisma.datingMatch.findMany({
       where: {
         OR: [{ user1_id: userId }, { user2_id: userId }],
@@ -18,7 +24,30 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
       },
     });
 
-    const matchedUserIds = matches.map((m) =>
+    let visibleMatches = matches;
+    if (isMale) {
+      const otherUserIds = matches.map((m) =>
+        m.user1_id === userId ? m.user2_id : m.user1_id
+      );
+      const otherUsers = await prisma.datingUser.findMany({
+        where: { id: { in: otherUserIds } },
+        select: { id: true, gender: true },
+      });
+      const otherGenderMap = new Map(otherUsers.map((u) => [u.id, u.gender]));
+
+      visibleMatches = matches.filter((m) => {
+        const otherId = m.user1_id === userId ? m.user2_id : m.user1_id;
+        const otherGender = otherGenderMap.get(otherId) || "Male";
+        if (otherGender === "Female") {
+          const femaleIsUser1 = m.user1_id === otherId;
+          const femaleInterested = femaleIsUser1 ? m.user1Interested : m.user2Interested;
+          return femaleInterested;
+        }
+        return true;
+      });
+    }
+
+    const matchedUserIds = visibleMatches.map((m) =>
       m.user1_id === userId ? m.user2_id : m.user1_id
     );
 
@@ -44,7 +73,7 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
     });
 
     const result = matchedUsers.map((u) => {
-      const match = matches.find(
+      const match = visibleMatches.find(
         (m) => m.user1_id === u.id || m.user2_id === u.id
       );
       return {

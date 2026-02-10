@@ -136,6 +136,7 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-10: Match visibility: male users only see a match after the female user marks interested; female users see matches immediately
 - 2026-02-10: Added dateCity and dateNeighborhoods fields to user profile (signup, edit, admin view, CSV export)
 - 2026-02-10: Added separate Export Match Data button in admin portal (exports matches + scheduling availability in legible CSV)
 - 2026-02-10: User CSV export does not include scheduling data; match export is separate
