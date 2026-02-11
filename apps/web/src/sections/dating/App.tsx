@@ -389,7 +389,18 @@ export default function DatingApp() {
             {matches.length === 0 ? (
               <div className="hogu-empty">
                 <p>No matches yet. Check back soon!</p>
-                <p className="hogu-muted">We'll notify you when you get a match.</p>
+                <p className="hogu-muted" style={{ marginTop: "1.5rem", lineHeight: 1.7, maxWidth: 520 }}>
+                  Hi! We're working on finding you the best possible matches.<br />
+                  To improve your chances, please complete your profile with as much detail as possible.<br />
+                  Adding your diet preferences, interests, profession, and preferred areas to go out in makes a huge difference in helping us curate relevant introductions for you.
+                </p>
+                <button
+                  className="hogu-btn"
+                  style={{ marginTop: "1.25rem" }}
+                  onClick={() => setTab("edit")}
+                >
+                  Complete Your Profile
+                </button>
               </div>
             ) : (
               <>
