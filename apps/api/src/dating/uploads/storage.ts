@@ -122,4 +122,14 @@ export async function getPhotoStream(objectKey: string) {
   };
 }
 
+export async function deleteObject(objectKey: string): Promise<void> {
+  const bucketName = getBucketName();
+  const bucket = storageClient.bucket(bucketName);
+  const file = bucket.file(objectKey);
+  const [exists] = await file.exists();
+  if (exists) {
+    await file.delete();
+  }
+}
+
 export { storageClient };

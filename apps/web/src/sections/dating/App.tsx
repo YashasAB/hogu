@@ -752,6 +752,96 @@ export default function DatingApp() {
         {tab === "edit" && myProfile && (
           <section className="hogu-edit-profile">
             <h2>Edit Profile</h2>
+
+            <div className="hogu-photo-manager">
+              <h3>Your Photos</h3>
+              <div className="hogu-photo-grid">
+                {myProfile.photos.map((p, i) => (
+                  <div key={p.id} className="hogu-photo-slot">
+                    <img src={getPhotoUrl(p.objectKey)} alt={`Photo ${i + 1}`} />
+                    <button
+                      type="button"
+                      className="hogu-photo-delete-btn"
+                      onClick={async () => {
+                        if (myProfile.photos.length <= 1) {
+                          setError("You must keep at least 1 photo");
+                          return;
+                        }
+                        if (!confirm("Delete this photo?")) return;
+                        try {
+                          const res = await fetch(`/api/dating/profile/photos/${p.id}`, {
+                            method: "DELETE",
+                            credentials: "include",
+                          });
+                          const data = await res.json();
+                          if (data.ok) {
+                            await fetchMyProfile();
+                          } else {
+                            setError(data.error || "Failed to delete photo");
+                          }
+                        } catch {
+                          setError("Failed to delete photo");
+                        }
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {myProfile.photos.length < 6 && (
+                  <label className="hogu-photo-add-slot">
+                    <span>+ Add Photo</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        e.target.value = "";
+                        try {
+                          setError(null);
+                          const contentType = file.type || "image/jpeg";
+                          const presignRes = await fetch("/api/dating/uploads/presign", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ count: 1, contentTypes: [contentType], userHint: "profile" }),
+                          });
+                          const presignData = await presignRes.json();
+                          if (!presignData.ok || !presignData.items?.length) throw new Error("Presign failed");
+
+                          const item = presignData.items[0];
+                          const uploadRes = await fetch(item.uploadUrl, {
+                            method: "PUT",
+                            headers: { "Content-Type": item.contentType },
+                            body: file,
+                          });
+                          if (!uploadRes.ok) throw new Error("Upload failed");
+
+                          const addRes = await fetch("/api/dating/profile/photos", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ objectKey: item.objectKey }),
+                          });
+                          const addData = await addRes.json();
+                          if (addData.ok) {
+                            await fetchMyProfile();
+                          } else {
+                            setError(addData.error || "Failed to add photo");
+                          }
+                        } catch {
+                          setError("Failed to upload photo");
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
             <form onSubmit={saveProfile} className="hogu-edit-form">
               <div className="hogu-form-group">
                 <label>Name</label>
@@ -1072,6 +1162,67 @@ export default function DatingApp() {
           object-fit: cover;
           border-radius: 12px;
           flex-shrink: 0;
+        }
+        .hogu-photo-manager {
+          margin-bottom: 2rem;
+        }
+        .hogu-photo-manager h3 {
+          margin: 0 0 1rem;
+          font-size: 1.1rem;
+        }
+        .hogu-photo-grid {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .hogu-photo-slot {
+          position: relative;
+          width: 120px;
+          height: 150px;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        .hogu-photo-slot img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .hogu-photo-delete-btn {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: rgba(220, 38, 38, 0.9);
+          color: #fff;
+          border: none;
+          font-size: 18px;
+          line-height: 1;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .hogu-photo-delete-btn:hover {
+          background: #dc2626;
+        }
+        .hogu-photo-add-slot {
+          width: 120px;
+          height: 150px;
+          border-radius: 10px;
+          border: 2px dashed #555;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #888;
+          font-size: 0.9rem;
+          transition: border-color 0.2s;
+        }
+        .hogu-photo-add-slot:hover {
+          border-color: #e32995;
+          color: #e32995;
         }
         .hogu-profile-details {
           margin-top: 1.5rem;

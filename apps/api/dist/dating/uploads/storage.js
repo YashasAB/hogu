@@ -7,6 +7,7 @@ exports.storageClient = void 0;
 exports.presignPhotoUpload = presignPhotoUpload;
 exports.getPhotoUrl = getPhotoUrl;
 exports.getPhotoStream = getPhotoStream;
+exports.deleteObject = deleteObject;
 const storage_1 = require("@google-cloud/storage");
 const crypto_1 = __importDefault(require("crypto"));
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
@@ -105,4 +106,13 @@ async function getPhotoStream(objectKey) {
         contentType: metadata.contentType || 'application/octet-stream',
         size: metadata.size,
     };
+}
+async function deleteObject(objectKey) {
+    const bucketName = getBucketName();
+    const bucket = storageClient.bucket(bucketName);
+    const file = bucket.file(objectKey);
+    const [exists] = await file.exists();
+    if (exists) {
+        await file.delete();
+    }
 }

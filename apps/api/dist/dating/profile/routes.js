@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const session_1 = require("../session");
+const storage_1 = require("../uploads/storage");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
@@ -438,6 +439,57 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     catch (err) {
         console.error("Error updating profile:", err);
         return res.status(500).json({ ok: false, error: "Failed to update profile" });
+    }
+});
+router.delete("/photos/:photoId", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { photoId } = req.params;
+        const photo = await prisma.datingUserPhoto.findUnique({ where: { id: photoId } });
+        if (!photo || photo.userId !== userId)
+            return res.status(404).json({ ok: false, error: "Photo not found" });
+        const photoCount = await prisma.datingUserPhoto.count({ where: { userId } });
+        if (photoCount <= 1)
+            return res.status(400).json({ ok: false, error: "You must keep at least 1 photo" });
+        await prisma.datingUserPhoto.delete({ where: { id: photoId } });
+        try {
+            await (0, storage_1.deleteObject)(photo.objectKey);
+        }
+        catch (storageErr) {
+            console.error("Failed to delete from storage (record already removed):", storageErr);
+        }
+        return res.json({ ok: true });
+    }
+    catch (err) {
+        console.error("Error deleting photo:", err);
+        return res.status(500).json({ ok: false, error: "Failed to delete photo" });
+    }
+});
+router.post("/photos", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { objectKey, sortOrder } = req.body;
+        if (!objectKey)
+            return res.status(400).json({ ok: false, error: "objectKey required" });
+        const photoCount = await prisma.datingUserPhoto.count({ where: { userId } });
+        if (photoCount >= 6)
+            return res.status(400).json({ ok: false, error: "Maximum 6 photos allowed" });
+        const photo = await prisma.datingUserPhoto.create({
+            data: {
+                userId,
+                objectKey: String(objectKey),
+                sortOrder: sortOrder ?? photoCount,
+            },
+        });
+        return res.json({ ok: true, photo: { id: photo.id, objectKey: photo.objectKey, sortOrder: photo.sortOrder } });
+    }
+    catch (err) {
+        console.error("Error adding photo:", err);
+        return res.status(500).json({ ok: false, error: "Failed to add photo" });
     }
 });
 router.get("/matches/:matchId/availability", session_1.datingSessionMiddleware, async (req, res) => {
