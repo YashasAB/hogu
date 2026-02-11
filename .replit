@@ -68,3 +68,7 @@ externalPort = 8080
 [agent]
 expertMode = true
 integrations = ["javascript_object_storage:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
