@@ -26,8 +26,8 @@ export default function DatingHome() {
           Real dates. <span className="hogu-accent">Not swipes.</span>
         </h1>
         <p className="hogu-subtitle">
-          Curated matches with serious intent. Share availability, meet in your
-          preferred neighborhoods, and let the night do the talking.
+          Forget swiping. Forget messaging. Forget ghosting.<br />
+          Your personal wingman introduces you, sets you up, and gets you both out the door.
         </p>
 
         <div className="hogu-cta">
@@ -47,25 +47,64 @@ export default function DatingHome() {
           </a>
         </div>
 
+        {/* How It Works */}
+        <section className="hogu-how-it-works">
+          <h2 className="hogu-section-title">How it works</h2>
+          <div className="hogu-steps">
+            <div className="hogu-step">
+              <div className="hogu-step-num">1</div>
+              <h3>Sign up & build your profile</h3>
+              <p>Tell us about yourself — your interests, diet, profession, preferred neighborhoods. The more detail you share, the better your matches.</p>
+            </div>
+            <div className="hogu-step">
+              <div className="hogu-step-num">2</div>
+              <h3>We find your match</h3>
+              <p>Our matchmakers handpick introductions based on who you actually are — not an algorithm. Women see the match first and decide if they're interested before the man ever knows.</p>
+            </div>
+            <div className="hogu-step">
+              <div className="hogu-step-num">3</div>
+              <h3>Talk to your wingman, not your date</h3>
+              <p>Want to know something about your match? Ask your matchmaker. They'll tell you everything you'd learn from months of texting — without the small talk. No messaging your match. No awkward openers.</p>
+            </div>
+            <div className="hogu-step">
+              <div className="hogu-step-num">4</div>
+              <h3>We handle the logistics</h3>
+              <p>Your wingman finds a common neighborhood and time that works for both of you, picks a great spot, and gets you both out the door. All you have to do is show up.</p>
+            </div>
+          </div>
+        </section>
+
         {/* Value Props */}
         <section className="hogu-grid">
           <article className="hogu-card">
+            <div className="hogu-chip">Women first</div>
+            <h3>She decides first</h3>
+            <p>Men don't see a match until she says she's interested. She's always in control of who gets introduced to her.</p>
+          </article>
+
+          <article className="hogu-card">
+            <div className="hogu-chip">Wingman</div>
+            <h3>No messaging each other</h3>
+            <p>You never text your match. Talk to your matchmaker instead — ask anything you want to know. They do the convincing, the coordinating, and the introducing.</p>
+          </article>
+
+          <article className="hogu-card">
             <div className="hogu-chip">Curated</div>
             <h3>Personalized matches</h3>
-            <p>Fewer, higher-quality introductions. No feed fatigue.</p>
+            <p>Fewer, higher-quality introductions handpicked by real people. No feed fatigue, no endless scrolling.</p>
           </article>
 
           <article className="hogu-card">
             <div className="hogu-chip">IRL</div>
             <h3>Real dates, fast</h3>
-            <p>Say “Yes”, share your times, and we move it offline.</p>
+            <p>Say "I'm interested", share your availability, and your wingman moves it offline. No weeks of back-and-forth.</p>
           </article>
 
           <article className="hogu-card">
             <div className="hogu-chip">Commitment</div>
             <h3>No flaking</h3>
             <p>
-              Small venue deposit that turns into credit at the table. Get payed
+              Small venue deposit that turns into credit at the table. Get paid
               the deposit if your date flakes.
             </p>
           </article>
@@ -73,21 +112,19 @@ export default function DatingHome() {
           <article className="hogu-card">
             <div className="hogu-chip">Intent</div>
             <h3>Only serious people</h3>
-            <p>Clear preferences, aligned goals, respectful culture.</p>
-          </article>
-
-          <article className="hogu-card">
-            <div className="hogu-chip">Clarity</div>
-            <h3>Get off the phone</h3>
-            <p>Stop swiping. Make a plan. Meet someone great.</p>
+            <p>Clear preferences, aligned goals, respectful culture. No catfishing, no time-wasters.</p>
           </article>
         </section>
 
         {/* Trust strip */}
         <div className="hogu-trust">
+          <span>Women choose first</span>
+          <span className="dot" />
+          <span>Wingman-managed</span>
+          <span className="dot" />
           <span>Neighborhood-first</span>
           <span className="dot" />
-          <span>Deposit becomes credit</span>
+          <span>No messaging matches</span>
           <span className="dot" />
           <span>Privacy & respect</span>
         </div>
@@ -96,8 +133,8 @@ export default function DatingHome() {
       {/* Footer */}
       <footer className="hogu-shell hogu-footer">
         <p>
-          Hogu connects real people for real dates. Users never message each
-          other; coordination runs through the app’s flow.
+          Hogu connects real people for real dates. You never message your match —
+          your wingman handles introductions, coordination, and scheduling.
         </p>
         <p style={{ marginTop: '16px' }}>
           <a href="/restaurant-reservations" className="hogu-link" style={{ color: 'rgba(255,255,255,0.7)' }}>
@@ -238,8 +275,61 @@ export default function DatingHome() {
           transform: translateY(-1px);
         }
 
+        .hogu-section-title {
+          color: #ffffff;
+          font-size: clamp(22px, 3.5vw, 32px);
+          letter-spacing: -0.01em;
+          margin: 0 0 1.5rem;
+        }
+
+        .hogu-how-it-works {
+          margin-top: 3rem;
+          text-align: left;
+        }
+        .hogu-steps {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+        @media (min-width: 700px) {
+          .hogu-steps { grid-template-columns: repeat(2, 1fr); }
+        }
+        .hogu-step {
+          background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 16px;
+          padding: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .hogu-step-num {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #e32995, #a5b4fc);
+          color: #fff;
+          font-weight: 800;
+          font-size: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .hogu-step h3 {
+          margin: 0;
+          font-size: 17px;
+          color: #ffffff;
+        }
+        .hogu-step p {
+          margin: 0;
+          font-size: 14px;
+          color: rgba(255,255,255,0.75);
+          line-height: 1.55;
+        }
+
         .hogu-grid {
-          margin-top: 36px;
+          margin-top: 2.5rem;
           display: grid;
           grid-template-columns: repeat(1, minmax(0, 1fr));
           gap: 14px;
