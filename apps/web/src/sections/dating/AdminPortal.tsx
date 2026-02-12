@@ -79,6 +79,107 @@ export default function AdminPortal() {
   const [matchAvailability, setMatchAvailability] = useState<Record<string, AvailabilityData>>({});
   const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterGender, setFilterGender] = useState<string>("all");
+  const [filterDiet, setFilterDiet] = useState<string>("all");
+  const [filterDrinking, setFilterDrinking] = useState<string>("all");
+  const [filterSmoking, setFilterSmoking] = useState<string>("all");
+  const [filterActivity, setFilterActivity] = useState<string>("all");
+  const [filterRelType, setFilterRelType] = useState<string>("all");
+  const [filterAgeMin, setFilterAgeMin] = useState<string>("");
+  const [filterAgeMax, setFilterAgeMax] = useState<string>("");
+  const [filterDreams, setFilterDreams] = useState<string>("all");
+  const [filterFiveYear, setFilterFiveYear] = useState<string>("all");
+  const [filterWantInPartner, setFilterWantInPartner] = useState<string>("all");
+  const [filterWhyLikeMe, setFilterWhyLikeMe] = useState<string>("all");
+  const [filterProfession, setFilterProfession] = useState<string>("all");
+  const [filterDateCity, setFilterDateCity] = useState<string>("all");
+  const [filterNeighborhoods, setFilterNeighborhoods] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  function getAge(dob: string): number {
+    const d = new Date(dob);
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+    return age;
+  }
+
+  function applyFilters(list: DatingUser[]): DatingUser[] {
+    return list.filter((u) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const match = u.name.toLowerCase().includes(q)
+          || u.phoneE164.toLowerCase().includes(q)
+          || (u.instagramHandle || "").toLowerCase().includes(q)
+          || (u.profession || "").toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      if (filterGender !== "all" && (u.gender || "Male") !== filterGender) return false;
+      if (filterDiet !== "all") {
+        if (filterDiet === "_empty" && u.diet) return false;
+        if (filterDiet !== "_empty" && u.diet !== filterDiet) return false;
+      }
+      if (filterDrinking !== "all") {
+        if (filterDrinking === "_empty" && u.drinking) return false;
+        if (filterDrinking !== "_empty" && u.drinking !== filterDrinking) return false;
+      }
+      if (filterSmoking !== "all") {
+        if (filterSmoking === "_empty" && u.smoking) return false;
+        if (filterSmoking !== "_empty" && u.smoking !== filterSmoking) return false;
+      }
+      if (filterActivity !== "all") {
+        if (filterActivity === "_empty" && u.physicalActivity) return false;
+        if (filterActivity !== "_empty" && u.physicalActivity !== filterActivity) return false;
+      }
+      if (filterRelType !== "all" && (u.relationshipType || "serious") !== filterRelType) return false;
+      if (filterAgeMin || filterAgeMax) {
+        const age = u.dob ? getAge(u.dob) : null;
+        if (age === null) return false;
+        if (filterAgeMin && age < parseInt(filterAgeMin)) return false;
+        if (filterAgeMax && age > parseInt(filterAgeMax)) return false;
+      }
+      const isFilled = (v: string | undefined | null) => !!(v && v.trim().length > 0);
+      if (filterDreams === "filled" && !isFilled(u.dreams)) return false;
+      if (filterDreams === "empty" && isFilled(u.dreams)) return false;
+      if (filterFiveYear === "filled" && !isFilled(u.fiveYearGoal)) return false;
+      if (filterFiveYear === "empty" && isFilled(u.fiveYearGoal)) return false;
+      if (filterWantInPartner === "filled" && !isFilled(u.whatIWantInPartner)) return false;
+      if (filterWantInPartner === "empty" && isFilled(u.whatIWantInPartner)) return false;
+      if (filterWhyLikeMe === "filled" && !isFilled(u.whyPartnerWouldLikeMe)) return false;
+      if (filterWhyLikeMe === "empty" && isFilled(u.whyPartnerWouldLikeMe)) return false;
+      if (filterProfession === "filled" && !isFilled(u.profession)) return false;
+      if (filterProfession === "empty" && isFilled(u.profession)) return false;
+      if (filterDateCity === "filled" && !isFilled(u.dateCity)) return false;
+      if (filterDateCity === "empty" && isFilled(u.dateCity)) return false;
+      if (filterNeighborhoods === "filled" && !isFilled(u.dateNeighborhoods)) return false;
+      if (filterNeighborhoods === "empty" && isFilled(u.dateNeighborhoods)) return false;
+      return true;
+    });
+  }
+
+  const filteredUsers = applyFilters(users);
+  const activeFilterCount = [filterGender, filterDiet, filterDrinking, filterSmoking, filterActivity, filterRelType, filterDreams, filterFiveYear, filterWantInPartner, filterWhyLikeMe, filterProfession, filterDateCity, filterNeighborhoods].filter(v => v !== "all").length + (filterAgeMin ? 1 : 0) + (filterAgeMax ? 1 : 0);
+
+  function clearAllFilters() {
+    setSearchQuery("");
+    setFilterGender("all");
+    setFilterDiet("all");
+    setFilterDrinking("all");
+    setFilterSmoking("all");
+    setFilterActivity("all");
+    setFilterRelType("all");
+    setFilterAgeMin("");
+    setFilterAgeMax("");
+    setFilterDreams("all");
+    setFilterFiveYear("all");
+    setFilterWantInPartner("all");
+    setFilterWhyLikeMe("all");
+    setFilterProfession("all");
+    setFilterDateCity("all");
+    setFilterNeighborhoods("all");
+  }
+
   async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const res = await fetch(url, {
       ...options,
@@ -371,27 +472,208 @@ export default function AdminPortal() {
                   Export Match Data
                 </button>
             </div>
+
+            <div className="filter-toolbar">
+              <div className="filter-search-row">
+                <input
+                  type="text"
+                  className="filter-search"
+                  placeholder="Search by name, phone, Instagram, profession..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button
+                  className={`filter-toggle-btn ${showFilters ? "active" : ""}`}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  Filters {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
+                </button>
+                {activeFilterCount > 0 && (
+                  <button className="filter-clear-btn" onClick={clearAllFilters}>Clear all</button>
+                )}
+              </div>
+
+              {showFilters && (
+                <div className="filter-panel">
+                  <div className="filter-section">
+                    <h4>Profile</h4>
+                    <div className="filter-grid">
+                      <label className="filter-item">
+                        <span>Gender</span>
+                        <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Relationship</span>
+                        <select value={filterRelType} onChange={(e) => setFilterRelType(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="serious">Serious</option>
+                          <option value="casual">Casual</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Age min</span>
+                        <input type="number" placeholder="e.g. 25" value={filterAgeMin} onChange={(e) => setFilterAgeMin(e.target.value)} />
+                      </label>
+                      <label className="filter-item">
+                        <span>Age max</span>
+                        <input type="number" placeholder="e.g. 35" value={filterAgeMax} onChange={(e) => setFilterAgeMax(e.target.value)} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="filter-section">
+                    <h4>Lifestyle</h4>
+                    <div className="filter-grid">
+                      <label className="filter-item">
+                        <span>Diet</span>
+                        <select value={filterDiet} onChange={(e) => setFilterDiet(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="VEG">Vegetarian</option>
+                          <option value="EGG">Eggetarian</option>
+                          <option value="NON_VEG">Non-Vegetarian</option>
+                          <option value="VEGAN">Vegan</option>
+                          <option value="JAIN">Jain</option>
+                          <option value="_empty">Not specified</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Drinking</span>
+                        <select value={filterDrinking} onChange={(e) => setFilterDrinking(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="NEVER">Never</option>
+                          <option value="SOCIALLY">Socially</option>
+                          <option value="OFTEN">Often</option>
+                          <option value="_empty">Not specified</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Smoking</span>
+                        <select value={filterSmoking} onChange={(e) => setFilterSmoking(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="NO">No</option>
+                          <option value="SOCIALLY">Socially</option>
+                          <option value="YES">Yes</option>
+                          <option value="_empty">Not specified</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Activity</span>
+                        <select value={filterActivity} onChange={(e) => setFilterActivity(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="RARELY">Rarely</option>
+                          <option value="SOMETIMES">Sometimes</option>
+                          <option value="REGULAR">Regular</option>
+                          <option value="ATHLETE">Athlete</option>
+                          <option value="_empty">Not specified</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="filter-section">
+                    <h4>Profile Completion</h4>
+                    <div className="filter-grid">
+                      <label className="filter-item">
+                        <span>Profession</span>
+                        <select value={filterProfession} onChange={(e) => setFilterProfession(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Date City</span>
+                        <select value={filterDateCity} onChange={(e) => setFilterDateCity(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Neighborhoods</span>
+                        <select value={filterNeighborhoods} onChange={(e) => setFilterNeighborhoods(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="filter-section">
+                    <h4>Essays</h4>
+                    <div className="filter-grid">
+                      <label className="filter-item">
+                        <span>Dreams</span>
+                        <select value={filterDreams} onChange={(e) => setFilterDreams(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>5-Year Plan</span>
+                        <select value={filterFiveYear} onChange={(e) => setFilterFiveYear(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Want in Partner</span>
+                        <select value={filterWantInPartner} onChange={(e) => setFilterWantInPartner(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                      <label className="filter-item">
+                        <span>Why They'd Like Me</span>
+                        <select value={filterWhyLikeMe} onChange={(e) => setFilterWhyLikeMe(e.target.value)}>
+                          <option value="all">All</option>
+                          <option value="filled">Filled</option>
+                          <option value="empty">Not filled</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(searchQuery || activeFilterCount > 0) && (
+                <div className="filter-results-count">
+                  Showing {filteredUsers.length} of {users.length} users
+                </div>
+              )}
+            </div>
+
             {(() => {
-              const maleUsers = users.filter((u) => (u.gender || "Male") === "Male");
-              const femaleUsers = users.filter((u) => (u.gender || "Male") === "Female");
+              const maleUsers = filteredUsers.filter((u) => (u.gender || "Male") === "Male");
+              const femaleUsers = filteredUsers.filter((u) => (u.gender || "Male") === "Female");
               const renderUserTable = (userList: DatingUser[]) => (
                 <table>
                   <thead>
                     <tr>
                       <th>Photo</th>
                       <th>Name</th>
+                      <th>Age</th>
                       <th>Phone</th>
                       <th>Profession</th>
-                      <th>Height</th>
+                      <th>Diet</th>
                       <th>Looking for</th>
-                      <th>Age Pref</th>
-                      <th>DOB</th>
+                      <th>City</th>
                       <th>Joined</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {userList.map((u) => (
+                    {userList.map((u) => {
+                      const dietLabels: Record<string, string> = { VEG: "Veg", EGG: "Egg", NON_VEG: "Non-Veg", VEGAN: "Vegan", JAIN: "Jain" };
+                      return (
                       <tr key={u.id}>
                         <td>
                           {u.photos[0] && (
@@ -403,18 +685,19 @@ export default function AdminPortal() {
                           )}
                         </td>
                         <td>{u.name}</td>
+                        <td>{u.dob ? getAge(u.dob) : "-"}</td>
                         <td>{u.phoneE164}</td>
                         <td>{u.profession || "-"}</td>
-                        <td>{u.height || "-"}</td>
+                        <td>{u.diet ? dietLabels[u.diet] || u.diet : "-"}</td>
                         <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
-                        <td>{u.agePreferenceMin || u.agePreferenceMax ? `${u.agePreferenceMin ?? "?"}–${u.agePreferenceMax ?? "?"}` : "-"}</td>
-                        <td>{u.dob ? new Date(u.dob).toLocaleDateString() : "-"}</td>
+                        <td>{u.dateCity || "-"}</td>
                         <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                         <td>
                           <button onClick={() => handleViewUser(u)}>View / Message</button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               );
@@ -1014,6 +1297,129 @@ th { color: #999; font-weight: 600; }
 }
 .export-btn:hover {
   background: #34a063;
+}
+
+.filter-toolbar {
+  margin-bottom: 16px;
+}
+.filter-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.filter-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #1a1a2e;
+  color: #eee;
+  font-size: 14px;
+  outline: none;
+}
+.filter-search:focus {
+  border-color: #e32995;
+}
+.filter-search::placeholder {
+  color: #666;
+}
+.filter-toggle-btn {
+  padding: 10px 16px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #1a1a2e;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.filter-toggle-btn.active {
+  border-color: #e32995;
+  color: #e32995;
+}
+.filter-badge {
+  background: #e32995;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.filter-clear-btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #e32995;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.filter-clear-btn:hover {
+  text-decoration: underline;
+}
+.filter-panel {
+  margin-top: 12px;
+  padding: 16px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+.filter-section {
+  margin-bottom: 14px;
+}
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+.filter-section h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  font-weight: 700;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filter-item span {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 500;
+}
+.filter-item select,
+.filter-item input {
+  padding: 7px 10px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0f0f23;
+  color: #eee;
+  font-size: 13px;
+  outline: none;
+}
+.filter-item select:focus,
+.filter-item input:focus {
+  border-color: #e32995;
+}
+.filter-results-count {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
 }
 
 .delete-btn {
