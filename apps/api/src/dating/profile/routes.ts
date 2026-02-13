@@ -638,6 +638,19 @@ router.post("/matches/:matchId/availability", datingSessionMiddleware, async (re
       data: { matchId, userId, datesFree, timesFree, neighborhoods },
     });
 
+    const otherUserId = match.user1_id === userId ? match.user2_id : match.user1_id;
+    const otherUserAvailability = await prisma.matchAvailability.findFirst({
+      where: { matchId, userId: otherUserId },
+    });
+
+    if (!otherUserAvailability) {
+      const currentUser = await prisma.datingUser.findUnique({ where: { id: userId }, select: { name: true } });
+      const nudgeMessage = `Yay! ${currentUser?.name || "Your match"} is down to go on a date and has shared their availability. Please head to your Matches tab and add yours now!`;
+      await prisma.adminMessage.create({
+        data: { userId: otherUserId, fromAdmin: true, content: nudgeMessage },
+      });
+    }
+
     return res.status(201).json({ ok: true, availability: entry });
   } catch (err) {
     console.error("Error creating availability:", err);
