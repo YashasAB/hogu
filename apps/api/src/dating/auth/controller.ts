@@ -33,6 +33,9 @@ export const AuthController = {
           fiveYearGoal: data.fiveYearGoal,
           whatIWantInPartner: data.whatIWantInPartner,
           whyPartnerWouldLikeMe: data.whyPartnerWouldLikeMe,
+          myDayLooksLike: data.myDayLooksLike,
+          idealFirstDate: data.idealFirstDate,
+          nonNegotiables: data.nonNegotiables,
 
           physicalActivity: data.physicalActivity,
           dateBudget: data.dateBudget,
@@ -122,7 +125,10 @@ export const AuthController = {
         !data.dreams || data.dreams.trim().length < 20 ||
         !data.fiveYearGoal || data.fiveYearGoal.trim().length < 20 ||
         !data.whatIWantInPartner || data.whatIWantInPartner.trim().length < 20 ||
-        !data.whyPartnerWouldLikeMe || data.whyPartnerWouldLikeMe.trim().length < 20;
+        !data.whyPartnerWouldLikeMe || data.whyPartnerWouldLikeMe.trim().length < 20 ||
+        !data.myDayLooksLike || data.myDayLooksLike.trim().length < 20 ||
+        !data.idealFirstDate || data.idealFirstDate.trim().length < 20 ||
+        !data.nonNegotiables || data.nonNegotiables.trim().length < 20;
 
       if (hasIncompleteProfile) {
         await prisma.adminMessage.create({
@@ -138,6 +144,9 @@ Please take a few minutes to complete these sections in your profile:
 • Your 5-year goals
 • What you're looking for in a partner
 • Why your partner would love dating you
+• What your typical day looks like
+• Your ideal fun first date
+• Your non-negotiables in a partner
 
 The more you share, the better we can match you with someone truly compatible. Head to your profile and tap "Edit Profile" to add these details!
 

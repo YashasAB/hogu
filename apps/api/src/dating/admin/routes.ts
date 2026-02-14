@@ -128,7 +128,8 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
       "Looking For", "Age Pref Min", "Age Pref Max", "Date City", "Date Neighborhoods", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
       "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
       "Dreams", "Five Year Goal", "What I Want in a Partner",
-      "Why My Partner Would Like Me", "Photos Count", "Joined"
+      "Why My Partner Would Like Me", "My Day Looks Like", "Ideal First Date",
+      "Non-Negotiables", "Photos Count", "Joined"
     ];
 
     function escCsv(val: unknown): string {
@@ -181,6 +182,9 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
         u.fiveYearGoal || "",
         u.whatIWantInPartner || "",
         u.whyPartnerWouldLikeMe || "",
+        u.myDayLooksLike || "",
+        u.idealFirstDate || "",
+        u.nonNegotiables || "",
         String(photosByUser.get(u.id) || 0),
         new Date(u.createdAt).toLocaleDateString("en-IN"),
       ].map(escCsv).join(",");

@@ -136,6 +136,9 @@ The system uses a comprehensive schema covering:
 
 # Recent Changes
 
+- 2026-02-14: Added 3 new profile essay fields: myDayLooksLike, idealFirstDate, nonNegotiables (schema, signup, profile edit, match view, admin detail, CSV export)
+- 2026-02-14: Auto-nudge: when user submits scheduling availability, auto-sends admin message to other user if they haven't submitted theirs
+- 2026-02-14: NYC expansion planned: add city field to users, separate landing/signup pages, admin city toggle (saved for future)
 - 2026-02-10: Match visibility: male users only see a match after the female user marks interested; female users see matches immediately
 - 2026-02-10: Added dateCity and dateNeighborhoods fields to user profile (signup, edit, admin view, CSV export)
 - 2026-02-10: Added separate Export Match Data button in admin portal (exports matches + scheduling availability in legible CSV)

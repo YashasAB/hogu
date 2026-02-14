@@ -22,6 +22,9 @@ interface DatingUser {
   fiveYearGoal?: string;
   whatIWantInPartner?: string;
   whyPartnerWouldLikeMe?: string;
+  myDayLooksLike?: string;
+  idealFirstDate?: string;
+  nonNegotiables?: string;
   cuisines?: string[];
   firstDateTypes?: string[];
   interests?: string[];
@@ -790,6 +793,18 @@ export default function AdminPortal() {
                 <div className="essay">
                   <h4>Why My Partner Would Like Me</h4>
                   <p>{selectedUser.whyPartnerWouldLikeMe || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>My Day Looks Like</h4>
+                  <p>{selectedUser.myDayLooksLike || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>Ideal First Date</h4>
+                  <p>{selectedUser.idealFirstDate || "-"}</p>
+                </div>
+                <div className="essay">
+                  <h4>Non-Negotiables</h4>
+                  <p>{selectedUser.nonNegotiables || "-"}</p>
                 </div>
               </div>
             </div>

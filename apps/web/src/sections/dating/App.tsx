@@ -47,6 +47,9 @@ interface Profile {
   fiveYearGoal: string | null;
   whatIWantInPartner: string | null;
   whyPartnerWouldLikeMe: string | null;
+  myDayLooksLike: string | null;
+  idealFirstDate: string | null;
+  nonNegotiables: string | null;
   physicalActivity: string | null;
   dateBudget: string | null;
   instagramHandle: string | null;
@@ -295,6 +298,9 @@ export default function DatingApp() {
       fiveYearGoal: formData.get("fiveYearGoal"),
       whatIWantInPartner: formData.get("whatIWantInPartner"),
       whyPartnerWouldLikeMe: formData.get("whyPartnerWouldLikeMe"),
+      myDayLooksLike: formData.get("myDayLooksLike"),
+      idealFirstDate: formData.get("idealFirstDate"),
+      nonNegotiables: formData.get("nonNegotiables"),
       physicalActivity: formData.get("physicalActivity"),
       dateBudget: formData.get("dateBudget"),
       instagramHandle: formData.get("instagramHandle"),
@@ -595,6 +601,27 @@ export default function DatingApp() {
                 </div>
               )}
 
+              {selectedMatch.myDayLooksLike && (
+                <div className="hogu-section">
+                  <h4>My Day Looks Like</h4>
+                  <p>{selectedMatch.myDayLooksLike}</p>
+                </div>
+              )}
+
+              {selectedMatch.idealFirstDate && (
+                <div className="hogu-section">
+                  <h4>My Ideal First Date</h4>
+                  <p>{selectedMatch.idealFirstDate}</p>
+                </div>
+              )}
+
+              {selectedMatch.nonNegotiables && (
+                <div className="hogu-section">
+                  <h4>Non-Negotiables</h4>
+                  <p>{selectedMatch.nonNegotiables}</p>
+                </div>
+              )}
+
               {(selectedMatch.diet || selectedMatch.drinking || selectedMatch.smoking || selectedMatch.physicalActivity || selectedMatch.dateBudget) && (
                 <div className="hogu-section">
                   <h4>Lifestyle</h4>
@@ -713,6 +740,27 @@ export default function DatingApp() {
                 <div className="hogu-section">
                   <h4>Why You'd Like Me</h4>
                   <p>{myProfile.whyPartnerWouldLikeMe}</p>
+                </div>
+              )}
+
+              {myProfile.myDayLooksLike && (
+                <div className="hogu-section">
+                  <h4>My Day Looks Like</h4>
+                  <p>{myProfile.myDayLooksLike}</p>
+                </div>
+              )}
+
+              {myProfile.idealFirstDate && (
+                <div className="hogu-section">
+                  <h4>My Ideal First Date</h4>
+                  <p>{myProfile.idealFirstDate}</p>
+                </div>
+              )}
+
+              {myProfile.nonNegotiables && (
+                <div className="hogu-section">
+                  <h4>Non-Negotiables</h4>
+                  <p>{myProfile.nonNegotiables}</p>
                 </div>
               )}
 
@@ -927,6 +975,21 @@ export default function DatingApp() {
               <div className="hogu-form-group">
                 <label>Why You'd Like Me</label>
                 <textarea name="whyPartnerWouldLikeMe" rows={3} placeholder="What makes you a great partner? Share your personality, interests, and what you bring to a relationship. Help potential matches understand what makes you special! (100+ characters recommended)" defaultValue={myProfile.whyPartnerWouldLikeMe || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>My Day Looks Like</label>
+                <textarea name="myDayLooksLike" rows={3} placeholder="Walk us through your typical day! e.g. 'I work in tech till 6, hit the gym, and then I'm free for drinks'" defaultValue={myProfile.myDayLooksLike || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>My Ideal First Date</label>
+                <textarea name="idealFirstDate" rows={3} placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date!)" defaultValue={myProfile.idealFirstDate || ""} />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Non-Negotiables in a Partner</label>
+                <textarea name="nonNegotiables" rows={3} placeholder="What are the things you absolutely need in a partner? e.g. 'Must be active and into fitness, has to love dogs'" defaultValue={myProfile.nonNegotiables || ""} />
               </div>
 
               <div className="hogu-form-row">

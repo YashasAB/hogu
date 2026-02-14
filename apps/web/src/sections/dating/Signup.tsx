@@ -43,6 +43,9 @@ export default function Signup() {
     fiveYearGoal: "",
     wantInPartner: "",
     whyTheyLikeMe: "",
+    myDayLooksLike: "",
+    idealFirstDate: "",
+    nonNegotiables: "",
     firstDateTypes: [] as string[],
     dateBudget: "",
 
@@ -187,6 +190,9 @@ export default function Signup() {
         fiveYearGoal: form.fiveYearGoal,
         whatIWantInPartner: form.wantInPartner,
         whyPartnerWouldLikeMe: form.whyTheyLikeMe,
+        myDayLooksLike: form.myDayLooksLike,
+        idealFirstDate: form.idealFirstDate,
+        nonNegotiables: form.nonNegotiables,
         physicalActivity: form.physicalActivity,
         dateBudget: form.dateBudget,
         instagramHandle: form.instagram,
@@ -558,6 +564,42 @@ export default function Signup() {
                 onChange={(e) => set("fiveYearGoal", e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="hogu-field">
+            <label>My day looks like</label>
+            <textarea
+              className="hogu-input"
+              rows={3}
+              maxLength={500}
+              placeholder="Walk us through your typical day! e.g. 'I work in tech till 6, hit the gym, and then I'm free for drinks' or 'College till 5, then I'm out exploring cafes and looking to meet someone new on weekends'"
+              value={form.myDayLooksLike}
+              onChange={(e) => set("myDayLooksLike", e.target.value)}
+            />
+          </div>
+
+          <div className="hogu-field">
+            <label>My ideal fun first date would be</label>
+            <textarea
+              className="hogu-input"
+              rows={3}
+              maxLength={500}
+              placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date! A rooftop with cocktails? A street food walk? A bookstore date followed by coffee?)"
+              value={form.idealFirstDate}
+              onChange={(e) => set("idealFirstDate", e.target.value)}
+            />
+          </div>
+
+          <div className="hogu-field">
+            <label>Non-negotiables in a partner</label>
+            <textarea
+              className="hogu-input"
+              rows={3}
+              maxLength={500}
+              placeholder="What are the things you absolutely need in a partner? e.g. 'Must be active and into fitness, has to love dogs, needs to be ambitious' or 'Has to be vegetarian, must be taller than 5'5, values family'"
+              value={form.nonNegotiables}
+              onChange={(e) => set("nonNegotiables", e.target.value)}
+            />
           </div>
 
           {/* First date types */}

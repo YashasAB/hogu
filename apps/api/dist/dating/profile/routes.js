@@ -49,6 +49,25 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
                 name: true,
                 profession: true,
                 dob: true,
+                dreams: true,
+                fiveYearGoal: true,
+                whatIWantInPartner: true,
+                whyPartnerWouldLikeMe: true,
+                myDayLooksLike: true,
+                idealFirstDate: true,
+                nonNegotiables: true,
+                physicalActivity: true,
+                dateBudget: true,
+                diet: true,
+                drinking: true,
+                smoking: true,
+                height: true,
+                gender: true,
+                relationshipType: true,
+                agePreferenceMin: true,
+                agePreferenceMax: true,
+                dateCity: true,
+                dateNeighborhoods: true,
             },
         });
         const photos = await prisma.datingUserPhoto.findMany({
@@ -165,6 +184,9 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 fiveYearGoal: true,
                 whatIWantInPartner: true,
                 whyPartnerWouldLikeMe: true,
+                myDayLooksLike: true,
+                idealFirstDate: true,
+                nonNegotiables: true,
                 physicalActivity: true,
                 dateBudget: true,
                 instagramHandle: true,
@@ -310,6 +332,9 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                 fiveYearGoal: true,
                 whatIWantInPartner: true,
                 whyPartnerWouldLikeMe: true,
+                myDayLooksLike: true,
+                idealFirstDate: true,
+                nonNegotiables: true,
                 physicalActivity: true,
                 dateBudget: true,
                 instagramHandle: true,
@@ -370,7 +395,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, } = req.body;
+        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, } = req.body;
         await prisma.datingUser.update({
             where: { id: userId },
             data: {
@@ -380,6 +405,9 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 fiveYearGoal,
                 whatIWantInPartner,
                 whyPartnerWouldLikeMe,
+                myDayLooksLike,
+                idealFirstDate,
+                nonNegotiables,
                 physicalActivity,
                 dateBudget,
                 instagramHandle,

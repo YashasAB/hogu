@@ -240,6 +240,10 @@ model DatingUser {
   whatIWantInPartner    String?  @map("whatIWantInPartner")
   whyPartnerWouldLikeMe String?  @map("whyPartnerWouldLikeMe")
 
+  myDayLooksLike        String?  @map("myDayLooksLike")
+  idealFirstDate        String?  @map("idealFirstDate")
+  nonNegotiables        String?  @map("nonNegotiables")
+
   physicalActivity      String?  @map("physicalActivity")
   dateBudget            String?  @map("dateBudget")
   instagramHandle       String?  @map("instagramHandle")
