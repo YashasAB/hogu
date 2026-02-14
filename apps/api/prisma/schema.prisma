@@ -257,6 +257,7 @@ model DatingUser {
   agePreferenceMax      Int?     @map("agePreferenceMax")
   dateCity              String?  @map("dateCity")
   dateNeighborhoods     String?  @map("dateNeighborhoods")
+  city                  String   @default("BLR")
 
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")

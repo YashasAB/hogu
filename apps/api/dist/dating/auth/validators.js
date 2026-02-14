@@ -78,6 +78,7 @@ function requireSignupBody(body) {
         agePreferenceMax: body.agePreferenceMax !== undefined && body.agePreferenceMax !== null && body.agePreferenceMax !== "" ? parseInt(String(body.agePreferenceMax), 10) : null,
         dateCity: pick("dateCity"),
         dateNeighborhoods: pick("dateNeighborhoods"),
+        city: pick("city") || "BLR",
         photos,
         cuisines: pickArray("cuisines"),
         interests: pickArray("interests"),

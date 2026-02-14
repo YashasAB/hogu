@@ -6,6 +6,8 @@ import DatingLogin from '../sections/dating/Login'
 import DatingSignup from '../sections/dating/Signup'
 import DatingApp from '../sections/dating/App'
 import DatingResetPassword from '../sections/dating/ResetPassword'
+import NYCHome from '../sections/dating/NYCHome'
+import NYCSignup from '../sections/dating/NYCSignup'
 
 // Restaurant reservation sections (moved to /restaurant-reservations)
 import RestaurantHome from '../sections/restaurant/Home'
@@ -46,6 +48,16 @@ export const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: <DatingResetPassword />
+  },
+
+  // NYC dating routes
+  {
+    path: '/nyc',
+    element: <NYCHome />
+  },
+  {
+    path: '/nyc/signup',
+    element: <NYCSignup />
   },
 
   // Restaurant reservation routes (dormant - under /restaurant-reservations)

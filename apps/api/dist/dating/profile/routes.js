@@ -68,6 +68,7 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
                 agePreferenceMax: true,
                 dateCity: true,
                 dateNeighborhoods: true,
+                city: true,
             },
         });
         const photos = await prisma.datingUserPhoto.findMany({
@@ -200,6 +201,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 agePreferenceMax: true,
                 dateCity: true,
                 dateNeighborhoods: true,
+                city: true,
             },
         });
         if (!user)
@@ -346,6 +348,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                 relationshipType: true,
                 dateCity: true,
                 dateNeighborhoods: true,
+                city: true,
             },
         });
         if (!user)
@@ -395,7 +398,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, } = req.body;
+        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, city, } = req.body;
         await prisma.datingUser.update({
             where: { id: userId },
             data: {
@@ -420,6 +423,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 agePreferenceMax: agePreferenceMax === undefined ? undefined : (agePreferenceMax !== null && agePreferenceMax !== "" ? parseInt(String(agePreferenceMax), 10) : null),
                 dateCity,
                 dateNeighborhoods,
+                city,
             },
         });
         if (cuisines !== undefined) {

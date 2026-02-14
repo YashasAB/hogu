@@ -17,7 +17,7 @@ interface OptionsData {
   dateBudget: Option[];
 }
 
-export default function Signup() {
+export default function NYCSignup() {
   const [options, setOptions] = useState<OptionsData | null>(null);
   const [optionsLoading, setOptionsLoading] = useState(true);
 
@@ -32,9 +32,8 @@ export default function Signup() {
     password: "",
     name: "",
     dob: "",
-    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata",
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York",
 
-    // core prefs
     cuisines: [] as string[],
     interests: [] as string[],
     physicalActivity: "SOMETIMES",
@@ -54,18 +53,17 @@ export default function Signup() {
     agePreferenceMin: "",
     agePreferenceMax: "",
 
-    // optional extras for better matching
     instagram: "",
     languages: [] as string[],
     diet: "",
     drinking: "",
     smoking: "",
-    dateCity: "",
+    dateCity: "New York",
     dateNeighborhoods: "",
   });
 
-  const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]); // previews
-  const [files, setFiles] = useState<(File | null)[]>([null, null, null]); // actual files
+  const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
+  const [files, setFiles] = useState<(File | null)[]>([null, null, null]);
   const [height, setHeight] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -113,14 +111,12 @@ export default function Signup() {
     if (!file) return;
     if (!file.type.startsWith("image/")) return alert("Please select an image");
     
-    // Store the actual file
     setFiles((prev) => {
       const next = [...prev]; 
       next[idx] = file; 
       return next;
     });
     
-    // Create preview
     const reader = new FileReader();
     reader.onload = () => {
       setPhotos((p) => {
@@ -144,7 +140,6 @@ export default function Signup() {
     if (form.firstDateTypes.length < 1)
       e.firstDateTypes = "Pick at least one preferred first date";
     if (!form.dateBudget) e.dateBudget = "Choose a date budget";
-    // Soft guidance (not required): interests 3+
     return e;
   }, [form, files]);
 
@@ -168,18 +163,15 @@ export default function Signup() {
     try {
       setIsSubmitting(true);
 
-      // 1) presign
       const realFiles = files.filter(Boolean) as File[];
       const presigned = await presignPhotos(realFiles);
 
       if (presigned.length < 1) throw new Error("Failed to presign uploads");
 
-      // 2) PUT uploads
       await Promise.all(
         presigned.map((p, i) => putToPresignedUrl(p.uploadUrl, realFiles[i], p.contentType))
       );
 
-      // 3) assemble request body for signup (photos => objectKey + sortOrder)
       const body = {
         phone: form.phone,
         password: form.password,
@@ -206,21 +198,17 @@ export default function Signup() {
         agePreferenceMax: form.agePreferenceMax ? parseInt(form.agePreferenceMax) : null,
         dateCity: form.dateCity,
         dateNeighborhoods: form.dateNeighborhoods,
-        city: "BLR",
+        city: "NYC",
 
-        // multi-selects serialized to strings arrays on backend later if needed
-        // but for photos we pass objectKeys now:
         photos: presigned.map((p, i) => ({ objectKey: p.objectKey, sortOrder: i })),
-        cuisines: form.cuisines,            // (ignored by server in Step 6; will wire later)
-        interests: form.interests,          // same
-        firstDateTypes: form.firstDateTypes // same
+        cuisines: form.cuisines,
+        interests: form.interests,
+        firstDateTypes: form.firstDateTypes
       };
 
-      // 4) call signup
       const resp = await postJson<{ ok: boolean; user: { id: string } }>("/api/dating/auth/signup", body);
 
-      // 5) redirect on success
-      window.location.href = "/app"; // or wherever your dashboard lives
+      window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Failed to create account");
     } finally {
@@ -231,13 +219,12 @@ export default function Signup() {
   return (
     <div className="hogu-auth">
       <div className="hogu-auth-card">
-        <h1>Create your Hogu account</h1>
+        <h1>Sign up — NYC</h1>
         <p className="muted">
           Serious connections. Curated experiences. Built for real dates.
         </p>
 
         <form className="hogu-form" onSubmit={submit} noValidate>
-          {/* Contact / Security */}
           <div className="grid-two">
             <div className="hogu-field">
               <label>Phone number</label>
@@ -248,7 +235,7 @@ export default function Signup() {
                 className="hogu-input"
                 type="tel"
                 inputMode="tel"
-                placeholder="+91 98765 43210"
+                placeholder="+1 212 555 1234"
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value.trim())}
               />
@@ -396,7 +383,6 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* Height */}
           <div className="hogu-field">
             <label>Height (optional)</label>
             <input
@@ -408,7 +394,6 @@ export default function Signup() {
             />
           </div>
 
-          {/* Photos */}
           <div className="hogu-field">
             <label>Photos (at least 1, up to 3)</label>
             <div className="photo-grid">
@@ -435,7 +420,6 @@ export default function Signup() {
             )}
           </div>
 
-          {/* Cuisines */}
           <div className="hogu-field">
             <label>Favourite cuisines</label>
             <div className="chip-row">
@@ -458,7 +442,6 @@ export default function Signup() {
             )}
           </div>
 
-          {/* Interests */}
           <div className="hogu-field">
             <label>Interests</label>
             <TagEditor
@@ -469,14 +452,13 @@ export default function Signup() {
             />
           </div>
 
-          {/* City & Neighborhoods */}
           <div className="grid-two">
             <div className="hogu-field">
               <label>City you want to go on dates in</label>
               <input
                 className="hogu-input"
                 type="text"
-                placeholder="e.g., Bengaluru"
+                placeholder="e.g., New York"
                 value={form.dateCity}
                 onChange={(e) => set("dateCity", e.target.value)}
               />
@@ -486,14 +468,13 @@ export default function Signup() {
               <textarea
                 className="hogu-input"
                 rows={2}
-                placeholder="e.g., Koramangala, Indiranagar, HSR Layout"
+                placeholder="e.g., East Village, Williamsburg, West Village, Lower East Side"
                 value={form.dateNeighborhoods}
                 onChange={(e) => set("dateNeighborhoods", e.target.value)}
               />
             </div>
           </div>
 
-          {/* Profession & Persona */}
           <div className="grid-two">
             <div className="hogu-field">
               <label>Profession</label>
@@ -530,7 +511,7 @@ export default function Signup() {
               />
             </div>
             <div className="hogu-field">
-              <label>Why they’d love dating you</label>
+              <label>Why they'd love dating you</label>
               <textarea
                 className="hogu-input"
                 rows={3}
@@ -549,7 +530,7 @@ export default function Signup() {
                 className="hogu-input"
                 rows={3}
                 maxLength={500}
-                placeholder="A vision you’re chasing…"
+                placeholder="A vision you're chasing…"
                 value={form.dreams}
                 onChange={(e) => set("dreams", e.target.value)}
               />
@@ -573,7 +554,7 @@ export default function Signup() {
               className="hogu-input"
               rows={3}
               maxLength={500}
-              placeholder="Walk us through your typical day! e.g. 'I work in tech till 6, hit the gym, and then I'm free for drinks' or 'College till 5, then I'm out exploring cafes and looking to meet someone new on weekends'"
+              placeholder="Walk us through your typical day! e.g. 'I'm in finance in Midtown till 6, then I hit a workout class in the Village before I'm free for drinks' or 'I freelance from coffee shops in Brooklyn, usually free by 5 for happy hour'"
               value={form.myDayLooksLike}
               onChange={(e) => set("myDayLooksLike", e.target.value)}
             />
@@ -585,7 +566,7 @@ export default function Signup() {
               className="hogu-input"
               rows={3}
               maxLength={500}
-              placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date! A rooftop with cocktails? A street food walk? A bookstore date followed by coffee?)"
+              placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date! A speakeasy in the Village? A walk across the Brooklyn Bridge? Pizza and people-watching in the park?)"
               value={form.idealFirstDate}
               onChange={(e) => set("idealFirstDate", e.target.value)}
             />
@@ -603,7 +584,6 @@ export default function Signup() {
             />
           </div>
 
-          {/* First date types */}
           <div className="hogu-field">
             <label>Preferred first date</label>
             <div className="chip-row">
@@ -626,7 +606,6 @@ export default function Signup() {
             )}
           </div>
 
-          {/* Optional match boosters */}
           <div className="grid-three">
             <div className="hogu-field">
               <label>Diet (optional)</label>
@@ -714,7 +693,6 @@ export default function Signup() {
   );
 }
 
-/** Simple tag editor used for interests/languages */
 function TagEditor({
   values,
   onAdd,
@@ -766,7 +744,6 @@ function TagEditor({
 }
 
 const signupCss = `
-/* container */
 .hogu-auth {
   min-height: 100dvh;
   background: #0f1115;
@@ -786,7 +763,6 @@ const signupCss = `
 .muted { color: rgba(255,255,255,0.75); }
 .tiny { font-size: 12px; margin-top: 10px; }
 
-/* layout */
 .hogu-form { margin-top: 18px; display: grid; gap: 16px; }
 .hogu-field { display: grid; gap: 6px; }
 .hogu-field label { font-weight: 600; color: rgba(255,255,255,0.9); font-size: 13px; }
@@ -797,7 +773,6 @@ const signupCss = `
   .grid-three { grid-template-columns: 1fr 1fr 1fr; }
 }
 
-/* inputs */
 .hogu-input, .chip {
   border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.06); color: #fff; padding: 12px 12px;
@@ -806,7 +781,6 @@ const signupCss = `
 textarea.hogu-input { resize: vertical; }
 .hogu-input:focus { border-color: rgba(227,41,149,0.6); box-shadow: 0 0 0 3px rgba(227,41,149,0.18); }
 
-/* chips */
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { background: rgba(255,255,255,0.07); cursor: pointer; padding: 8px 12px; }
 .chip--active { background: #e32995; color: #0b0b0b; border-color: transparent; }
@@ -815,7 +789,6 @@ textarea.hogu-input { resize: vertical; }
   cursor: pointer; font-weight: 700;
 }
 
-/* photos */
 .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .photo-slot {
   aspect-ratio: 1 / 1; border-radius: 14px; border: 1px dashed rgba(255,255,255,0.2);
@@ -825,7 +798,6 @@ textarea.hogu-input { resize: vertical; }
 .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
 .photo-placeholder { color: rgba(255,255,255,0.7); font-size: 12px; }
 
-/* buttons */
 .hogu-btn {
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 14px; padding: 12px 18px; font-weight: 700;
@@ -834,7 +806,6 @@ textarea.hogu-input { resize: vertical; }
 .hogu-btn--primary { background: #e32995; color: #0b0b0b; border-color: transparent; }
 .hogu-btn--primary:hover { transform: translateY(-1px); }
 
-/* misc */
 .hogu-link { color: #eaeaea; text-decoration: underline; }
 .hogu-error { color: #ffb3c6; font-size: 12px; }
 
@@ -849,7 +820,6 @@ textarea.hogu-input { resize: vertical; }
   color: #f0c0d8;
 }
 
-/* validation summary */
 .validation-summary {
   background: rgba(255, 107, 129, 0.15);
   border: 1px solid rgba(255, 107, 129, 0.4);

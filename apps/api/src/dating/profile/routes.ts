@@ -78,6 +78,7 @@ router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
         agePreferenceMax: true,
         dateCity: true,
         dateNeighborhoods: true,
+        city: true,
       },
     });
 
@@ -226,6 +227,7 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         agePreferenceMax: true,
         dateCity: true,
         dateNeighborhoods: true,
+        city: true,
       },
     });
 
@@ -392,6 +394,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         relationshipType: true,
         dateCity: true,
         dateNeighborhoods: true,
+        city: true,
       },
     });
 
@@ -475,6 +478,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
       languages,
       dateCity,
       dateNeighborhoods,
+      city,
     } = req.body;
 
     await prisma.datingUser.update({
@@ -501,6 +505,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         agePreferenceMax: agePreferenceMax === undefined ? undefined : (agePreferenceMax !== null && agePreferenceMax !== "" ? parseInt(String(agePreferenceMax), 10) : null),
         dateCity,
         dateNeighborhoods,
+        city,
       },
     });
 

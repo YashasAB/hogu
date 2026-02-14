@@ -42,6 +42,7 @@ router.get("/users", requireAdminAuth, async (req: any, res: any) => {
         agePreferenceMax: true,
         dateCity: true,
         dateNeighborhoods: true,
+        city: true,
         createdAt: true,
       },
     });
@@ -129,7 +130,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
       "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
       "Dreams", "Five Year Goal", "What I Want in a Partner",
       "Why My Partner Would Like Me", "My Day Looks Like", "Ideal First Date",
-      "Non-Negotiables", "Photos Count", "Joined"
+      "Non-Negotiables", "City", "Photos Count", "Joined"
     ];
 
     function escCsv(val: unknown): string {
@@ -185,6 +186,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req: any, res: any) => 
         u.myDayLooksLike || "",
         u.idealFirstDate || "",
         u.nonNegotiables || "",
+        u.city || "BLR",
         String(photosByUser.get(u.id) || 0),
         new Date(u.createdAt).toLocaleDateString("en-IN"),
       ].map(escCsv).join(",");

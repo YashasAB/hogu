@@ -50,6 +50,7 @@ export const AuthController = {
           agePreferenceMax: data.agePreferenceMax,
           dateCity: data.dateCity,
           dateNeighborhoods: data.dateNeighborhoods,
+          city: data.city,
         },
         select: { id: true, name: true, phoneE164: true },
       });

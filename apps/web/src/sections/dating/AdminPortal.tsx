@@ -34,6 +34,7 @@ interface DatingUser {
   agePreferenceMax?: number | null;
   dateCity?: string;
   dateNeighborhoods?: string;
+  city?: string;
 }
 
 interface Match {
@@ -82,6 +83,7 @@ export default function AdminPortal() {
   const [matchAvailability, setMatchAvailability] = useState<Record<string, AvailabilityData>>({});
   const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
 
+  const [filterCity, setFilterCity] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterDiet, setFilterDiet] = useState<string>("all");
@@ -157,6 +159,7 @@ export default function AdminPortal() {
       if (filterDateCity === "empty" && isFilled(u.dateCity)) return false;
       if (filterNeighborhoods === "filled" && !isFilled(u.dateNeighborhoods)) return false;
       if (filterNeighborhoods === "empty" && isFilled(u.dateNeighborhoods)) return false;
+      if (filterCity !== "all" && (u.city || "BLR") !== filterCity) return false;
       return true;
     });
   }
@@ -181,6 +184,7 @@ export default function AdminPortal() {
     setFilterProfession("all");
     setFilterDateCity("all");
     setFilterNeighborhoods("all");
+    setFilterCity("all");
   }
 
   async function fetchWithAuth(url: string, options: RequestInit = {}) {
@@ -466,6 +470,11 @@ export default function AdminPortal() {
 
         {tab === "users" && !selectedUser && (
           <div className="users-list">
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <button onClick={() => setFilterCity("all")} style={{ padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: filterCity === "all" ? "#e32995" : "transparent", color: "#fff", cursor: "pointer", fontWeight: 600 }}>All Cities</button>
+              <button onClick={() => setFilterCity("BLR")} style={{ padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: filterCity === "BLR" ? "#e32995" : "transparent", color: "#fff", cursor: "pointer", fontWeight: 600 }}>Bengaluru</button>
+              <button onClick={() => setFilterCity("NYC")} style={{ padding: "6px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: filterCity === "NYC" ? "#e32995" : "transparent", color: "#fff", cursor: "pointer", fontWeight: 600 }}>New York</button>
+            </div>
             <div className="users-header">
               <h2>All Users ({users.length})</h2>
               <button className="export-btn" onClick={downloadCsv}>
@@ -731,7 +740,7 @@ export default function AdminPortal() {
               </button>
             </div>
             <div className="user-profile">
-              <h2>{selectedUser.name}</h2>
+              <h2>{selectedUser.name} <span style={{ display: "inline-block", fontSize: "13px", padding: "3px 10px", borderRadius: "6px", background: (selectedUser.city || "BLR") === "NYC" ? "#3b82f6" : "#e32995", color: "#fff", fontWeight: 600, verticalAlign: "middle", marginLeft: "8px" }}>{(selectedUser.city || "BLR") === "NYC" ? "New York" : "Bengaluru"}</span></h2>
               <p className="user-phone">{selectedUser.phoneE164}</p>
               
               <div className="photos-row">
