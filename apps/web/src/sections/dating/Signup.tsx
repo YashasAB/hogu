@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { postJson, fetchJson } from "../../lib/api";
 import { presignPhotos, putToPresignedUrl } from "../../lib/uploads";
 
@@ -234,6 +235,12 @@ export default function Signup() {
         <h1>Create your Hogu account</h1>
         <p className="muted">
           Serious connections. Curated experiences. Built for real dates.
+        </p>
+
+        <p style={{ textAlign: "center", marginBottom: "0.5rem" }}>
+          <Link to="/nyc/signup" style={{ color: "#e879a8", fontSize: "0.9rem", textDecoration: "underline" }}>
+            Signing up from New York? Click here
+          </Link>
         </p>
 
         <form className="hogu-form" onSubmit={submit} noValidate>
