@@ -16,19 +16,6 @@ build = ["pnpm", "build"]
 runButton = "Project"
 
 [[workflows.workflow]]
-name = "Development"
-author = 45771689
-mode = "parallel"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd apps/api && npm run dev"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd apps/web && npm run dev"
-
-[[workflows.workflow]]
 name = "Project"
 mode = "parallel"
 author = "agent"
@@ -56,10 +43,6 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5555
-externalPort = 3000
 
 [[ports]]
 localPort = 8080
