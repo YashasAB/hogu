@@ -80,6 +80,10 @@ export default function AdminPortal() {
   const [newMessage, setNewMessage] = useState("");
   const [createMatchUser1, setCreateMatchUser1] = useState("");
   const [createMatchUser2, setCreateMatchUser2] = useState("");
+  const [search1, setSearch1] = useState("");
+  const [search2, setSearch2] = useState("");
+  const [showDropdown1, setShowDropdown1] = useState(false);
+  const [showDropdown2, setShowDropdown2] = useState(false);
   const [matchAvailability, setMatchAvailability] = useState<Record<string, AvailabilityData>>({});
   const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
 
@@ -332,6 +336,8 @@ export default function AdminPortal() {
         loadMatches();
         setCreateMatchUser1("");
         setCreateMatchUser2("");
+        setSearch1("");
+        setSearch2("");
       } else {
         alert(res.error || "Failed to create match");
       }
@@ -847,23 +853,76 @@ export default function AdminPortal() {
 
             <div className="create-match">
               <h3>Create New Match</h3>
-              <select value={createMatchUser1} onChange={(e) => setCreateMatchUser1(e.target.value)}>
-                <option value="">Select User 1</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.phoneE164})
-                  </option>
-                ))}
-              </select>
-              <select value={createMatchUser2} onChange={(e) => setCreateMatchUser2(e.target.value)}>
-                <option value="">Select User 2</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.phoneE164})
-                  </option>
-                ))}
-              </select>
-              <button onClick={createMatch}>Create Match</button>
+              <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                {[
+                  { label: "User 1", search: search1, setSearch: setSearch1, selected: createMatchUser1, setSelected: setCreateMatchUser1, show: showDropdown1, setShow: setShowDropdown1 },
+                  { label: "User 2", search: search2, setSearch: setSearch2, selected: createMatchUser2, setSelected: setCreateMatchUser2, show: showDropdown2, setShow: setShowDropdown2 },
+                ].map((field) => {
+                  const selectedUser = users.find((u) => u.id === field.selected);
+                  const filtered = field.search.trim().length > 0
+                    ? users.filter((u) => {
+                        const q = field.search.toLowerCase();
+                        return u.name.toLowerCase().includes(q) || u.phoneE164.includes(q);
+                      }).slice(0, 10)
+                    : [];
+                  return (
+                    <div key={field.label} style={{ position: "relative", flex: "1", minWidth: "220px" }}>
+                      <label style={{ display: "block", fontSize: "13px", marginBottom: "4px", color: "#ccc" }}>{field.label}</label>
+                      {selectedUser ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2a2a3a", border: "1px solid #555", borderRadius: "8px", padding: "8px 12px" }}>
+                          <span style={{ flex: 1 }}>
+                            <strong>{selectedUser.name}</strong>{" "}
+                            <span style={{ fontSize: "12px", color: "#aaa" }}>
+                              {selectedUser.gender === "Female" ? "F" : "M"} · {(selectedUser.city || "BLR") === "NYC" ? "NYC" : "BLR"}
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => { field.setSelected(""); field.setSearch(""); }}
+                            style={{ background: "none", border: "none", color: "#e879a8", cursor: "pointer", fontSize: "16px", padding: "0 4px" }}
+                          >✕</button>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            placeholder="Type name or phone..."
+                            value={field.search}
+                            onChange={(e) => { field.setSearch(e.target.value); field.setShow(true); }}
+                            onFocus={() => field.setShow(true)}
+                            onBlur={() => setTimeout(() => field.setShow(false), 200)}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #555", background: "#1a1a2e", color: "#fff", fontSize: "14px" }}
+                          />
+                          {field.show && filtered.length > 0 && (
+                            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e2f", border: "1px solid #555", borderRadius: "8px", marginTop: "4px", maxHeight: "220px", overflowY: "auto", zIndex: 50, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                              {filtered.map((u) => (
+                                <div
+                                  key={u.id}
+                                  onMouseDown={(e) => { e.preventDefault(); field.setSelected(u.id); field.setSearch(""); field.setShow(false); }}
+                                  style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = "#2a2a3a")}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                                >
+                                  <span><strong>{u.name}</strong> <span style={{ fontSize: "12px", color: "#aaa" }}>{u.phoneE164}</span></span>
+                                  <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "4px", background: u.gender === "Female" ? "#e3299533" : "#3b82f633", color: u.gender === "Female" ? "#e879a8" : "#60a5fa" }}>
+                                    {u.gender === "Female" ? "F" : "M"} · {(u.city || "BLR") === "NYC" ? "NYC" : "BLR"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {field.show && field.search.trim().length > 0 && filtered.length === 0 && (
+                            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e2f", border: "1px solid #555", borderRadius: "8px", marginTop: "4px", padding: "12px", color: "#888", textAlign: "center", zIndex: 50 }}>
+                              No users found
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                <button onClick={createMatch} style={{ alignSelf: "flex-end", marginBottom: "2px" }}>Create Match</button>
+              </div>
             </div>
 
             {MATCH_STATUSES.map((status) => {
