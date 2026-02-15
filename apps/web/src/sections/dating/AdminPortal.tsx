@@ -92,6 +92,7 @@ export default function AdminPortal() {
   const [showDropdown2, setShowDropdown2] = useState(false);
   const [matchAvailability, setMatchAvailability] = useState<Record<string, AvailabilityData>>({});
   const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
+  const [addAvailForm, setAddAvailForm] = useState<Record<string, { userId: string; datesFree: string; timesFree: string; neighborhoods: string }>>({});
 
   const [filterCity, setFilterCity] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -325,6 +326,26 @@ export default function AdminPortal() {
       setMatchAvailability((prev) => ({ ...prev, [matchId]: data }));
     } catch (err) {
       console.error("Failed to fetch availability:", err);
+    }
+  }
+
+  async function adminAddAvailability(matchId: string, userId: string, datesFree: string, timesFree: string, neighborhoods: string) {
+    try {
+      await fetchWithAuth(`${API_BASE}/matches/${matchId}/availability`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, datesFree, timesFree, neighborhoods }),
+      });
+      const formKey = `${matchId}_${userId}`;
+      setAddAvailForm((prev) => {
+        const copy = { ...prev };
+        delete copy[formKey];
+        return copy;
+      });
+      fetchMatchAvailability(matchId);
+    } catch (err) {
+      console.error("Failed to add availability:", err);
+      alert("Failed to add availability");
     }
   }
 
@@ -1016,34 +1037,42 @@ export default function AdminPortal() {
                                   <p style={{ color: "#aaa" }}>Loading availability...</p>
                                 ) : (
                                   <div className="avail-grid">
-                                    <div className="avail-user-col">
-                                      <h4>{m.user1?.name || "User 1"}</h4>
-                                      {avail.user1Filled ? (
-                                        avail.user1Availability.map((a) => (
-                                          <div key={a.id} className="avail-card">
-                                            <div><strong>Dates:</strong> {a.datesFree}</div>
-                                            <div><strong>Times:</strong> {a.timesFree}</div>
-                                            <div><strong>Neighborhoods:</strong> {a.neighborhoods}</div>
-                                          </div>
-                                        ))
-                                      ) : (
-                                        <p className="avail-pending">Not yet filled</p>
-                                      )}
-                                    </div>
-                                    <div className="avail-user-col">
-                                      <h4>{m.user2?.name || "User 2"}</h4>
-                                      {avail.user2Filled ? (
-                                        avail.user2Availability.map((a) => (
-                                          <div key={a.id} className="avail-card">
-                                            <div><strong>Dates:</strong> {a.datesFree}</div>
-                                            <div><strong>Times:</strong> {a.timesFree}</div>
-                                            <div><strong>Neighborhoods:</strong> {a.neighborhoods}</div>
-                                          </div>
-                                        ))
-                                      ) : (
-                                        <p className="avail-pending">Not yet filled</p>
-                                      )}
-                                    </div>
+                                    {[
+                                      { key: "user1", user: m.user1, entries: avail.user1Availability, filled: avail.user1Filled, userId: m.user1?.id },
+                                      { key: "user2", user: m.user2, entries: avail.user2Availability, filled: avail.user2Filled, userId: m.user2?.id },
+                                    ].map(({ key, user, entries, filled, userId }) => {
+                                      const formKey = `${m.id}_${userId}`;
+                                      const form = addAvailForm[formKey];
+                                      return (
+                                        <div className="avail-user-col" key={key}>
+                                          <h4>{user?.name || key}</h4>
+                                          {filled ? (
+                                            entries.map((a) => (
+                                              <div key={a.id} className="avail-card">
+                                                <div><strong>Dates:</strong> {a.datesFree}</div>
+                                                <div><strong>Times:</strong> {a.timesFree}</div>
+                                                <div><strong>Neighborhoods:</strong> {a.neighborhoods}</div>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="avail-pending">Not yet filled</p>
+                                          )}
+                                          {userId && (form ? (
+                                            <div className="avail-add-form">
+                                              <input placeholder="Dates free" value={form.datesFree} onChange={(e) => setAddAvailForm((prev) => ({ ...prev, [formKey]: { ...prev[formKey], datesFree: e.target.value } }))} />
+                                              <input placeholder="Times free" value={form.timesFree} onChange={(e) => setAddAvailForm((prev) => ({ ...prev, [formKey]: { ...prev[formKey], timesFree: e.target.value } }))} />
+                                              <input placeholder="Neighborhoods" value={form.neighborhoods} onChange={(e) => setAddAvailForm((prev) => ({ ...prev, [formKey]: { ...prev[formKey], neighborhoods: e.target.value } }))} />
+                                              <div className="avail-form-actions">
+                                                <button className="avail-save-btn" disabled={!form.datesFree.trim() || !form.timesFree.trim() || !form.neighborhoods.trim()} onClick={() => adminAddAvailability(m.id, userId, form.datesFree, form.timesFree, form.neighborhoods)}>Save</button>
+                                                <button className="avail-cancel-btn" onClick={() => setAddAvailForm((prev) => { const copy = { ...prev }; delete copy[formKey]; return copy; })}>Cancel</button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <button className="avail-add-btn" onClick={() => setAddAvailForm((prev) => ({ ...prev, [formKey]: { userId, datesFree: "", timesFree: "", neighborhoods: "" } }))}>+ Add Availability</button>
+                                          ))}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 )}
                                 <button className="avail-refresh" onClick={() => fetchMatchAvailability(m.id)}>
@@ -1630,6 +1659,72 @@ select {
   margin-top: 0.75rem;
 }
 .avail-refresh:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.avail-add-btn {
+  background: rgba(255, 152, 0, 0.15);
+  color: #FF9800;
+  border: 1px dashed rgba(255, 152, 0, 0.4);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+.avail-add-btn:hover {
+  background: rgba(255, 152, 0, 0.25);
+}
+
+.avail-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+.avail-add-form input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.avail-add-form input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+.avail-form-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.avail-save-btn {
+  background: #FF9800;
+  color: #000;
+  border: none;
+  padding: 5px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.avail-save-btn:hover {
+  background: #e68a00;
+}
+.avail-cancel-btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 5px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.avail-cancel-btn:hover {
   background: rgba(255,255,255,0.2);
 }
 `;

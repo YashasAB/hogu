@@ -447,6 +447,34 @@ router.get("/matches/:matchId/availability", requireAdminAuth, async (req: any, 
   }
 });
 
+router.post("/matches/:matchId/availability", requireAdminAuth, async (req: any, res: any) => {
+  try {
+    const { matchId } = req.params;
+    const { userId, datesFree, timesFree, neighborhoods } = req.body;
+
+    if (!userId || !datesFree || !timesFree || !neighborhoods) {
+      return res.status(400).json({ ok: false, error: "All fields are required: userId, datesFree, timesFree, neighborhoods" });
+    }
+
+    const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+    if (!match)
+      return res.status(404).json({ ok: false, error: "Match not found" });
+
+    if (userId !== match.user1_id && userId !== match.user2_id) {
+      return res.status(400).json({ ok: false, error: "User is not part of this match" });
+    }
+
+    const entry = await prisma.matchAvailability.create({
+      data: { matchId, userId, datesFree, timesFree, neighborhoods },
+    });
+
+    return res.status(201).json({ ok: true, availability: entry });
+  } catch (err) {
+    console.error("Error creating admin availability:", err);
+    return res.status(500).json({ ok: false, error: "Failed to create availability" });
+  }
+});
+
 router.delete("/matches/:matchId", requireAdminAuth, async (req: any, res: any) => {
   try {
     const { matchId } = req.params;
