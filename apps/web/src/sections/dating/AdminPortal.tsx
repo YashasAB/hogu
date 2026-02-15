@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 
 const API_BASE = "/api/dating/admin";
 
+const DIET_LABELS: Record<string, string> = { VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-Vegetarian", VEGAN: "Vegan", JAIN: "Jain" };
+const DRINKING_LABELS: Record<string, string> = { NEVER: "Never", SOCIALLY: "Socially", OFTEN: "Often" };
+const SMOKING_LABELS: Record<string, string> = { NO: "No", SOCIALLY: "Socially", YES: "Yes" };
+const ACTIVITY_LABELS: Record<string, string> = { RARELY: "Rarely", SOMETIMES: "Sometimes", REGULAR: "Regular", ATHLETE: "Athlete" };
+const friendlyLabel = (val: string | undefined, labels: Record<string, string>) => val ? (labels[val] || val) : "-";
+
 interface DatingUser {
   id: string;
   name: string;
@@ -690,7 +696,6 @@ export default function AdminPortal() {
                   </thead>
                   <tbody>
                     {userList.map((u) => {
-                      const dietLabels: Record<string, string> = { VEG: "Veg", EGG: "Egg", NON_VEG: "Non-Veg", VEGAN: "Vegan", JAIN: "Jain" };
                       return (
                       <tr key={u.id}>
                         <td>
@@ -706,7 +711,7 @@ export default function AdminPortal() {
                         <td>{u.dob ? getAge(u.dob) : "-"}</td>
                         <td>{u.phoneE164}</td>
                         <td>{u.profession || "-"}</td>
-                        <td>{u.diet ? dietLabels[u.diet] || u.diet : "-"}</td>
+                        <td>{friendlyLabel(u.diet, DIET_LABELS)}</td>
                         <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
                         <td>{u.dateCity || "-"}</td>
                         <td>{new Date(u.createdAt).toLocaleDateString()}</td>
@@ -776,10 +781,10 @@ export default function AdminPortal() {
 
                 <div className="profile-section">
                   <h4>Lifestyle</h4>
-                  <p><strong>Diet:</strong> {selectedUser.diet || "-"}</p>
-                  <p><strong>Drinking:</strong> {selectedUser.drinking || "-"}</p>
-                  <p><strong>Smoking:</strong> {selectedUser.smoking || "-"}</p>
-                  <p><strong>Physical Activity:</strong> {selectedUser.physicalActivity || "-"}</p>
+                  <p><strong>Diet:</strong> {friendlyLabel(selectedUser.diet, DIET_LABELS)}</p>
+                  <p><strong>Drinking:</strong> {friendlyLabel(selectedUser.drinking, DRINKING_LABELS)}</p>
+                  <p><strong>Smoking:</strong> {friendlyLabel(selectedUser.smoking, SMOKING_LABELS)}</p>
+                  <p><strong>Physical Activity:</strong> {friendlyLabel(selectedUser.physicalActivity, ACTIVITY_LABELS)}</p>
                   <p><strong>Date Budget:</strong> {selectedUser.dateBudget || "-"}</p>
                 </div>
 

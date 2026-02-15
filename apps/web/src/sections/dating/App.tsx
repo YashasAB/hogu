@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 
+const DIET_LABELS: Record<string, string> = { VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-Vegetarian", VEGAN: "Vegan", JAIN: "Jain" };
+const DRINKING_LABELS: Record<string, string> = { NEVER: "Never", SOCIALLY: "Socially", OFTEN: "Often" };
+const SMOKING_LABELS: Record<string, string> = { NO: "No", SOCIALLY: "Socially", YES: "Yes" };
+const ACTIVITY_LABELS: Record<string, string> = { RARELY: "Rarely", SOMETIMES: "Sometimes", REGULAR: "Regular", ATHLETE: "Athlete" };
+const friendlyLabel = (val: string | null | undefined, labels: Record<string, string>) => val ? (labels[val] || val) : null;
+
 interface Match {
   id: string;
   name: string;
@@ -626,10 +632,10 @@ export default function DatingApp() {
                 <div className="hogu-section">
                   <h4>Lifestyle</h4>
                   <div className="hogu-lifestyle-tags">
-                    {selectedMatch.diet && <span>Diet: {selectedMatch.diet.replace(/_/g, " ")}</span>}
-                    {selectedMatch.drinking && <span>Drinking: {selectedMatch.drinking}</span>}
-                    {selectedMatch.smoking && <span>Smoking: {selectedMatch.smoking}</span>}
-                    {selectedMatch.physicalActivity && <span>Activity: {selectedMatch.physicalActivity.replace(/_/g, " ")}</span>}
+                    {selectedMatch.diet && <span>Diet: {friendlyLabel(selectedMatch.diet, DIET_LABELS)}</span>}
+                    {selectedMatch.drinking && <span>Drinking: {friendlyLabel(selectedMatch.drinking, DRINKING_LABELS)}</span>}
+                    {selectedMatch.smoking && <span>Smoking: {friendlyLabel(selectedMatch.smoking, SMOKING_LABELS)}</span>}
+                    {selectedMatch.physicalActivity && <span>Activity: {friendlyLabel(selectedMatch.physicalActivity, ACTIVITY_LABELS)}</span>}
                     {selectedMatch.dateBudget && <span>Date budget: {selectedMatch.dateBudget}</span>}
                   </div>
                 </div>
@@ -768,10 +774,10 @@ export default function DatingApp() {
                 <div className="hogu-section">
                   <h4>Lifestyle</h4>
                   <div className="hogu-lifestyle-tags">
-                    {myProfile.diet && <span>Diet: {myProfile.diet.replace(/_/g, " ")}</span>}
-                    {myProfile.drinking && <span>Drinking: {myProfile.drinking}</span>}
-                    {myProfile.smoking && <span>Smoking: {myProfile.smoking}</span>}
-                    {myProfile.physicalActivity && <span>Activity: {myProfile.physicalActivity.replace(/_/g, " ")}</span>}
+                    {myProfile.diet && <span>Diet: {friendlyLabel(myProfile.diet, DIET_LABELS)}</span>}
+                    {myProfile.drinking && <span>Drinking: {friendlyLabel(myProfile.drinking, DRINKING_LABELS)}</span>}
+                    {myProfile.smoking && <span>Smoking: {friendlyLabel(myProfile.smoking, SMOKING_LABELS)}</span>}
+                    {myProfile.physicalActivity && <span>Activity: {friendlyLabel(myProfile.physicalActivity, ACTIVITY_LABELS)}</span>}
                     {myProfile.dateBudget && <span>Date budget: {myProfile.dateBudget}</span>}
                   </div>
                 </div>

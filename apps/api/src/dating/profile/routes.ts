@@ -6,6 +6,19 @@ import { deleteObject, presignPhotoUpload } from "../uploads/storage";
 const prisma = new PrismaClient();
 const router = Router();
 
+const LIFESTYLE_CANONICAL: Record<string, Record<string, string>> = {
+  diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
+  drinking: { never: "NEVER", socially: "SOCIALLY", occasionally: "SOCIALLY", regularly: "OFTEN", often: "OFTEN" },
+  smoking: { no: "NO", never: "NO", socially: "SOCIALLY", occasionally: "SOCIALLY", yes: "YES", regularly: "YES" },
+  physicalActivity: { rarely: "RARELY", sedentary: "RARELY", light: "RARELY", sometimes: "SOMETIMES", moderate: "SOMETIMES", regular: "REGULAR", active: "REGULAR", very_active: "REGULAR", athlete: "ATHLETE" },
+};
+function normalizeLifestyle(field: string, val: string | undefined | null): string | undefined | null {
+  if (!val) return val;
+  const map = LIFESTYLE_CANONICAL[field];
+  if (!map) return val;
+  return map[val.toLowerCase()] || val;
+}
+
 router.get("/matches", datingSessionMiddleware, async (req: any, res: any) => {
   const userId = req.datingUserId as string | null;
   if (!userId)
@@ -493,12 +506,12 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         myDayLooksLike,
         idealFirstDate,
         nonNegotiables,
-        physicalActivity,
+        physicalActivity: normalizeLifestyle("physicalActivity", physicalActivity) as string | undefined,
         dateBudget,
         instagramHandle,
-        diet,
-        drinking,
-        smoking,
+        diet: normalizeLifestyle("diet", diet) as string | undefined,
+        drinking: normalizeLifestyle("drinking", drinking) as string | undefined,
+        smoking: normalizeLifestyle("smoking", smoking) as string | undefined,
         gender,
         relationshipType,
         agePreferenceMin: agePreferenceMin === undefined ? undefined : (agePreferenceMin !== null && agePreferenceMin !== "" ? parseInt(String(agePreferenceMin), 10) : null),

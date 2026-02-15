@@ -7,6 +7,20 @@ const session_1 = require("../session");
 const validators_1 = require("./validators");
 const prisma = new client_1.PrismaClient();
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
+const LIFESTYLE_CANONICAL = {
+    diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
+    drinking: { never: "NEVER", socially: "SOCIALLY", occasionally: "SOCIALLY", regularly: "OFTEN", often: "OFTEN" },
+    smoking: { no: "NO", never: "NO", socially: "SOCIALLY", occasionally: "SOCIALLY", yes: "YES", regularly: "YES" },
+    physicalActivity: { rarely: "RARELY", sedentary: "RARELY", light: "RARELY", sometimes: "SOMETIMES", moderate: "SOMETIMES", regular: "REGULAR", active: "REGULAR", very_active: "REGULAR", athlete: "ATHLETE" },
+};
+function normalizeLifestyle(field, val) {
+    if (!val)
+        return val;
+    const map = LIFESTYLE_CANONICAL[field];
+    if (!map)
+        return val;
+    return map[val.toLowerCase()] || val;
+}
 exports.AuthController = {
     async signup(req, res, next) {
         try {
@@ -34,12 +48,12 @@ exports.AuthController = {
                     myDayLooksLike: data.myDayLooksLike,
                     idealFirstDate: data.idealFirstDate,
                     nonNegotiables: data.nonNegotiables,
-                    physicalActivity: data.physicalActivity,
+                    physicalActivity: normalizeLifestyle("physicalActivity", data.physicalActivity),
                     dateBudget: data.dateBudget,
                     instagramHandle: data.instagramHandle,
-                    diet: data.diet,
-                    drinking: data.drinking,
-                    smoking: data.smoking,
+                    diet: normalizeLifestyle("diet", data.diet),
+                    drinking: normalizeLifestyle("drinking", data.drinking),
+                    smoking: normalizeLifestyle("smoking", data.smoking),
                     height: data.height,
                     gender: data.gender,
                     relationshipType: data.relationshipType,

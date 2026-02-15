@@ -7,6 +7,19 @@ const prisma = new PrismaClient();
 
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
 
+const LIFESTYLE_CANONICAL: Record<string, Record<string, string>> = {
+  diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
+  drinking: { never: "NEVER", socially: "SOCIALLY", occasionally: "SOCIALLY", regularly: "OFTEN", often: "OFTEN" },
+  smoking: { no: "NO", never: "NO", socially: "SOCIALLY", occasionally: "SOCIALLY", yes: "YES", regularly: "YES" },
+  physicalActivity: { rarely: "RARELY", sedentary: "RARELY", light: "RARELY", sometimes: "SOMETIMES", moderate: "SOMETIMES", regular: "REGULAR", active: "REGULAR", very_active: "REGULAR", athlete: "ATHLETE" },
+};
+function normalizeLifestyle(field: string, val: string | undefined | null): string | undefined | null {
+  if (!val) return val;
+  const map = LIFESTYLE_CANONICAL[field];
+  if (!map) return val;
+  return map[val.toLowerCase()] || val;
+}
+
 export const AuthController = {
   async signup(req: any, res: any, next: any) {
     try {
@@ -37,12 +50,12 @@ export const AuthController = {
           idealFirstDate: data.idealFirstDate,
           nonNegotiables: data.nonNegotiables,
 
-          physicalActivity: data.physicalActivity,
+          physicalActivity: normalizeLifestyle("physicalActivity", data.physicalActivity) as string | undefined,
           dateBudget: data.dateBudget,
           instagramHandle: data.instagramHandle,
-          diet: data.diet,
-          drinking: data.drinking,
-          smoking: data.smoking,
+          diet: normalizeLifestyle("diet", data.diet) as string | undefined,
+          drinking: normalizeLifestyle("drinking", data.drinking) as string | undefined,
+          smoking: normalizeLifestyle("smoking", data.smoking) as string | undefined,
           height: data.height,
           gender: data.gender,
           relationshipType: data.relationshipType,
