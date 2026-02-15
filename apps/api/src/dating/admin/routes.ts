@@ -43,6 +43,10 @@ router.get("/users", requireAdminAuth, async (req: any, res: any) => {
         dateCity: true,
         dateNeighborhoods: true,
         city: true,
+        diet: true,
+        drinking: true,
+        smoking: true,
+        physicalActivity: true,
         createdAt: true,
       },
     });
