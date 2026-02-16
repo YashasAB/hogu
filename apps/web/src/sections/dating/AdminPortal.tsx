@@ -557,6 +557,7 @@ export default function AdminPortal() {
                           <option value="all">All</option>
                           <option value="serious">Serious</option>
                           <option value="casual">Casual</option>
+                          <option value="not_sure">Not sure</option>
                         </select>
                       </label>
                       <label className="filter-item">
@@ -733,7 +734,7 @@ export default function AdminPortal() {
                         <td>{u.phoneE164}</td>
                         <td>{u.profession || "-"}</td>
                         <td>{friendlyLabel(u.diet, DIET_LABELS)}</td>
-                        <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : "Serious"}</span></td>
+                        <td><span className={`rel-badge rel-${u.relationshipType || "serious"}`}>{u.relationshipType === "casual" ? "Casual" : u.relationshipType === "not_sure" ? "Not sure" : "Serious"}</span></td>
                         <td>{u.dateCity || "-"}</td>
                         <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                         <td>
@@ -793,7 +794,7 @@ export default function AdminPortal() {
                   <p><strong>Profession:</strong> {selectedUser.profession || "-"}</p>
                   <p><strong>Date of Birth:</strong> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : "-"}</p>
                   <p><strong>Height:</strong> {selectedUser.height || "-"}</p>
-                  <p><strong>Looking for:</strong> {selectedUser.relationshipType === "casual" ? "Casual dating" : "Serious relationship"}</p>
+                  <p><strong>Looking for:</strong> {selectedUser.relationshipType === "casual" ? "Casual dating" : selectedUser.relationshipType === "not_sure" ? "Not sure yet" : "Serious relationship"}</p>
                   <p><strong>Age preference:</strong> {selectedUser.agePreferenceMin || selectedUser.agePreferenceMax ? `${selectedUser.agePreferenceMin ?? "?"} – ${selectedUser.agePreferenceMax ?? "?"}` : "Not set"}</p>
                   <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : "-"}</p>
                   <p><strong>Date City:</strong> {selectedUser.dateCity || "-"}</p>

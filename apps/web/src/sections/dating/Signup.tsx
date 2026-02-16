@@ -327,6 +327,7 @@ export default function Signup() {
               {[
                 { value: "serious", label: "Serious relationship" },
                 { value: "casual", label: "Casual dating" },
+                { value: "not_sure", label: "I'm not sure" },
               ].map((opt) => (
                 <button
                   key={opt.value}

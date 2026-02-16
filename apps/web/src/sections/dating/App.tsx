@@ -575,7 +575,7 @@ export default function DatingApp() {
               {selectedMatch.relationshipType && (
                 <div className="hogu-section">
                   <h4>Looking for</h4>
-                  <p>{selectedMatch.relationshipType === "serious" ? "Serious relationship" : "Casual dating"}</p>
+                  <p>{selectedMatch.relationshipType === "serious" ? "Serious relationship" : selectedMatch.relationshipType === "not_sure" ? "Not sure yet" : "Casual dating"}</p>
                 </div>
               )}
 
@@ -704,7 +704,7 @@ export default function DatingApp() {
               {myProfile.relationshipType && (
                 <div className="hogu-section">
                   <h4>Looking for</h4>
-                  <p>{myProfile.relationshipType === "serious" ? "Serious relationship" : "Casual dating"}</p>
+                  <p>{myProfile.relationshipType === "serious" ? "Serious relationship" : myProfile.relationshipType === "not_sure" ? "Not sure yet" : "Casual dating"}</p>
                 </div>
               )}
 
@@ -951,6 +951,7 @@ export default function DatingApp() {
                 <select name="relationshipType" defaultValue={myProfile.relationshipType || "serious"}>
                   <option value="serious">Serious relationship</option>
                   <option value="casual">Casual dating</option>
+                  <option value="not_sure">I'm not sure</option>
                 </select>
               </div>
 
