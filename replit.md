@@ -184,6 +184,28 @@ The system uses a comprehensive schema covering:
 - 2025-12-25: Created feature-based folder structure (sections/dating/, sections/restaurant/, sections/admin/)
 - 2025-12-25: Updated all routing and navigation links for new URL structure
 
+# Recent Changes (continued)
+
+- 2026-03-02: Added "I'm not sure" as a third relationship type option across signup (BLR + NYC), profile edit, match view, and admin portal
+- 2026-03-02: Built Intro Agent at `apps/api/src/dating/agents/intro-agent/` — generates personalized AI introduction messages when a match is created using OpenAI (gpt-4o). Single LLM call generates both messages; female message delivered immediately, male message stored in `PendingIntroMessage` table and delivered when female marks interest. Pending message deleted on unmatch.
+- 2026-03-02: Added `PendingIntroMessage` DB table for queued male intro messages (matchId unique, toUserId, content)
+
+# Intro Agent Architecture
+
+```
+apps/api/src/dating/agents/intro-agent/
+├── types.ts        — IntroInput / IntroOutput TypeScript interfaces
+├── prompt.ts       — System prompt (Hogu Wingman Agent)
+├── buildInput.ts   — Builds lean JSON from DB (no phone/instagram)
+├── generator.ts    — OpenAI call + plain text parser → structured output
+└── index.ts        — runIntroAgent(), deliverPendingIntroToMale(), deletePendingIntro()
+```
+
+Trigger points:
+- Match created (admin) → `runIntroAgent(matchId)` fire-and-forget
+- Female marks interest → `deliverPendingIntroToMale(matchId)` fire-and-forget
+- Match set to UNMATCHED → `deletePendingIntro(matchId)`
+
 # Future Enhancements
 
 - Twilio OTP integration for phone verification during signup and password reset (credentials needed)
