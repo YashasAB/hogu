@@ -394,3 +394,13 @@ model AdminMessage {
   @@map("admin_messages")
 }
 
+model PendingIntroMessage {
+  id        String   @id @default(cuid())
+  matchId   String   @unique @map("match_id")
+  toUserId  String   @map("to_user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("pending_intro_messages")
+}
+

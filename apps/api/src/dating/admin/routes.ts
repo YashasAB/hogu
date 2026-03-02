@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import { runIntroAgent, deletePendingIntro } from "../agents/intro-agent";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -330,6 +331,8 @@ router.post("/matches", requireAdminAuth, async (req: any, res: any) => {
       },
     });
 
+    runIntroAgent(match.id);
+
     return res.status(201).json({ ok: true, match });
   } catch (err) {
     console.error("Error creating match:", err);
@@ -351,6 +354,10 @@ router.put("/matches/:matchId", requireAdminAuth, async (req: any, res: any) => 
       where: { id: matchId },
       data: { status },
     });
+
+    if (status === "UNMATCHED") {
+      deletePendingIntro(matchId);
+    }
 
     return res.json({ ok: true, match });
   } catch (err) {

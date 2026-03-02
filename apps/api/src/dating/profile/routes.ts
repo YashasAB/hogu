@@ -2,6 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { datingSessionMiddleware } from "../session";
 import { deleteObject, presignPhotoUpload } from "../uploads/storage";
+import { deliverPendingIntroToMale } from "../agents/intro-agent";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -189,6 +190,15 @@ router.post("/matches/:matchId/interested", datingSessionMiddleware, async (req:
           { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
         ],
       });
+    }
+
+    const currentUser = await prisma.datingUser.findUnique({
+      where: { id: userId },
+      select: { gender: true },
+    });
+
+    if (currentUser?.gender === "Female") {
+      deliverPendingIntroToMale(matchId);
     }
 
     return res.json({
