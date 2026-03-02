@@ -1,0 +1,22 @@
+3) Example Output (Yuvaraj ↔ Nikita) — efficient
+{
+  "match_id": "match_yuvaraj_nikita_2026_03_02",
+  "messages": [
+    {
+      "to_user_id": "u_nikita",
+      "to_role": "B",
+      "title": "🔥 Winging Yuvaraj to Nikita",
+      "body": "Nikita — I’m dropping you a match that feels very aligned with your calm-but-ambitious vibe.\n\nYuvaraj (24) is a Tech Lead and he’s big on two things you care about: staying plugged into tech + actually travelling, not just talking about it. He’s focused on stability and wants to explore 30+ more countries.\n\nYou said you’re building toward a strong tech career, financial independence, and a balanced life — and you want a partner who grows with you. This match feels like that: curious mind, good conversation, and shared momentum.\n\nDate vibe is easy: he specifically wants an open-air café (fresh air, not a fancy gourmet scene), and your ideal date is literally café + walk + deep conversation / bookstore + coffee.\n\nIf you’re open, send 2–3 time slots and I’ll start scheduling a café + walk this week.",
+      "cta": "Reply with 2–3 time slots you’re free this week and your preferred area, and I’ll lock it.",
+      "used_fields": ["Name", "Age", "Profession", "Five Year Goal", "Dreams", "Ideal First Date", "What I Want in a Partner"]
+    },
+    {
+      "to_user_id": "u_yuvaraj",
+      "to_role": "A",
+      "title": "🔥 Winging Nikita to Yuvaraj",
+      "body": "Yuvaraj — I’m introducing you to someone who matches your travel + tech curiosity energy, with a grounded long-term mindset.\n\nNikita (23) is serious about building a strong career in tech, becoming financially independent, and travelling — but she’s also clear she wants a relationship built on trust, loyalty, and clean communication. No mind games.\n\nYou said you want someone naturally curious, into tech, and passionate about travel. She’s exactly that, and she loves deep conversations, trying new cafés, and exploring the city.\n\nHer ideal first date is café + walk + conversation (and she’s into bookstore + coffee too). Since you prefer an open-air café, this is a clean, premium, low-pressure first meet.\n\nIf you’re down, share your availability and I’ll move this to scheduling.",
+      "cta": "Reply with your availability + preferred area, and I’ll set up the open-air café date.",
+      "used_fields": ["Name", "Age", "Profession", "Dreams", "Ideal First Date", "Non-Negotiables", "What I Want in a Partner"]
+    }
+  ]
+}
