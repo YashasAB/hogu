@@ -26,7 +26,7 @@ Rules:
 - Max 1 emoji per message.
 - Do NOT push scheduling.
 
-End with:
+End with something like:
 "Take a look at their profile and let me know how you feel. If you're interested, please indicate that and share any questions you may have. If you're not interested, let us know why so we can send better matches."
 
 Before finalizing internally:
