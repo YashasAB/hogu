@@ -7,15 +7,15 @@ exports.generateIntroMessages = generateIntroMessages;
 const openai_1 = __importDefault(require("openai"));
 const prompt_1 = require("./prompt");
 function getOpenAIClient() {
+    if (process.env.OPENAI_API_KEY) {
+        return new openai_1.default({ apiKey: process.env.OPENAI_API_KEY });
+    }
     const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
     const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
     if (baseURL && apiKey) {
         return new openai_1.default({ apiKey, baseURL });
     }
-    if (process.env.OPENAI_API_KEY) {
-        return new openai_1.default({ apiKey: process.env.OPENAI_API_KEY });
-    }
-    throw new Error("No OpenAI credentials configured. Set AI_INTEGRATIONS_OPENAI_API_KEY or OPENAI_API_KEY.");
+    throw new Error("No OpenAI credentials configured.");
 }
 function parsePlainTextOutput(rawText, input) {
     const wingMarker = "🔥 Winging";
@@ -35,7 +35,8 @@ function parsePlainTextOutput(rawText, input) {
                 line.toLowerCase().startsWith("let me know") ||
                 line.toLowerCase().startsWith("drop me") ||
                 line.toLowerCase().startsWith("send me") ||
-                line.toLowerCase().startsWith("share your");
+                line.toLowerCase().startsWith("share your") ||
+                line.toLowerCase().startsWith("when are you");
             if (isLast || (looksLikeCta && i >= lines.length - 2)) {
                 ctaLine = line;
             }
@@ -44,30 +45,9 @@ function parsePlainTextOutput(rawText, input) {
             }
         }
         const body = bodyLines.join("\n\n");
-        const toNameMatch = lines[0].match(/^(.+?)\s+to\s+(.+)$/i);
-        let toUserId = "";
-        let toRole = blockIndex === 0 ? "A" : "B";
-        if (toNameMatch) {
-            const recipientName = toNameMatch[2].trim().toLowerCase();
-            const userA = input.users[0];
-            const userB = input.users[1];
-            if (userA.profile.Name.toLowerCase() === recipientName) {
-                toUserId = userA.user_id;
-                toRole = "A";
-            }
-            else if (userB.profile.Name.toLowerCase() === recipientName) {
-                toUserId = userB.user_id;
-                toRole = "B";
-            }
-            else {
-                toUserId = input.users[blockIndex === 0 ? 1 : 0].user_id;
-                toRole = blockIndex === 0 ? "B" : "A";
-            }
-        }
-        else {
-            toUserId = input.users[blockIndex === 0 ? 1 : 0].user_id;
-            toRole = blockIndex === 0 ? "B" : "A";
-        }
+        // Block 0 = message TO user A (about user B) — prompt guarantees this order
+        // Block 1 = message TO user B (about user A)
+        const recipient = input.users[blockIndex === 0 ? 0 : 1];
         const usedFields = [];
         const profileFields = Object.keys(input.users[0].profile);
         for (const field of profileFields) {
@@ -76,8 +56,8 @@ function parsePlainTextOutput(rawText, input) {
             }
         }
         return {
-            to_user_id: toUserId,
-            to_role: toRole,
+            to_user_id: recipient.user_id,
+            to_role: recipient.role,
             title: titleLine,
             body,
             cta: ctaLine,
@@ -91,12 +71,12 @@ function parsePlainTextOutput(rawText, input) {
 async function generateIntroMessages(input) {
     const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o",
         messages: [
             { role: "system", content: prompt_1.INTRO_AGENT_SYSTEM_PROMPT },
             { role: "user", content: JSON.stringify(input, null, 2) },
         ],
-        max_completion_tokens: 2048,
+        max_tokens: 1024,
     });
     const rawText = response.choices[0]?.message?.content ?? "";
     if (!rawText) {

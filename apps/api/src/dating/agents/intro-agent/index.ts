@@ -5,7 +5,7 @@ import { generateIntroMessages } from "./generator";
 const prisma = new PrismaClient();
 
 function formatMessageContent(title: string, body: string, cta: string): string {
-  return [title, body, cta].filter(Boolean).join("\n\n");
+  return [body, cta].filter(Boolean).join("\n\n");
 }
 
 export async function runIntroAgent(matchId: string): Promise<void> {

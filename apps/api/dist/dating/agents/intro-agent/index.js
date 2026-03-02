@@ -8,7 +8,7 @@ const buildInput_1 = require("./buildInput");
 const generator_1 = require("./generator");
 const prisma = new client_1.PrismaClient();
 function formatMessageContent(title, body, cta) {
-    return [title, body, cta].filter(Boolean).join("\n\n");
+    return [body, cta].filter(Boolean).join("\n\n");
 }
 async function runIntroAgent(matchId) {
     try {
