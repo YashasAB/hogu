@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
+const intro_agent_1 = require("../agents/intro-agent");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -297,6 +298,7 @@ router.post("/matches", requireAdminAuth, async (req, res) => {
                 status,
             },
         });
+        (0, intro_agent_1.runIntroAgent)(match.id);
         return res.status(201).json({ ok: true, match });
     }
     catch (err) {
@@ -316,6 +318,9 @@ router.put("/matches/:matchId", requireAdminAuth, async (req, res) => {
             where: { id: matchId },
             data: { status },
         });
+        if (status === "UNMATCHED") {
+            (0, intro_agent_1.deletePendingIntro)(matchId);
+        }
         return res.json({ ok: true, match });
     }
     catch (err) {

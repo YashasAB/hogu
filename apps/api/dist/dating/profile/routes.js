@@ -4,6 +4,7 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const session_1 = require("../session");
 const storage_1 = require("../uploads/storage");
+const intro_agent_1 = require("../agents/intro-agent");
 const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const LIFESTYLE_CANONICAL = {
@@ -166,6 +167,13 @@ router.post("/matches/:matchId/interested", session_1.datingSessionMiddleware, a
                     { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
                 ],
             });
+        }
+        const currentUser = await prisma.datingUser.findUnique({
+            where: { id: userId },
+            select: { gender: true },
+        });
+        if (currentUser?.gender === "Female") {
+            (0, intro_agent_1.deliverPendingIntroToMale)(matchId);
         }
         return res.json({
             ok: true,
