@@ -44,7 +44,12 @@ export async function runGetToKnow(
     );
   }
 
-  await prisma.$transaction(ops);
+  try {
+    await prisma.$transaction(ops);
+  } catch (err) {
+    console.error("[GetToKnow] transaction failed:", err, "patch:", JSON.stringify(profilePatch));
+    throw err;
+  }
 
   const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));
   return { reply, dailyRemaining };

@@ -39,7 +39,13 @@ async function runGetToKnow(userId, userMessage) {
             data: profilePatch,
         }));
     }
-    await prismaClient_1.default.$transaction(ops);
+    try {
+        await prismaClient_1.default.$transaction(ops);
+    }
+    catch (err) {
+        console.error("[GetToKnow] transaction failed:", err, "patch:", JSON.stringify(profilePatch));
+        throw err;
+    }
     const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));
     return { reply, dailyRemaining };
 }

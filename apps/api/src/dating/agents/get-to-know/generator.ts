@@ -15,8 +15,8 @@ export async function runGetToKnowGenerator(
   input: BuiltInput
 ): Promise<GeneratorResult> {
   const last5Messages = userMessage !== null
-    ? [...input.last4Messages, { role: "user", content: userMessage }]
-    : [...input.last4Messages];
+    ? [...input.last5Messages, { role: "user", content: userMessage }]
+    : [...input.last5Messages];
 
   const userTurn = JSON.stringify({
     user_id: input.userId,
@@ -44,6 +44,9 @@ export async function runGetToKnowGenerator(
     return { reply: null, profilePatch: {} };
   }
 
+  console.log("[GetToKnow] raw LLM:", raw);
+  console.log("[GetToKnow] parsed updates:", JSON.stringify(parsed.updates));
+
   const profilePatch: Record<string, string | number> = {};
 
   for (const update of parsed.updates ?? []) {
@@ -53,6 +56,16 @@ export async function runGetToKnowGenerator(
     if (!prismaCol) continue;
     profilePatch[prismaCol] = update.value;
   }
+
+  // Coerce Int fields — LLM may return them as strings
+  if (profilePatch.agePreferenceMin != null) {
+    profilePatch.agePreferenceMin = Number(profilePatch.agePreferenceMin);
+  }
+  if (profilePatch.agePreferenceMax != null) {
+    profilePatch.agePreferenceMax = Number(profilePatch.agePreferenceMax);
+  }
+
+  console.log("[GetToKnow] profilePatch:", JSON.stringify(profilePatch));
 
   return {
     reply: parsed.assistant_message ?? null,

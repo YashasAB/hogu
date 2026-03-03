@@ -3,7 +3,7 @@ import prisma from "../../../prismaClient";
 
 export interface BuiltInput {
   userSchemaJson: Record<string, any>;
-  last4Messages: Array<{ role: string; content: string }>;
+  last5Messages: Array<{ role: string; content: string }>;
   todayUserCount: number;
   userId: string;
 }
@@ -44,8 +44,8 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     }),
     prisma.getToKnowMessage.findMany({
       where: { userId },
-      orderBy: { createdAt: "asc" },
-      take: 4,
+      orderBy: { createdAt: "desc" },
+      take: 5,
       select: { role: true, content: true, createdAt: true },
     }),
     prisma.dietOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
@@ -62,7 +62,8 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     (m) => m.role === "user" && new Date(m.createdAt) >= todayStart
   ).length;
 
-  const last4Messages = messages.map((m) => ({
+  // Reverse to restore chronological order (oldest→newest), latest message last
+  const last5Messages = messages.reverse().map((m) => ({
     role: m.role === "agent" ? "assistant" : m.role,
     content: m.content,
   }));
@@ -115,5 +116,5 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     },
   };
 
-  return { userSchemaJson, last4Messages, todayUserCount, userId };
+  return { userSchemaJson, last5Messages, todayUserCount, userId };
 }

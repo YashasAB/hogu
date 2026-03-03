@@ -10,8 +10,8 @@ const types_1 = require("./types");
 const openai = new openai_1.default({ apiKey: process.env.OPENAI_API_KEY });
 async function runGetToKnowGenerator(userMessage, input) {
     const last5Messages = userMessage !== null
-        ? [...input.last4Messages, { role: "user", content: userMessage }]
-        : [...input.last4Messages];
+        ? [...input.last5Messages, { role: "user", content: userMessage }]
+        : [...input.last5Messages];
     const userTurn = JSON.stringify({
         user_id: input.userId,
         user_schema: input.userSchemaJson,
@@ -35,6 +35,8 @@ async function runGetToKnowGenerator(userMessage, input) {
         console.error("[GetToKnow] Failed to parse LLM response:", raw);
         return { reply: null, profilePatch: {} };
     }
+    console.log("[GetToKnow] raw LLM:", raw);
+    console.log("[GetToKnow] parsed updates:", JSON.stringify(parsed.updates));
     const profilePatch = {};
     for (const update of parsed.updates ?? []) {
         const fieldName = update.field;
@@ -45,6 +47,14 @@ async function runGetToKnowGenerator(userMessage, input) {
             continue;
         profilePatch[prismaCol] = update.value;
     }
+    // Coerce Int fields — LLM may return them as strings
+    if (profilePatch.agePreferenceMin != null) {
+        profilePatch.agePreferenceMin = Number(profilePatch.agePreferenceMin);
+    }
+    if (profilePatch.agePreferenceMax != null) {
+        profilePatch.agePreferenceMax = Number(profilePatch.agePreferenceMax);
+    }
+    console.log("[GetToKnow] profilePatch:", JSON.stringify(profilePatch));
     return {
         reply: parsed.assistant_message ?? null,
         profilePatch,
