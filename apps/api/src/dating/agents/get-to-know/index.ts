@@ -50,6 +50,24 @@ export async function runGetToKnow(
   return { reply, dailyRemaining };
 }
 
+export async function runGetToKnowStart(
+  userId: string
+): Promise<{ reply: string | null }> {
+  const existingCount = await prisma.getToKnowMessage.count({ where: { userId } });
+  if (existingCount > 0) return { reply: null };
+
+  const input = await buildGetToKnowInput(userId);
+  const { reply } = await runGetToKnowGenerator(null, input);
+
+  if (reply) {
+    await prisma.getToKnowMessage.create({
+      data: { userId, role: "agent", content: reply },
+    });
+  }
+
+  return { reply };
+}
+
 export async function getGetToKnowStatus(userId: string): Promise<{
   dailyUsed: number;
   dailyLimit: number;

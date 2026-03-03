@@ -9,10 +9,9 @@ const prompt_1 = require("./prompt");
 const types_1 = require("./types");
 const openai = new openai_1.default({ apiKey: process.env.OPENAI_API_KEY });
 async function runGetToKnowGenerator(userMessage, input) {
-    const last5Messages = [
-        ...input.last4Messages,
-        { role: "user", content: userMessage },
-    ];
+    const last5Messages = userMessage !== null
+        ? [...input.last4Messages, { role: "user", content: userMessage }]
+        : [...input.last4Messages];
     const userTurn = JSON.stringify({
         user_id: input.userId,
         user_schema: input.userSchemaJson,

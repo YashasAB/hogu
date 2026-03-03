@@ -1,7 +1,7 @@
 import { Router } from "express";
 import prisma from "../../../prismaClient";
 import { datingSessionMiddleware } from "../../session";
-import { runGetToKnow, getGetToKnowStatus, GetToKnowLimitError } from "./index";
+import { runGetToKnow, runGetToKnowStart, getGetToKnowStatus, GetToKnowLimitError } from "./index";
 
 const router = Router();
 
@@ -31,6 +31,18 @@ router.get("/status", datingSessionMiddleware, async (req: any, res: any) => {
   } catch (err) {
     console.error("[GetToKnow] /status error:", err);
     res.status(500).json({ error: "Failed to fetch status" });
+  }
+});
+
+router.post("/start", datingSessionMiddleware, async (req: any, res: any) => {
+  try {
+    const userId = (req as any).datingUserId as string | null;
+    if (!userId) return res.status(401).json({ ok: false, error: "Not authenticated" });
+    const result = await runGetToKnowStart(userId);
+    res.json({ reply: result.reply });
+  } catch (err) {
+    console.error("[GetToKnow] /start error:", err);
+    res.status(500).json({ error: "Failed to start conversation" });
   }
 });
 

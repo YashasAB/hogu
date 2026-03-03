@@ -153,18 +153,9 @@ exports.AuthController = {
                         fromAdmin: true,
                         content: `Hey ${user.name}! Welcome to Hogu! 🎉
 
-We noticed your profile is missing some important details that help us find your perfect match.
+The best way to help us find your perfect match is to talk to your matchmaker and tell them more about yourself — the more we know, the better your matches.
 
-Please take a few minutes to complete these sections in your profile:
-• Your dreams and aspirations
-• Your 5-year goals
-• What you're looking for in a partner
-• Why your partner would love dating you
-• What your typical day looks like
-• Your ideal fun first date
-• Your non-negotiables in a partner
-
-The more you share, the better we can match you with someone truly compatible. Head to your profile and tap "Edit Profile" to add these details!
+Head to your Matches section and tap "Chat with your live matchmaker" to get started. Just tell them about yourself in your own words and we'll take it from there.
 
 Your matchmaker`,
                         read: false,

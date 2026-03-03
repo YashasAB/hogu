@@ -27,9 +27,24 @@ export default function GetToKnowChat({ open, onClose }: Props) {
       fetch("/api/dating/get-to-know/messages", { credentials: "include" }).then((r) => r.json()),
       fetch("/api/dating/get-to-know/status", { credentials: "include" }).then((r) => r.json()),
     ])
-      .then(([msgs, status]) => {
-        setMessages(Array.isArray(msgs) ? msgs : []);
+      .then(async ([msgs, status]) => {
+        const loaded: Message[] = Array.isArray(msgs) ? msgs : [];
         setDailyRemaining(status.dailyRemaining ?? 5);
+        if (loaded.length === 0) {
+          try {
+            const startRes = await fetch("/api/dating/get-to-know/start", {
+              method: "POST",
+              credentials: "include",
+            });
+            const startData = await startRes.json();
+            if (startData.reply) {
+              loaded.push({ role: "agent", content: startData.reply });
+            }
+          } catch (err) {
+            console.error("[GetToKnowChat] start error:", err);
+          }
+        }
+        setMessages(loaded);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -131,8 +146,7 @@ export default function GetToKnowChat({ open, onClose }: Props) {
         )}
         {!loading && messages.length === 0 && (
           <div style={{ color: "#a3a3a3", textAlign: "center", marginTop: 32, lineHeight: 1.6 }}>
-            Send a message to start the conversation.<br />
-            We'd love to get to know you better!
+            Starting your conversation...
           </div>
         )}
         {messages.map((msg, i) => {

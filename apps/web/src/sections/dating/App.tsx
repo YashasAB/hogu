@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import GetToKnowChat from "../../components/GetToKnowChat";
 
 const DIET_LABELS: Record<string, string> = {
@@ -129,6 +129,7 @@ export default function DatingApp() {
     editId?: string;
   } | null>(null);
   const [showGetToKnow, setShowGetToKnow] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchMatches();
@@ -139,6 +140,12 @@ export default function DatingApp() {
     }, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (tab === "messages") {
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+  }, [tab, messages]);
 
   async function fetchMatches() {
     try {
@@ -561,7 +568,7 @@ export default function DatingApp() {
                   helping us curate relevant introductions for you.
                 </p>
                 <button
-                  className="hogu-btn"
+                  className="hogu-btn hogu-btn--primary"
                   style={{ marginTop: "1.25rem" }}
                   onClick={() => setShowGetToKnow(true)}
                 >
@@ -1672,7 +1679,7 @@ export default function DatingApp() {
                 <div className="hogu-empty">
                   <p>No messages yet.</p>
                   <p className="hogu-muted">
-                    Send a message to start a conversation with your matchmaker!
+                    Your matchmaker will be in touch soon!
                   </p>
                 </div>
               ) : (
@@ -1693,6 +1700,7 @@ export default function DatingApp() {
                   </div>
                 ))
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="hogu-message-input">

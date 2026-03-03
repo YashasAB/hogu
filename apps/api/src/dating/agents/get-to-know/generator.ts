@@ -11,13 +11,12 @@ export interface GeneratorResult {
 }
 
 export async function runGetToKnowGenerator(
-  userMessage: string,
+  userMessage: string | null,
   input: BuiltInput
 ): Promise<GeneratorResult> {
-  const last5Messages = [
-    ...input.last4Messages,
-    { role: "user", content: userMessage },
-  ];
+  const last5Messages = userMessage !== null
+    ? [...input.last4Messages, { role: "user", content: userMessage }]
+    : [...input.last4Messages];
 
   const userTurn = JSON.stringify({
     user_id: input.userId,

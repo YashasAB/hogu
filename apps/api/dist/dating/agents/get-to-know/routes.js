@@ -39,6 +39,19 @@ router.get("/status", session_1.datingSessionMiddleware, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch status" });
     }
 });
+router.post("/start", session_1.datingSessionMiddleware, async (req, res) => {
+    try {
+        const userId = req.datingUserId;
+        if (!userId)
+            return res.status(401).json({ ok: false, error: "Not authenticated" });
+        const result = await (0, index_1.runGetToKnowStart)(userId);
+        res.json({ reply: result.reply });
+    }
+    catch (err) {
+        console.error("[GetToKnow] /start error:", err);
+        res.status(500).json({ error: "Failed to start conversation" });
+    }
+});
 router.post("/chat", session_1.datingSessionMiddleware, async (req, res) => {
     try {
         const userId = req.datingUserId;

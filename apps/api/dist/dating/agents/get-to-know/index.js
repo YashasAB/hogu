@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetToKnowLimitError = void 0;
 exports.runGetToKnow = runGetToKnow;
+exports.runGetToKnowStart = runGetToKnowStart;
 exports.getGetToKnowStatus = getGetToKnowStatus;
 const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const buildInput_1 = require("./buildInput");
@@ -41,6 +42,19 @@ async function runGetToKnow(userId, userMessage) {
     await prismaClient_1.default.$transaction(ops);
     const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));
     return { reply, dailyRemaining };
+}
+async function runGetToKnowStart(userId) {
+    const existingCount = await prismaClient_1.default.getToKnowMessage.count({ where: { userId } });
+    if (existingCount > 0)
+        return { reply: null };
+    const input = await (0, buildInput_1.buildGetToKnowInput)(userId);
+    const { reply } = await (0, generator_1.runGetToKnowGenerator)(null, input);
+    if (reply) {
+        await prismaClient_1.default.getToKnowMessage.create({
+            data: { userId, role: "agent", content: reply },
+        });
+    }
+    return { reply };
 }
 async function getGetToKnowStatus(userId) {
     const todayStart = new Date();
