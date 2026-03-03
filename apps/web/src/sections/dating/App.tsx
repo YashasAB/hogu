@@ -308,6 +308,7 @@ export default function DatingApp() {
       method: "POST",
       credentials: "include",
     });
+    sessionStorage.removeItem("dating_token");
     window.location.href = "/";
   }
 

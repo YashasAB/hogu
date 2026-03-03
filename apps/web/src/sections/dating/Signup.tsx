@@ -218,10 +218,11 @@ export default function Signup() {
       };
 
       // 4) call signup
-      const resp = await postJson<{ ok: boolean; user: { id: string } }>("/api/dating/auth/signup", body);
+      const resp = await postJson<{ ok: boolean; sessionToken?: string; user: { id: string } }>("/api/dating/auth/signup", body);
 
-      // 5) redirect on success
-      window.location.href = "/app"; // or wherever your dashboard lives
+      // 5) store token and redirect on success
+      if (resp.sessionToken) sessionStorage.setItem("dating_token", resp.sessionToken);
+      window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Failed to create account");
     } finally {

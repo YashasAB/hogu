@@ -95,9 +95,10 @@ function datingSessionMiddleware(req, _res, next) {
         if (i > -1)
             map.set(p.slice(0, i).trim(), p.slice(i + 1).trim());
     });
-    const rawCookieVal = map.get(COOKIE_NAME);
-    const userId = parseSessionValue(rawCookieVal);
-    req.datingUserId = userId || null;
-    console.log("[session-debug]", req.method, req.path, "cookie-header:", req.headers.cookie ? req.headers.cookie.substring(0, 100) : "MISSING", "| parsed-userId:", userId ?? "null");
+    const headerToken = req.headers["x-auth-token"];
+    const tokenStr = Array.isArray(headerToken) ? headerToken[0] : headerToken;
+    const userIdFromHeader = parseSessionValue(tokenStr);
+    const userIdFromCookie = parseSessionValue(map.get(COOKIE_NAME));
+    req.datingUserId = userIdFromHeader || userIdFromCookie || null;
     next();
 }

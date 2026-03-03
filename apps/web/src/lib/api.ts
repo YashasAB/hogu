@@ -1,9 +1,11 @@
 export const API_BASE = (globalThis as any).process?.env?.NEXT_PUBLIC_API_BASE || "";
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = sessionStorage.getItem("dating_token");
+  const authHeader = token ? { "X-Auth-Token": token } : {};
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    headers: { "Content-Type": "application/json", ...authHeader, ...(init?.headers || {}) },
     ...init,
   });
   if (!res.ok) {

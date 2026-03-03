@@ -1,6 +1,6 @@
 import prisma, { withRetry } from "../../prismaClient";
 import { hashPassword, verifyPassword } from "../password";
-import { setSessionCookie, clearSessionCookie } from "../session";
+import { setSessionCookie, clearSessionCookie, makeSessionValue } from "../session";
 import { requireLoginBody, requireSignupBody } from "./validators";
 
 
@@ -170,7 +170,7 @@ Your matchmaker`,
       }
 
       setSessionCookie(req, res, user.id);
-      return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
+      return res.status(201).json({ ok: true, sessionToken: makeSessionValue(user.id), user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     } catch (err) {
       if ((err as any).details)
         return res
@@ -209,6 +209,7 @@ Your matchmaker`,
         .status(200)
         .json({
           ok: true,
+          sessionToken: makeSessionValue(user.id),
           user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
         });
     } catch (err) {

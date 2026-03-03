@@ -26,10 +26,11 @@ export default function Login() {
     if (Object.keys(errors).length) return;
     try {
       setIsSubmitting(true);
-      await postJson("/api/dating/auth/login", {
+      const data = await postJson<{ ok: boolean; sessionToken?: string }>("/api/dating/auth/login", {
         phone: cleanPhone,
         password: form.password,
       });
+      if (data.sessionToken) sessionStorage.setItem("dating_token", data.sessionToken);
       window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Login failed");

@@ -172,7 +172,7 @@ Your matchmaker`,
                 });
             }
             (0, session_1.setSessionCookie)(req, res, user.id);
-            return res.status(201).json({ ok: true, user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
+            return res.status(201).json({ ok: true, sessionToken: (0, session_1.makeSessionValue)(user.id), user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
         }
         catch (err) {
             if (err.details)
@@ -207,6 +207,7 @@ Your matchmaker`,
                 .status(200)
                 .json({
                 ok: true,
+                sessionToken: (0, session_1.makeSessionValue)(user.id),
                 user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
             });
         }
