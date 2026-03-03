@@ -2,11 +2,10 @@ import { Router } from "express";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { PrismaClient } from "@prisma/client";
 import { authenticateToken, AuthenticatedRequest } from "../middleware/auth";
+import prisma from "../prismaClient";
 
 const router = Router();
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key"; // Use environment variable for secret key
 
 const RegisterSchema = z.object({

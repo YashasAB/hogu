@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../prismaClient";
 import { hashPassword, verifyPassword } from "../password";
 import { setSessionCookie, clearSessionCookie } from "../session";
 import { requireLoginBody, requireSignupBody } from "./validators";
 
-const prisma = new PrismaClient();
 
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
 

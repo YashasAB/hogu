@@ -39,7 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("./prismaClient"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const discover_1 = __importDefault(require("./routes/discover"));
 const restaurants_1 = __importDefault(require("./routes/restaurants"));
@@ -52,13 +52,10 @@ const routes_3 = __importDefault(require("./dating/profile/routes"));
 const routes_4 = __importDefault(require("./dating/admin/routes"));
 const routes_5 = __importDefault(require("./dating/options/routes"));
 const routes_6 = __importDefault(require("./dating/agents/get-to-know/routes"));
-const prisma = new client_1.PrismaClient({
-    log: ["query", "info", "warn", "error"],
-});
 // Test database connection on startup
 async function testDatabaseConnection() {
     try {
-        await prisma.$connect();
+        await prismaClient_1.default.$connect();
         console.log("✅ Database connected successfully");
     }
     catch (error) {
@@ -97,7 +94,7 @@ if (isProduction) {
 app.get("/health/db", async (req, res) => {
     try {
         // Test database connection
-        await prisma.$queryRaw `SELECT 1`;
+        await prismaClient_1.default.$queryRaw `SELECT 1`;
         res.status(200).json({
             status: "ok",
             database: "connected",
@@ -143,7 +140,7 @@ server.on("listening", async () => {
     try {
         // Lazy-import the file that mounts image routes
         const { mountImageRoutes } = await Promise.resolve().then(() => __importStar(require("./mount-images")));
-        mountImageRoutes(app, prisma);
+        mountImageRoutes(app, prismaClient_1.default);
         console.log("✅ Image routes mounted");
     }
     catch (e) {

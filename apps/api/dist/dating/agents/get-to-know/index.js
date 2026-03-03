@@ -1,12 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetToKnowLimitError = void 0;
 exports.runGetToKnow = runGetToKnow;
 exports.getGetToKnowStatus = getGetToKnowStatus;
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const buildInput_1 = require("./buildInput");
 const generator_1 = require("./generator");
-const prisma = new client_1.PrismaClient();
 const DAILY_LIMIT = 5;
 class GetToKnowLimitError extends Error {
     constructor() {
@@ -23,27 +25,27 @@ async function runGetToKnow(userId, userMessage) {
     const { reply, profilePatch } = await (0, generator_1.runGetToKnowGenerator)(userMessage, input);
     const agentContent = reply ?? "";
     const ops = [
-        prisma.getToKnowMessage.create({
+        prismaClient_1.default.getToKnowMessage.create({
             data: { userId, role: "user", content: userMessage },
         }),
-        prisma.getToKnowMessage.create({
+        prismaClient_1.default.getToKnowMessage.create({
             data: { userId, role: "agent", content: agentContent },
         }),
     ];
     if (Object.keys(profilePatch).length > 0) {
-        ops.push(prisma.datingUser.update({
+        ops.push(prismaClient_1.default.datingUser.update({
             where: { id: userId },
             data: profilePatch,
         }));
     }
-    await prisma.$transaction(ops);
+    await prismaClient_1.default.$transaction(ops);
     const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));
     return { reply, dailyRemaining };
 }
 async function getGetToKnowStatus(userId) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const count = await prisma.getToKnowMessage.count({
+    const count = await prismaClient_1.default.getToKnowMessage.count({
         where: { userId, role: "user", createdAt: { gte: todayStart } },
     });
     return {

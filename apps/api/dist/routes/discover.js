@@ -1,9 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Get tonight availability
 router.get('/tonight', async (req, res) => {
     try {
@@ -27,7 +29,7 @@ router.get('/tonight', async (req, res) => {
             timeSlots.push({ date: tomorrowDate, time: timeSlot });
         }
         // Get available slots for today and tomorrow within the 24-hour range
-        const availableSlots = await prisma.timeSlot.findMany({
+        const availableSlots = await prismaClient_1.default.timeSlot.findMany({
             where: {
                 OR: timeSlots.map(slot => ({
                     date: slot.date,
@@ -132,7 +134,7 @@ router.get('/available-today', async (req, res) => {
             }
         }
         // Get all available slots matching our time conditions
-        const availableSlots = await prisma.timeSlot.findMany({
+        const availableSlots = await prismaClient_1.default.timeSlot.findMany({
             where: {
                 OR: timeConditions,
             },
@@ -215,7 +217,7 @@ router.get('/week', async (req, res) => {
             date.setDate(date.getDate() + i);
             const dateStr = date.toISOString().split('T')[0];
             // Get available slots for this date
-            const availableSlots = await prisma.timeSlot.findMany({
+            const availableSlots = await prismaClient_1.default.timeSlot.findMany({
                 where: {
                     date: dateStr,
                     partySize: partySize,
@@ -282,7 +284,7 @@ router.get('/tonight-near-you', async (req, res) => {
         const today = new Date().toISOString().split('T')[0];
         const currentHour = new Date().getHours();
         // Get all available slots for today from current time onwards
-        const availableSlots = await prisma.timeSlot.findMany({
+        const availableSlots = await prismaClient_1.default.timeSlot.findMany({
             where: {
                 date: today,
                 partySize: partySize,

@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../prismaClient";
 import { datingSessionMiddleware } from "../../session";
 import { runGetToKnow, getGetToKnowStatus, GetToKnowLimitError } from "./index";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.get("/messages", datingSessionMiddleware, async (req: any, res: any) => {
   try {

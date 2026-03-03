@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../prismaClient";
 import { datingSessionMiddleware } from "../session";
 import { deleteObject, presignPhotoUpload } from "../uploads/storage";
 import { deliverPendingIntroToMale } from "../agents/intro-agent";
 
-const prisma = new PrismaClient();
 const router = Router();
 
 const LIFESTYLE_CANONICAL: Record<string, Record<string, string>> = {

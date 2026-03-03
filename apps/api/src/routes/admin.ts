@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prismaClient";
 import {
   authenticateRestaurant,
   AuthenticatedRestaurantRequest,
@@ -8,7 +8,6 @@ import mime from "mime-types";
 import multer from "multer";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Initialize Replit Object Storage client
 // const storageClient = new Client();

@@ -1,11 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import prisma from '../prismaClient';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 

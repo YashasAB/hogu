@@ -1,8 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildGetToKnowInput = buildGetToKnowInput;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 function getAge(dob) {
     const now = new Date();
     let age = now.getFullYear() - dob.getFullYear();
@@ -15,7 +17,7 @@ async function buildGetToKnowInput(userId) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const [user, messages, dietOpts, drinkOpts, smokeOpts, actOpts, budgetOpts, cuisineOpts, dateTypeOpts, relTypeOpts,] = await Promise.all([
-        prisma.datingUser.findUniqueOrThrow({
+        prismaClient_1.default.datingUser.findUniqueOrThrow({
             where: { id: userId },
             include: {
                 cuisines: { include: { cuisineOption: true } },
@@ -25,20 +27,20 @@ async function buildGetToKnowInput(userId) {
                 photos: { select: { id: true } },
             },
         }),
-        prisma.getToKnowMessage.findMany({
+        prismaClient_1.default.getToKnowMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
             take: 4,
             select: { role: true, content: true, createdAt: true },
         }),
-        prisma.dietOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.drinkingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.smokingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.physicalActivityOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.dateBudgetOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.cuisineOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.firstDateTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
-        prisma.relationshipTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.dietOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.drinkingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.smokingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.physicalActivityOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.dateBudgetOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.cuisineOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.firstDateTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
+        prismaClient_1.default.relationshipTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
     ]);
     const todayUserCount = messages.filter((m) => m.role === "user" && new Date(m.createdAt) >= todayStart).length;
     const last4Messages = messages.map((m) => ({

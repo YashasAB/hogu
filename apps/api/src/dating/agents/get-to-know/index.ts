@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../prismaClient";
 import { buildGetToKnowInput } from "./buildInput";
 import { runGetToKnowGenerator } from "./generator";
 
-const prisma = new PrismaClient();
 
 const DAILY_LIMIT = 5;
 

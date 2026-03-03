@@ -1,9 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 function requireAdminAuth(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -52,7 +54,7 @@ router.get("/tables", requireAdminAuth, async (_req, res) => {
         for (const table of tables) {
             const modelName = TABLE_MAP[table];
             try {
-                const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+                const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
                 if (model) {
                     counts[table] = await model.count();
                 }
@@ -81,7 +83,7 @@ router.get("/tables/:table", requireAdminAuth, async (req, res) => {
         if (!modelName) {
             return res.status(404).json({ error: "Table not found" });
         }
-        const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+        const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
         if (!model) {
             return res.status(404).json({ error: "Model not found" });
         }
@@ -114,7 +116,7 @@ router.get("/tables/:table/:id", requireAdminAuth, async (req, res) => {
         if (!modelName) {
             return res.status(404).json({ error: "Table not found" });
         }
-        const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+        const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
         if (!model) {
             return res.status(404).json({ error: "Model not found" });
         }
@@ -137,7 +139,7 @@ router.put("/tables/:table/:id", requireAdminAuth, async (req, res) => {
         if (!modelName) {
             return res.status(404).json({ error: "Table not found" });
         }
-        const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+        const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
         if (!model) {
             return res.status(404).json({ error: "Model not found" });
         }
@@ -162,7 +164,7 @@ router.post("/tables/:table", requireAdminAuth, async (req, res) => {
         if (!modelName) {
             return res.status(404).json({ error: "Table not found" });
         }
-        const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+        const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
         if (!model) {
             return res.status(404).json({ error: "Model not found" });
         }
@@ -188,7 +190,7 @@ router.delete("/tables/:table/:id", requireAdminAuth, async (req, res) => {
         if (!modelName) {
             return res.status(404).json({ error: "Table not found" });
         }
-        const model = prisma[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
+        const model = prismaClient_1.default[modelName.charAt(0).toLowerCase() + modelName.slice(1)];
         if (!model) {
             return res.status(404).json({ error: "Model not found" });
         }

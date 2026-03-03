@@ -1,12 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runIntroAgent = runIntroAgent;
 exports.deliverPendingIntroToMale = deliverPendingIntroToMale;
 exports.deletePendingIntro = deletePendingIntro;
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const buildInput_1 = require("./buildInput");
 const generator_1 = require("./generator");
-const prisma = new client_1.PrismaClient();
 function formatMessageContent(title, body, cta) {
     return [body, cta].filter(Boolean).join("\n\n");
 }
@@ -22,7 +24,7 @@ async function runIntroAgent(matchId) {
             console.warn(`[IntroAgent] Match ${matchId}: could not identify female/male user pair. Delivering both messages immediately.`);
             for (const msg of output.messages) {
                 const content = formatMessageContent(msg.title, msg.body, msg.cta);
-                await prisma.adminMessage.create({
+                await prismaClient_1.default.adminMessage.create({
                     data: { userId: msg.to_user_id, fromAdmin: true, content },
                 });
             }
@@ -32,14 +34,14 @@ async function runIntroAgent(matchId) {
         const maleMessage = output.messages.find((m) => m.to_user_id === maleUser.user_id);
         if (femaleMessage) {
             const content = formatMessageContent(femaleMessage.title, femaleMessage.body, femaleMessage.cta);
-            await prisma.adminMessage.create({
+            await prismaClient_1.default.adminMessage.create({
                 data: { userId: femaleMessage.to_user_id, fromAdmin: true, content },
             });
             console.log(`[IntroAgent] Match ${matchId}: intro message delivered to female user ${femaleMessage.to_user_id}`);
         }
         if (maleMessage) {
             const content = formatMessageContent(maleMessage.title, maleMessage.body, maleMessage.cta);
-            await prisma.pendingIntroMessage.upsert({
+            await prismaClient_1.default.pendingIntroMessage.upsert({
                 where: { matchId },
                 create: { matchId, toUserId: maleMessage.to_user_id, content },
                 update: { toUserId: maleMessage.to_user_id, content },
@@ -53,17 +55,17 @@ async function runIntroAgent(matchId) {
 }
 async function deliverPendingIntroToMale(matchId) {
     try {
-        const pending = await prisma.pendingIntroMessage.findUnique({
+        const pending = await prismaClient_1.default.pendingIntroMessage.findUnique({
             where: { matchId },
         });
         if (!pending) {
             console.log(`[IntroAgent] Match ${matchId}: no pending intro message found for male delivery.`);
             return;
         }
-        await prisma.adminMessage.create({
+        await prismaClient_1.default.adminMessage.create({
             data: { userId: pending.toUserId, fromAdmin: true, content: pending.content },
         });
-        await prisma.pendingIntroMessage.delete({ where: { matchId } });
+        await prismaClient_1.default.pendingIntroMessage.delete({ where: { matchId } });
         console.log(`[IntroAgent] Match ${matchId}: pending intro delivered to male user ${pending.toUserId}`);
     }
     catch (err) {
@@ -72,7 +74,7 @@ async function deliverPendingIntroToMale(matchId) {
 }
 async function deletePendingIntro(matchId) {
     try {
-        await prisma.pendingIntroMessage.deleteMany({ where: { matchId } });
+        await prismaClient_1.default.pendingIntroMessage.deleteMany({ where: { matchId } });
         console.log(`[IntroAgent] Match ${matchId}: pending intro message deleted (unmatch/cleanup).`);
     }
     catch (err) {

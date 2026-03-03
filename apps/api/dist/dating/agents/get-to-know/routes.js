@@ -1,15 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const session_1 = require("../../session");
 const index_1 = require("./index");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.get("/messages", session_1.datingSessionMiddleware, async (req, res) => {
     try {
         const userId = req.datingUser.id;
-        const messages = await prisma.getToKnowMessage.findMany({
+        const messages = await prismaClient_1.default.getToKnowMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
             take: 30,

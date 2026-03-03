@@ -1,11 +1,13 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../prismaClient"));
 const session_1 = require("../session");
 const storage_1 = require("../uploads/storage");
 const intro_agent_1 = require("../agents/intro-agent");
-const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const LIFESTYLE_CANONICAL = {
     diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
@@ -26,12 +28,12 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const currentUser = await prisma.datingUser.findUnique({
+        const currentUser = await prismaClient_1.default.datingUser.findUnique({
             where: { id: userId },
             select: { gender: true },
         });
         const isMale = (currentUser?.gender || "Male") === "Male";
-        const matches = await prisma.datingMatch.findMany({
+        const matches = await prismaClient_1.default.datingMatch.findMany({
             where: {
                 OR: [{ user1_id: userId }, { user2_id: userId }],
                 status: { not: "UNMATCHED" },
@@ -40,7 +42,7 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
         let visibleMatches = matches;
         if (isMale) {
             const otherUserIds = matches.map((m) => m.user1_id === userId ? m.user2_id : m.user1_id);
-            const otherUsers = await prisma.datingUser.findMany({
+            const otherUsers = await prismaClient_1.default.datingUser.findMany({
                 where: { id: { in: otherUserIds } },
                 select: { id: true, gender: true },
             });
@@ -57,7 +59,7 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
             });
         }
         const matchedUserIds = visibleMatches.map((m) => m.user1_id === userId ? m.user2_id : m.user1_id);
-        const matchedUsers = await prisma.datingUser.findMany({
+        const matchedUsers = await prismaClient_1.default.datingUser.findMany({
             where: { id: { in: matchedUserIds } },
             select: {
                 id: true,
@@ -86,7 +88,7 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
                 city: true,
             },
         });
-        const photos = await prisma.datingUserPhoto.findMany({
+        const photos = await prismaClient_1.default.datingUserPhoto.findMany({
             where: { userId: { in: matchedUserIds } },
             orderBy: { sortOrder: "asc" },
         });
@@ -127,7 +129,7 @@ router.post("/matches/:matchId/interested", session_1.datingSessionMiddleware, a
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
         const { matchId } = req.params;
-        const match = await prisma.datingMatch.findUnique({
+        const match = await prismaClient_1.default.datingMatch.findUnique({
             where: { id: matchId },
         });
         if (!match)
@@ -155,20 +157,20 @@ router.post("/matches/:matchId/interested", session_1.datingSessionMiddleware, a
         else if (match.status === "MATCHED") {
             updateData.status = "INTERESTED";
         }
-        const updated = await prisma.datingMatch.update({
+        const updated = await prismaClient_1.default.datingMatch.update({
             where: { id: matchId },
             data: updateData,
         });
         if (promotedToScheduling) {
             const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
-            await prisma.adminMessage.createMany({
+            await prismaClient_1.default.adminMessage.createMany({
                 data: [
                     { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
                     { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
                 ],
             });
         }
-        const currentUser = await prisma.datingUser.findUnique({
+        const currentUser = await prismaClient_1.default.datingUser.findUnique({
             where: { id: userId },
             select: { gender: true },
         });
@@ -195,7 +197,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const user = await prisma.datingUser.findUnique({
+        const user = await prismaClient_1.default.datingUser.findUnique({
             where: { id: userId },
             select: {
                 id: true,
@@ -228,23 +230,23 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
         });
         if (!user)
             return res.status(404).json({ ok: false, error: "User not found" });
-        const photos = await prisma.datingUserPhoto.findMany({
+        const photos = await prismaClient_1.default.datingUserPhoto.findMany({
             where: { userId },
             orderBy: { sortOrder: "asc" },
         });
-        const cuisines = await prisma.datingUserCuisine.findMany({
+        const cuisines = await prismaClient_1.default.datingUserCuisine.findMany({
             where: { userId },
             include: { cuisineOption: { select: { value: true, label: true } } },
         });
-        const interests = await prisma.datingUserInterest.findMany({
+        const interests = await prismaClient_1.default.datingUserInterest.findMany({
             where: { userId },
             select: { tag: true },
         });
-        const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
+        const firstDateTypes = await prismaClient_1.default.datingUserFirstDateType.findMany({
             where: { userId },
             include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
-        const languages = await prisma.datingUserLanguage.findMany({
+        const languages = await prismaClient_1.default.datingUserLanguage.findMany({
             where: { userId },
             select: { lang: true },
         });
@@ -274,11 +276,11 @@ router.get("/messages", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const messages = await prisma.adminMessage.findMany({
+        const messages = await prismaClient_1.default.adminMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
         });
-        await prisma.adminMessage.updateMany({
+        await prismaClient_1.default.adminMessage.updateMany({
             where: { userId, fromAdmin: true, read: false },
             data: { read: true },
         });
@@ -298,7 +300,7 @@ router.post("/messages", session_1.datingSessionMiddleware, async (req, res) => 
         if (!content || typeof content !== "string") {
             return res.status(400).json({ ok: false, error: "Content required" });
         }
-        const message = await prisma.adminMessage.create({
+        const message = await prismaClient_1.default.adminMessage.create({
             data: {
                 userId,
                 content,
@@ -318,7 +320,7 @@ router.get("/messages/unread-count", session_1.datingSessionMiddleware, async (r
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const count = await prisma.adminMessage.count({
+        const count = await prismaClient_1.default.adminMessage.count({
             where: { userId, fromAdmin: true, read: false },
         });
         return res.json({ ok: true, count });
@@ -334,7 +336,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     const targetUserId = req.params.userId;
     try {
-        const match = await prisma.datingMatch.findFirst({
+        const match = await prismaClient_1.default.datingMatch.findFirst({
             where: {
                 OR: [
                     { user1_id: currentUserId, user2_id: targetUserId },
@@ -345,7 +347,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
         });
         if (!match)
             return res.status(403).json({ ok: false, error: "Not matched with this user" });
-        const user = await prisma.datingUser.findUnique({
+        const user = await prismaClient_1.default.datingUser.findUnique({
             where: { id: targetUserId },
             select: {
                 id: true,
@@ -375,23 +377,23 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
         });
         if (!user)
             return res.status(404).json({ ok: false, error: "User not found" });
-        const photos = await prisma.datingUserPhoto.findMany({
+        const photos = await prismaClient_1.default.datingUserPhoto.findMany({
             where: { userId: targetUserId },
             orderBy: { sortOrder: "asc" },
         });
-        const cuisines = await prisma.datingUserCuisine.findMany({
+        const cuisines = await prismaClient_1.default.datingUserCuisine.findMany({
             where: { userId: targetUserId },
             include: { cuisineOption: { select: { value: true, label: true } } },
         });
-        const interests = await prisma.datingUserInterest.findMany({
+        const interests = await prismaClient_1.default.datingUserInterest.findMany({
             where: { userId: targetUserId },
             select: { tag: true },
         });
-        const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
+        const firstDateTypes = await prismaClient_1.default.datingUserFirstDateType.findMany({
             where: { userId: targetUserId },
             include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
-        const languages = await prisma.datingUserLanguage.findMany({
+        const languages = await prismaClient_1.default.datingUserLanguage.findMany({
             where: { userId: targetUserId },
             select: { lang: true },
         });
@@ -421,7 +423,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
         const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, city, } = req.body;
-        await prisma.datingUser.update({
+        await prismaClient_1.default.datingUser.update({
             where: { id: userId },
             data: {
                 name,
@@ -449,41 +451,41 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
             },
         });
         if (cuisines !== undefined) {
-            await prisma.datingUserCuisine.deleteMany({ where: { userId } });
+            await prismaClient_1.default.datingUserCuisine.deleteMany({ where: { userId } });
             if (cuisines.length > 0) {
-                const cuisineOptions = await prisma.cuisineOption.findMany({
+                const cuisineOptions = await prismaClient_1.default.cuisineOption.findMany({
                     where: { value: { in: cuisines } },
                     select: { id: true },
                 });
-                await prisma.datingUserCuisine.createMany({
+                await prismaClient_1.default.datingUserCuisine.createMany({
                     data: cuisineOptions.map((opt) => ({ userId, cuisineOptionId: opt.id })),
                 });
             }
         }
         if (interests !== undefined) {
-            await prisma.datingUserInterest.deleteMany({ where: { userId } });
+            await prismaClient_1.default.datingUserInterest.deleteMany({ where: { userId } });
             if (interests.length > 0) {
-                await prisma.datingUserInterest.createMany({
+                await prismaClient_1.default.datingUserInterest.createMany({
                     data: interests.map((t) => ({ userId, tag: t })),
                 });
             }
         }
         if (firstDateTypes !== undefined) {
-            await prisma.datingUserFirstDateType.deleteMany({ where: { userId } });
+            await prismaClient_1.default.datingUserFirstDateType.deleteMany({ where: { userId } });
             if (firstDateTypes.length > 0) {
-                const firstDateTypeOptions = await prisma.firstDateTypeOption.findMany({
+                const firstDateTypeOptions = await prismaClient_1.default.firstDateTypeOption.findMany({
                     where: { value: { in: firstDateTypes } },
                     select: { id: true },
                 });
-                await prisma.datingUserFirstDateType.createMany({
+                await prismaClient_1.default.datingUserFirstDateType.createMany({
                     data: firstDateTypeOptions.map((opt) => ({ userId, firstDateTypeOptionId: opt.id })),
                 });
             }
         }
         if (languages !== undefined) {
-            await prisma.datingUserLanguage.deleteMany({ where: { userId } });
+            await prismaClient_1.default.datingUserLanguage.deleteMany({ where: { userId } });
             if (languages.length > 0) {
-                await prisma.datingUserLanguage.createMany({
+                await prismaClient_1.default.datingUserLanguage.createMany({
                     data: languages.map((l) => ({ userId, lang: l })),
                 });
             }
@@ -501,13 +503,13 @@ router.delete("/photos/:photoId", session_1.datingSessionMiddleware, async (req,
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
         const { photoId } = req.params;
-        const photo = await prisma.datingUserPhoto.findUnique({ where: { id: photoId } });
+        const photo = await prismaClient_1.default.datingUserPhoto.findUnique({ where: { id: photoId } });
         if (!photo || photo.userId !== userId)
             return res.status(404).json({ ok: false, error: "Photo not found" });
-        const photoCount = await prisma.datingUserPhoto.count({ where: { userId } });
+        const photoCount = await prismaClient_1.default.datingUserPhoto.count({ where: { userId } });
         if (photoCount <= 1)
             return res.status(400).json({ ok: false, error: "You must keep at least 1 photo" });
-        await prisma.datingUserPhoto.delete({ where: { id: photoId } });
+        await prismaClient_1.default.datingUserPhoto.delete({ where: { id: photoId } });
         try {
             await (0, storage_1.deleteObject)(photo.objectKey);
         }
@@ -529,10 +531,10 @@ router.post("/photos", session_1.datingSessionMiddleware, async (req, res) => {
         const { objectKey, sortOrder } = req.body;
         if (!objectKey)
             return res.status(400).json({ ok: false, error: "objectKey required" });
-        const photoCount = await prisma.datingUserPhoto.count({ where: { userId } });
+        const photoCount = await prismaClient_1.default.datingUserPhoto.count({ where: { userId } });
         if (photoCount >= 6)
             return res.status(400).json({ ok: false, error: "Maximum 6 photos allowed" });
-        const photo = await prisma.datingUserPhoto.create({
+        const photo = await prismaClient_1.default.datingUserPhoto.create({
             data: {
                 userId,
                 objectKey: String(objectKey),
@@ -552,12 +554,12 @@ router.get("/matches/:matchId/availability", session_1.datingSessionMiddleware, 
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
         const { matchId } = req.params;
-        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        const match = await prismaClient_1.default.datingMatch.findUnique({ where: { id: matchId } });
         if (!match)
             return res.status(404).json({ ok: false, error: "Match not found" });
         if (match.user1_id !== userId && match.user2_id !== userId)
             return res.status(403).json({ ok: false, error: "Not part of this match" });
-        const entries = await prisma.matchAvailability.findMany({
+        const entries = await prismaClient_1.default.matchAvailability.findMany({
             where: { matchId, userId },
             orderBy: { createdAt: "desc" },
         });
@@ -578,7 +580,7 @@ router.post("/matches/:matchId/availability", session_1.datingSessionMiddleware,
         if (!datesFree || !timesFree || !neighborhoods) {
             return res.status(400).json({ ok: false, error: "All fields are required: datesFree, timesFree, neighborhoods" });
         }
-        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        const match = await prismaClient_1.default.datingMatch.findUnique({ where: { id: matchId } });
         if (!match)
             return res.status(404).json({ ok: false, error: "Match not found" });
         if (match.user1_id !== userId && match.user2_id !== userId)
@@ -586,17 +588,17 @@ router.post("/matches/:matchId/availability", session_1.datingSessionMiddleware,
         if (match.status !== "SCHEDULING" && match.status !== "CONFIRMED") {
             return res.status(400).json({ ok: false, error: "Match is not in scheduling stage" });
         }
-        const entry = await prisma.matchAvailability.create({
+        const entry = await prismaClient_1.default.matchAvailability.create({
             data: { matchId, userId, datesFree, timesFree, neighborhoods },
         });
         const otherUserId = match.user1_id === userId ? match.user2_id : match.user1_id;
-        const otherUserAvailability = await prisma.matchAvailability.findFirst({
+        const otherUserAvailability = await prismaClient_1.default.matchAvailability.findFirst({
             where: { matchId, userId: otherUserId },
         });
         if (!otherUserAvailability) {
-            const currentUser = await prisma.datingUser.findUnique({ where: { id: userId }, select: { name: true } });
+            const currentUser = await prismaClient_1.default.datingUser.findUnique({ where: { id: userId }, select: { name: true } });
             const nudgeMessage = `Yay! ${currentUser?.name || "Your match"} is down to go on a date and has shared their availability. Please head to your Matches tab and add yours now!`;
-            await prisma.adminMessage.create({
+            await prismaClient_1.default.adminMessage.create({
                 data: { userId: otherUserId, fromAdmin: true, content: nudgeMessage },
             });
         }
@@ -614,12 +616,12 @@ router.put("/availability/:entryId", session_1.datingSessionMiddleware, async (r
     try {
         const { entryId } = req.params;
         const { datesFree, timesFree, neighborhoods } = req.body;
-        const entry = await prisma.matchAvailability.findUnique({ where: { id: entryId } });
+        const entry = await prismaClient_1.default.matchAvailability.findUnique({ where: { id: entryId } });
         if (!entry)
             return res.status(404).json({ ok: false, error: "Availability entry not found" });
         if (entry.userId !== userId)
             return res.status(403).json({ ok: false, error: "Not your availability entry" });
-        const updated = await prisma.matchAvailability.update({
+        const updated = await prismaClient_1.default.matchAvailability.update({
             where: { id: entryId },
             data: {
                 ...(datesFree !== undefined && { datesFree }),
@@ -640,12 +642,12 @@ router.delete("/availability/:entryId", session_1.datingSessionMiddleware, async
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
         const { entryId } = req.params;
-        const entry = await prisma.matchAvailability.findUnique({ where: { id: entryId } });
+        const entry = await prismaClient_1.default.matchAvailability.findUnique({ where: { id: entryId } });
         if (!entry)
             return res.status(404).json({ ok: false, error: "Availability entry not found" });
         if (entry.userId !== userId)
             return res.status(403).json({ ok: false, error: "Not your availability entry" });
-        await prisma.matchAvailability.delete({ where: { id: entryId } });
+        await prismaClient_1.default.matchAvailability.delete({ where: { id: entryId } });
         return res.json({ ok: true });
     }
     catch (err) {

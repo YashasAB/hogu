@@ -1,9 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../prismaClient"));
 const intro_agent_1 = require("../agents/intro-agent");
-const prisma = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) {
@@ -25,7 +27,7 @@ function requireAdminAuth(req, res, next) {
 }
 router.get("/users", requireAdminAuth, async (req, res) => {
     try {
-        const users = await prisma.datingUser.findMany({
+        const users = await prismaClient_1.default.datingUser.findMany({
             orderBy: { createdAt: "desc" },
             select: {
                 id: true,
@@ -49,7 +51,7 @@ router.get("/users", requireAdminAuth, async (req, res) => {
             },
         });
         const userIds = users.map((u) => u.id);
-        const photos = await prisma.datingUserPhoto.findMany({
+        const photos = await prismaClient_1.default.datingUserPhoto.findMany({
             where: { userId: { in: userIds } },
             orderBy: { sortOrder: "asc" },
         });
@@ -75,28 +77,28 @@ router.get("/users", requireAdminAuth, async (req, res) => {
 });
 router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
     try {
-        const users = await prisma.datingUser.findMany({
+        const users = await prismaClient_1.default.datingUser.findMany({
             orderBy: { createdAt: "desc" },
         });
         const userIds = users.map((u) => u.id);
         const [photos, cuisines, interests, firstDateTypes, languages] = await Promise.all([
-            prisma.datingUserPhoto.findMany({
+            prismaClient_1.default.datingUserPhoto.findMany({
                 where: { userId: { in: userIds } },
                 orderBy: { sortOrder: "asc" },
             }),
-            prisma.datingUserCuisine.findMany({
+            prismaClient_1.default.datingUserCuisine.findMany({
                 where: { userId: { in: userIds } },
                 include: { cuisineOption: { select: { label: true } } },
             }),
-            prisma.datingUserInterest.findMany({
+            prismaClient_1.default.datingUserInterest.findMany({
                 where: { userId: { in: userIds } },
                 select: { userId: true, tag: true },
             }),
-            prisma.datingUserFirstDateType.findMany({
+            prismaClient_1.default.datingUserFirstDateType.findMany({
                 where: { userId: { in: userIds } },
                 include: { firstDateTypeOption: { select: { label: true } } },
             }),
-            prisma.datingUserLanguage.findMany({
+            prismaClient_1.default.datingUserLanguage.findMany({
                 where: { userId: { in: userIds } },
                 select: { userId: true, lang: true },
             }),
@@ -196,29 +198,29 @@ router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
 router.get("/users/:userId", requireAdminAuth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const user = await prisma.datingUser.findUnique({
+        const user = await prismaClient_1.default.datingUser.findUnique({
             where: { id: userId },
         });
         if (!user) {
             return res.status(404).json({ ok: false, error: "User not found" });
         }
-        const photos = await prisma.datingUserPhoto.findMany({
+        const photos = await prismaClient_1.default.datingUserPhoto.findMany({
             where: { userId },
             orderBy: { sortOrder: "asc" },
         });
-        const cuisines = await prisma.datingUserCuisine.findMany({
+        const cuisines = await prismaClient_1.default.datingUserCuisine.findMany({
             where: { userId },
             include: { cuisineOption: { select: { value: true, label: true } } },
         });
-        const interests = await prisma.datingUserInterest.findMany({
+        const interests = await prismaClient_1.default.datingUserInterest.findMany({
             where: { userId },
             select: { tag: true },
         });
-        const firstDateTypes = await prisma.datingUserFirstDateType.findMany({
+        const firstDateTypes = await prismaClient_1.default.datingUserFirstDateType.findMany({
             where: { userId },
             include: { firstDateTypeOption: { select: { value: true, label: true } } },
         });
-        const languages = await prisma.datingUserLanguage.findMany({
+        const languages = await prismaClient_1.default.datingUserLanguage.findMany({
             where: { userId },
             select: { lang: true },
         });
@@ -245,7 +247,7 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
 });
 router.get("/matches", requireAdminAuth, async (req, res) => {
     try {
-        const matches = await prisma.datingMatch.findMany({
+        const matches = await prismaClient_1.default.datingMatch.findMany({
             orderBy: { created_at: "desc" },
         });
         const userIds = new Set();
@@ -253,7 +255,7 @@ router.get("/matches", requireAdminAuth, async (req, res) => {
             userIds.add(m.user1_id);
             userIds.add(m.user2_id);
         });
-        const users = await prisma.datingUser.findMany({
+        const users = await prismaClient_1.default.datingUser.findMany({
             where: { id: { in: Array.from(userIds) } },
             select: { id: true, name: true, phoneE164: true },
         });
@@ -282,7 +284,7 @@ router.post("/matches", requireAdminAuth, async (req, res) => {
             return res.status(400).json({ ok: false, error: "Both user IDs required" });
         }
         const [id1, id2] = [user1Id, user2Id].sort();
-        const existing = await prisma.datingMatch.findFirst({
+        const existing = await prismaClient_1.default.datingMatch.findFirst({
             where: {
                 user1_id: id1,
                 user2_id: id2,
@@ -291,7 +293,7 @@ router.post("/matches", requireAdminAuth, async (req, res) => {
         if (existing) {
             return res.status(409).json({ ok: false, error: "Match already exists", matchId: existing.id });
         }
-        const match = await prisma.datingMatch.create({
+        const match = await prismaClient_1.default.datingMatch.create({
             data: {
                 user1_id: id1,
                 user2_id: id2,
@@ -314,7 +316,7 @@ router.put("/matches/:matchId", requireAdminAuth, async (req, res) => {
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ ok: false, error: "Invalid status" });
         }
-        const match = await prisma.datingMatch.update({
+        const match = await prismaClient_1.default.datingMatch.update({
             where: { id: matchId },
             data: { status },
         });
@@ -338,7 +340,7 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req, res) => {
         if (typeof interested !== "boolean") {
             return res.status(400).json({ ok: false, error: "interested must be a boolean" });
         }
-        const match = await prisma.datingMatch.findUnique({
+        const match = await prismaClient_1.default.datingMatch.findUnique({
             where: { id: matchId },
         });
         if (!match) {
@@ -364,13 +366,13 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req, res) => {
         else if ((newUser1Interested || newUser2Interested) && (match.status === "MATCHED" || match.status === "INTERESTED")) {
             updateData.status = "INTERESTED";
         }
-        const updated = await prisma.datingMatch.update({
+        const updated = await prismaClient_1.default.datingMatch.update({
             where: { id: matchId },
             data: updateData,
         });
         if (promotedToScheduling) {
             const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
-            await prisma.adminMessage.createMany({
+            await prismaClient_1.default.adminMessage.createMany({
                 data: [
                     { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
                     { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
@@ -387,10 +389,10 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req, res) => {
 router.get("/matches/:matchId/availability", requireAdminAuth, async (req, res) => {
     try {
         const { matchId } = req.params;
-        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        const match = await prismaClient_1.default.datingMatch.findUnique({ where: { id: matchId } });
         if (!match)
             return res.status(404).json({ ok: false, error: "Match not found" });
-        const entries = await prisma.matchAvailability.findMany({
+        const entries = await prismaClient_1.default.matchAvailability.findMany({
             where: { matchId },
             orderBy: { createdAt: "desc" },
         });
@@ -416,13 +418,13 @@ router.post("/matches/:matchId/availability", requireAdminAuth, async (req, res)
         if (!userId || !datesFree || !timesFree || !neighborhoods) {
             return res.status(400).json({ ok: false, error: "All fields are required: userId, datesFree, timesFree, neighborhoods" });
         }
-        const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+        const match = await prismaClient_1.default.datingMatch.findUnique({ where: { id: matchId } });
         if (!match)
             return res.status(404).json({ ok: false, error: "Match not found" });
         if (userId !== match.user1_id && userId !== match.user2_id) {
             return res.status(400).json({ ok: false, error: "User is not part of this match" });
         }
-        const entry = await prisma.matchAvailability.create({
+        const entry = await prismaClient_1.default.matchAvailability.create({
             data: { matchId, userId, datesFree, timesFree, neighborhoods },
         });
         return res.status(201).json({ ok: true, availability: entry });
@@ -435,7 +437,7 @@ router.post("/matches/:matchId/availability", requireAdminAuth, async (req, res)
 router.delete("/matches/:matchId", requireAdminAuth, async (req, res) => {
     try {
         const { matchId } = req.params;
-        await prisma.datingMatch.delete({
+        await prismaClient_1.default.datingMatch.delete({
             where: { id: matchId },
         });
         return res.json({ ok: true });
@@ -448,22 +450,22 @@ router.delete("/matches/:matchId", requireAdminAuth, async (req, res) => {
 router.delete("/users/:userId", requireAdminAuth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const user = await prisma.datingUser.findUnique({ where: { id: userId } });
+        const user = await prismaClient_1.default.datingUser.findUnique({ where: { id: userId } });
         if (!user) {
             return res.status(404).json({ ok: false, error: "User not found" });
         }
-        await prisma.$transaction([
-            prisma.adminMessage.deleteMany({ where: { userId } }),
-            prisma.matchAvailability.deleteMany({ where: { userId } }),
-            prisma.datingMatch.deleteMany({
+        await prismaClient_1.default.$transaction([
+            prismaClient_1.default.adminMessage.deleteMany({ where: { userId } }),
+            prismaClient_1.default.matchAvailability.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingMatch.deleteMany({
                 where: { OR: [{ user1_id: userId }, { user2_id: userId }] },
             }),
-            prisma.datingUserCuisine.deleteMany({ where: { userId } }),
-            prisma.datingUserInterest.deleteMany({ where: { userId } }),
-            prisma.datingUserFirstDateType.deleteMany({ where: { userId } }),
-            prisma.datingUserLanguage.deleteMany({ where: { userId } }),
-            prisma.datingUserPhoto.deleteMany({ where: { userId } }),
-            prisma.datingUser.delete({ where: { id: userId } }),
+            prismaClient_1.default.datingUserCuisine.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingUserInterest.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingUserFirstDateType.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingUserLanguage.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingUserPhoto.deleteMany({ where: { userId } }),
+            prismaClient_1.default.datingUser.delete({ where: { id: userId } }),
         ]);
         return res.json({ ok: true });
     }
@@ -474,12 +476,12 @@ router.delete("/users/:userId", requireAdminAuth, async (req, res) => {
 });
 router.get("/messages", requireAdminAuth, async (req, res) => {
     try {
-        const messages = await prisma.adminMessage.findMany({
+        const messages = await prismaClient_1.default.adminMessage.findMany({
             orderBy: { createdAt: "desc" },
             take: 100,
         });
         const userIds = [...new Set(messages.map((m) => m.userId))];
-        const users = await prisma.datingUser.findMany({
+        const users = await prismaClient_1.default.datingUser.findMany({
             where: { id: { in: userIds } },
             select: { id: true, name: true, phoneE164: true },
         });
@@ -498,7 +500,7 @@ router.get("/messages", requireAdminAuth, async (req, res) => {
 router.get("/messages/:userId", requireAdminAuth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const messages = await prisma.adminMessage.findMany({
+        const messages = await prismaClient_1.default.adminMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
         });
@@ -515,7 +517,7 @@ router.post("/messages", requireAdminAuth, async (req, res) => {
         if (!userId || !content) {
             return res.status(400).json({ ok: false, error: "userId and content required" });
         }
-        const message = await prisma.adminMessage.create({
+        const message = await prismaClient_1.default.adminMessage.create({
             data: {
                 userId,
                 content,
@@ -532,7 +534,7 @@ router.post("/messages", requireAdminAuth, async (req, res) => {
 });
 router.get("/matches/export/csv", requireAdminAuth, async (req, res) => {
     try {
-        const matches = await prisma.datingMatch.findMany({
+        const matches = await prismaClient_1.default.datingMatch.findMany({
             orderBy: { created_at: "desc" },
             include: {
                 availability: true,
@@ -543,7 +545,7 @@ router.get("/matches/export/csv", requireAdminAuth, async (req, res) => {
             userIds.add(m.user1_id);
             userIds.add(m.user2_id);
         });
-        const users = await prisma.datingUser.findMany({
+        const users = await prismaClient_1.default.datingUser.findMany({
             where: { id: { in: Array.from(userIds) } },
             select: { id: true, name: true, phoneE164: true },
         });
@@ -614,7 +616,7 @@ router.get("/matches/export/csv", requireAdminAuth, async (req, res) => {
 router.get("/users/:userId/get-to-know", requireAdminAuth, async (req, res) => {
     try {
         const { userId } = req.params;
-        const messages = await prisma.getToKnowMessage.findMany({
+        const messages = await prismaClient_1.default.getToKnowMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
             select: { id: true, role: true, content: true, createdAt: true },

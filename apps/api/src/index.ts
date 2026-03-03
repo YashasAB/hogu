@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
+import prisma from "./prismaClient";
 import authRoutes from "./routes/auth";
 import discoverRoutes from "./routes/discover";
 import restaurantRoutes from "./routes/restaurants";
@@ -14,10 +14,6 @@ import datingProfileRouter from "./dating/profile/routes";
 import datingAdminRouter from "./dating/admin/routes";
 import datingOptionsRouter from "./dating/options/routes";
 import datingGetToKnowRouter from "./dating/agents/get-to-know/routes";
-
-const prisma = new PrismaClient({
-  log: ["query", "info", "warn", "error"],
-});
 
 // Test database connection on startup
 async function testDatabaseConnection() {

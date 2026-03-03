@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import prisma from "../prismaClient";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 

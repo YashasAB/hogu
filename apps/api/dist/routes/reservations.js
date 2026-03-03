@@ -5,10 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const zod_1 = require("zod");
-const client_1 = require("@prisma/client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 // Authentication middleware
 function authenticateToken(req, res, next) {
@@ -80,7 +79,7 @@ router.get('/', authenticateToken, async (req, res) => {
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
         console.log('Today date for filtering:', today);
-        const reservations = await prisma.reservation.findMany({
+        const reservations = await prismaClient_1.default.reservation.findMany({
             where: {
                 userId,
                 slot: {
@@ -130,7 +129,7 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
         // Find the restaurant by slug
-        const restaurant = await prisma.restaurant.findUnique({
+        const restaurant = await prismaClient_1.default.restaurant.findUnique({
             where: { slug: restaurantSlug }
         });
         if (!restaurant) {
@@ -155,7 +154,7 @@ router.post('/', authenticateToken, async (req, res) => {
             }
         }
         // Create or find the time slot using the correct restaurant ID
-        const slot = await prisma.timeSlot.upsert({
+        const slot = await prismaClient_1.default.timeSlot.upsert({
             where: {
                 restaurantId_date_time_partySize: {
                     restaurantId: restaurant.id, // Use the found restaurant's ID
@@ -175,7 +174,7 @@ router.post('/', authenticateToken, async (req, res) => {
         });
         console.log(`Created/found slot: ${slot.id} for restaurant: ${restaurant.id}`);
         // Create the reservation with the correct restaurant ID and update slot status
-        const reservation = await prisma.$transaction(async (tx) => {
+        const reservation = await prismaClient_1.default.$transaction(async (tx) => {
             // Update the time slot status to REQUESTED
             await tx.timeSlot.update({
                 where: { id: slot.id },
@@ -220,7 +219,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const reservationId = req.params.id;
-        const reservation = await prisma.reservation.findFirst({
+        const reservation = await prismaClient_1.default.reservation.findFirst({
             where: {
                 id: reservationId,
                 userId
@@ -257,7 +256,7 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
         const userId = req.user.userId;
         const reservationId = req.params.id;
         // Find the reservation first to ensure it belongs to the user
-        const existingReservation = await prisma.reservation.findFirst({
+        const existingReservation = await prismaClient_1.default.reservation.findFirst({
             where: {
                 id: reservationId,
                 userId,
@@ -268,7 +267,7 @@ router.post('/:id/cancel', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Reservation not found or cannot be cancelled' });
         }
         // Cancel the reservation and update slot status in a transaction
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prismaClient_1.default.$transaction(async (tx) => {
             // Update the reservation status to CANCELLED
             const cancelledReservation = await tx.reservation.update({
                 where: { id: reservationId },
@@ -309,19 +308,19 @@ router.get('/status', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const [pending, ongoing, completed] = await Promise.all([
-            prisma.reservation.count({
+            prismaClient_1.default.reservation.count({
                 where: {
                     userId: userId,
                     status: { in: ['PENDING', 'HELD'] }
                 }
             }),
-            prisma.reservation.count({
+            prismaClient_1.default.reservation.count({
                 where: {
                     userId: userId,
                     status: 'CONFIRMED'
                 }
             }),
-            prisma.reservation.count({
+            prismaClient_1.default.reservation.count({
                 where: {
                     userId: userId,
                     status: { in: ['SEATED', 'COMPLETED'] }

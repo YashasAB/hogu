@@ -1,13 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Get all restaurants
 router.get('/', async (_req, res) => {
     try {
-        const restaurants = await prisma.restaurant.findMany({
+        const restaurants = await prismaClient_1.default.restaurant.findMany({
             include: {
                 cuisineTags: {
                     include: {
@@ -45,7 +47,7 @@ router.get('/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
         console.log('Fetching restaurant with slug:', slug);
-        const restaurant = await prisma.restaurant.findUnique({
+        const restaurant = await prismaClient_1.default.restaurant.findUnique({
             where: { slug },
             include: {
                 cuisineTags: {
@@ -92,13 +94,13 @@ router.get('/:slug/availability', async (req, res) => {
         if (!date || !partySize) {
             return res.status(400).json({ error: 'Date and party size are required' });
         }
-        const restaurant = await prisma.restaurant.findUnique({
+        const restaurant = await prismaClient_1.default.restaurant.findUnique({
             where: { slug },
         });
         if (!restaurant) {
             return res.status(404).json({ error: 'Restaurant not found' });
         }
-        const slots = await prisma.timeSlot.findMany({
+        const slots = await prismaClient_1.default.timeSlot.findMany({
             where: {
                 restaurantId: restaurant.id,
                 date: date,

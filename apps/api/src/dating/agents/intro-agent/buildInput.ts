@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../prismaClient";
 import { IntroInput, IntroInputUser, IntroUserProfile } from "./types";
 
-const prisma = new PrismaClient();
 
 const DIET_LABELS: Record<string, string> = {
   VEG: "Vegetarian",

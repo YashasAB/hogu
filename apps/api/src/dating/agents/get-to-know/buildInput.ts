@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../prismaClient";
 
-const prisma = new PrismaClient();
 
 export interface BuiltInput {
   userSchemaJson: Record<string, any>;

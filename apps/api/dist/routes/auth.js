@@ -7,10 +7,9 @@ const express_1 = require("express");
 const zod_1 = require("zod");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key"; // Use environment variable for secret key
 const RegisterSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
@@ -41,7 +40,7 @@ router.post("/signup", async (req, res) => {
                 .json({ error: "Username and password are required" });
         }
         // Check if user already exists
-        const existingUser = await prisma.userAuth.findUnique({
+        const existingUser = await prismaClient_1.default.userAuth.findUnique({
             where: { username },
         });
         if (existingUser) {
@@ -53,7 +52,7 @@ router.post("/signup", async (req, res) => {
         const passwordHash = await bcrypt_1.default.hash(password, 10);
         // Create user and auth record in a transaction
         console.log("Creating user in database...");
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prismaClient_1.default.$transaction(async (tx) => {
             // Create the main user record
             const user = await tx.user.create({
                 data: {
@@ -103,7 +102,7 @@ router.post("/login", async (req, res) => {
     const { username, password } = parse.data;
     try {
         // Find user by username
-        const userAuth = await prisma.userAuth.findUnique({
+        const userAuth = await prismaClient_1.default.userAuth.findUnique({
             where: { username },
             include: {
                 user: {
@@ -156,7 +155,7 @@ router.post("/restaurant-login", async (req, res) => {
     const { username, password } = parse.data;
     try {
         // Find restaurant auth record
-        const restaurantAuth = await prisma.restaurantAuth.findUnique({
+        const restaurantAuth = await prismaClient_1.default.restaurantAuth.findUnique({
             where: { username },
             include: {
                 restaurant: true,
@@ -196,7 +195,7 @@ router.get("/me", auth_1.authenticateToken, async (req, res) => {
             return res.status(401).json({ error: "No user ID in token" });
         }
         // Fetch user data from database using userId
-        const user = await prisma.user.findUnique({
+        const user = await prismaClient_1.default.user.findUnique({
             where: { id: userId },
             include: {
                 details: true,
@@ -226,7 +225,7 @@ router.get("/reservations/pending", auth_1.authenticateToken, async (req, res) =
         const now = new Date();
         const today = now.toISOString().split("T")[0];
         const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-        const pendingReservations = await prisma.reservation.findMany({
+        const pendingReservations = await prismaClient_1.default.reservation.findMany({
             where: {
                 userId: req.user.userId,
                 status: { in: ["PENDING", "HELD"] },
@@ -265,7 +264,7 @@ router.post("/reservations/:id/cancel", auth_1.authenticateToken, async (req, re
     const reservationId = req.restaurantId;
     try {
         // Find the reservation and verify ownership
-        const reservation = await prisma.reservation.findFirst({
+        const reservation = await prismaClient_1.default.reservation.findFirst({
             where: {
                 id: reservationId,
                 userId: userId,
@@ -285,7 +284,7 @@ router.post("/reservations/:id/cancel", auth_1.authenticateToken, async (req, re
             });
         }
         // Update reservation status to CANCELLED
-        await prisma.reservation.update({
+        await prismaClient_1.default.reservation.update({
             where: { id: reservationId },
             data: { status: "CANCELLED" },
         });

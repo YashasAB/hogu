@@ -4,11 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../prismaClient"));
 const auth_1 = require("../middleware/auth");
 const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Initialize Replit Object Storage client
 // const storageClient = new Client();
 // Initialize S3 client only if AWS credentials are available
@@ -33,7 +32,7 @@ router.get("/restaurant", auth_1.authenticateRestaurant, async (req, res) => {
     try {
         const restaurantId = req.restaurantId;
         console.log("Fetching restaurant profile for ID:", restaurantId);
-        const restaurant = await prisma.restaurant.findUnique({
+        const restaurant = await prismaClient_1.default.restaurant.findUnique({
             where: { id: restaurantId },
         });
         if (!restaurant) {
@@ -54,7 +53,7 @@ router.put("/restaurant", auth_1.authenticateRestaurant, async (req, res) => {
         const restaurantId = req.restaurantId;
         const { name, neighborhood, instagramUrl, website, heroImageUrl } = req.body;
         console.log("Updating restaurant profile for ID:", restaurantId, "with data:", req.body);
-        const restaurant = await prisma.restaurant.update({
+        const restaurant = await prismaClient_1.default.restaurant.update({
             where: { id: restaurantId },
             data: {
                 name,
@@ -82,7 +81,7 @@ router.get("/slots", auth_1.authenticateRestaurant, async (req, res) => {
             console.error("Date is required for fetching slots");
             return res.status(400).json({ error: "Date is required" });
         }
-        const slots = await prisma.timeSlot.findMany({
+        const slots = await prismaClient_1.default.timeSlot.findMany({
             where: {
                 restaurantId: restaurantId,
                 date: date,
@@ -122,7 +121,7 @@ router.get("/bookings", auth_1.authenticateRestaurant, async (req, res) => {
         const today = new Date().toISOString().split("T")[0];
         console.log("Today date for filtering:", today);
         // First, let's check if there are ANY reservations for this restaurant
-        const allBookingsForRestaurant = await prisma.reservation.findMany({
+        const allBookingsForRestaurant = await prismaClient_1.default.reservation.findMany({
             where: { restaurantId: restaurantId },
             include: {
                 slot: { select: { date: true, time: true } },
@@ -139,12 +138,12 @@ router.get("/bookings", auth_1.authenticateRestaurant, async (req, res) => {
             restaurantId: b.restaurantId,
         })));
         // Also check what restaurants exist
-        const allRestaurants = await prisma.restaurant.findMany({
+        const allRestaurants = await prismaClient_1.default.restaurant.findMany({
             select: { id: true, name: true },
         });
         console.log("All restaurants in database:", allRestaurants);
         // Fetch upcoming bookings (excluding completed/cancelled)
-        const bookings = await prisma.reservation.findMany({
+        const bookings = await prismaClient_1.default.reservation.findMany({
             where: {
                 restaurantId: restaurantId,
                 status: {
@@ -183,7 +182,7 @@ router.get("/bookings", auth_1.authenticateRestaurant, async (req, res) => {
             date: b.slot.date,
         })));
         // Fetch all bookings for today to calculate live status
-        const todayBookings = await prisma.reservation.findMany({
+        const todayBookings = await prismaClient_1.default.reservation.findMany({
             where: {
                 restaurantId: restaurantId,
                 slot: {
@@ -255,7 +254,7 @@ router.post("/slots/bulk", auth_1.authenticateRestaurant, async (req, res) => {
                 status: "AVAILABLE",
             });
         }
-        const createdSlots = await prisma.timeSlot.createMany({
+        const createdSlots = await prismaClient_1.default.timeSlot.createMany({
             data: slots,
         });
         console.log(`Created ${createdSlots.count} slots for restaurant ID: ${restaurantId} on date: ${date}`);
@@ -273,7 +272,7 @@ router.patch("/slots/:id", auth_1.authenticateRestaurant, async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         console.log(`Updating slot ID: ${id} for restaurant ID: ${restaurantId} with status: ${status}`);
-        const slot = await prisma.timeSlot.update({
+        const slot = await prismaClient_1.default.timeSlot.update({
             where: {
                 id,
                 restaurantId: restaurantId,
@@ -298,7 +297,7 @@ router.patch("/bookings/:id", auth_1.authenticateRestaurant, async (req, res) =>
         const { status } = req.body;
         const normalizedStatus = status.toUpperCase();
         console.log(`Updating booking ID: ${id} for restaurant ID: ${restaurantId} to status: ${normalizedStatus}`);
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prismaClient_1.default.$transaction(async (prisma) => {
             const booking = await prisma.reservation.update({
                 where: {
                     id,
@@ -349,7 +348,7 @@ router.post("/bookings/:id/accept", auth_1.authenticateRestaurant, async (req, r
         const reservationId = req.params.id;
         console.log(`Restaurant ${restaurantId} accepting booking ${reservationId}`);
         // First verify the reservation belongs to this restaurant and is pending
-        const reservation = await prisma.reservation.findFirst({
+        const reservation = await prismaClient_1.default.reservation.findFirst({
             where: {
                 id: reservationId,
                 restaurantId: restaurantId,
@@ -363,7 +362,7 @@ router.post("/bookings/:id/accept", auth_1.authenticateRestaurant, async (req, r
                 .json({ error: "Reservation not found or already processed" });
         }
         // Update the reservation status to CONFIRMED and slot status to FULL in a transaction
-        const updatedReservation = await prisma.$transaction(async (tx) => {
+        const updatedReservation = await prismaClient_1.default.$transaction(async (tx) => {
             // Update the reservation status to CONFIRMED
             const confirmedReservation = await tx.reservation.update({
                 where: { id: reservationId },
@@ -401,7 +400,7 @@ router.post("/bookings/:id/reject", auth_1.authenticateRestaurant, async (req, r
         const reservationId = req.params.id;
         console.log(`Restaurant ${restaurantId} rejecting booking ${reservationId}`);
         // First verify the reservation belongs to this restaurant and is pending
-        const reservation = await prisma.reservation.findFirst({
+        const reservation = await prismaClient_1.default.reservation.findFirst({
             where: {
                 id: reservationId,
                 restaurantId: restaurantId,
@@ -415,7 +414,7 @@ router.post("/bookings/:id/reject", auth_1.authenticateRestaurant, async (req, r
                 .json({ error: "Reservation not found or already processed" });
         }
         // Update the reservation status to CANCELLED and slot status back to AVAILABLE in a transaction
-        const updatedReservation = await prisma.$transaction(async (tx) => {
+        const updatedReservation = await prismaClient_1.default.$transaction(async (tx) => {
             // Update the reservation status to CANCELLED
             const cancelledReservation = await tx.reservation.update({
                 where: { id: reservationId },

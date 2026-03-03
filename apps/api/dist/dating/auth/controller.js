@@ -1,11 +1,13 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../prismaClient"));
 const password_1 = require("../password");
 const session_1 = require("../session");
 const validators_1 = require("./validators");
-const prisma = new client_1.PrismaClient();
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
 const LIFESTYLE_CANONICAL = {
     diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
@@ -25,7 +27,7 @@ exports.AuthController = {
     async signup(req, res, next) {
         try {
             const data = (0, validators_1.requireSignupBody)(req.body);
-            const exists = await prisma.datingUser.findFirst({
+            const exists = await prismaClient_1.default.datingUser.findFirst({
                 where: { phoneE164: data.phoneE164 },
                 select: { id: true },
             });
@@ -34,7 +36,7 @@ exports.AuthController = {
                     .status(409)
                     .json({ ok: false, error: "Phone already registered" });
             const hash = await (0, password_1.hashPassword)(data.password);
-            const user = await prisma.datingUser.create({
+            const user = await prismaClient_1.default.datingUser.create({
                 data: {
                     phoneE164: data.phoneE164,
                     passwordHash: hash,
@@ -66,7 +68,7 @@ exports.AuthController = {
                 select: { id: true, name: true, phoneE164: true },
             });
             // Save photos
-            await Promise.all(data.photos.map((p) => prisma.datingUserPhoto.create({
+            await Promise.all(data.photos.map((p) => prismaClient_1.default.datingUserPhoto.create({
                 data: {
                     userId: user.id,
                     objectKey: p.objectKey,
@@ -76,33 +78,33 @@ exports.AuthController = {
             })));
             // Save cuisines (lookup by value, create junction records)
             if (data.cuisines && data.cuisines.length > 0) {
-                const cuisineOptions = await prisma.cuisineOption.findMany({
+                const cuisineOptions = await prismaClient_1.default.cuisineOption.findMany({
                     where: { value: { in: data.cuisines } },
                     select: { id: true },
                 });
-                await Promise.all(cuisineOptions.map((opt) => prisma.datingUserCuisine.create({
+                await Promise.all(cuisineOptions.map((opt) => prismaClient_1.default.datingUserCuisine.create({
                     data: { userId: user.id, cuisineOptionId: opt.id },
                 })));
             }
             // Save first date types (lookup by value, create junction records)
             if (data.firstDateTypes && data.firstDateTypes.length > 0) {
-                const firstDateOptions = await prisma.firstDateTypeOption.findMany({
+                const firstDateOptions = await prismaClient_1.default.firstDateTypeOption.findMany({
                     where: { value: { in: data.firstDateTypes } },
                     select: { id: true },
                 });
-                await Promise.all(firstDateOptions.map((opt) => prisma.datingUserFirstDateType.create({
+                await Promise.all(firstDateOptions.map((opt) => prismaClient_1.default.datingUserFirstDateType.create({
                     data: { userId: user.id, firstDateTypeOptionId: opt.id },
                 })));
             }
             // Save interests (free-form tags)
             if (data.interests && data.interests.length > 0) {
-                await Promise.all(data.interests.map((tag) => prisma.datingUserInterest.create({
+                await Promise.all(data.interests.map((tag) => prismaClient_1.default.datingUserInterest.create({
                     data: { userId: user.id, tag },
                 })));
             }
             // Save languages (free-form)
             if (data.languages && data.languages.length > 0) {
-                await Promise.all(data.languages.map((lang) => prisma.datingUserLanguage.create({
+                await Promise.all(data.languages.map((lang) => prismaClient_1.default.datingUserLanguage.create({
                     data: { userId: user.id, lang },
                 })));
             }
@@ -115,7 +117,7 @@ exports.AuthController = {
                 !data.idealFirstDate || data.idealFirstDate.trim().length < 20 ||
                 !data.nonNegotiables || data.nonNegotiables.trim().length < 20;
             if (hasIncompleteProfile) {
-                await prisma.adminMessage.create({
+                await prismaClient_1.default.adminMessage.create({
                     data: {
                         userId: user.id,
                         fromAdmin: true,
@@ -157,7 +159,7 @@ Your matchmaker`,
     async login(req, res, next) {
         try {
             const { phoneE164, password } = (0, validators_1.requireLoginBody)(req.body);
-            const user = await prisma.datingUser.findFirst({
+            const user = await prismaClient_1.default.datingUser.findFirst({
                 where: { phoneE164 },
                 select: { id: true, name: true, phoneE164: true, passwordHash: true },
             });
@@ -186,7 +188,7 @@ Your matchmaker`,
         const userId = req.datingUserId;
         if (!userId)
             return res.status(401).json({ ok: false, error: "Not authenticated" });
-        const user = await prisma.datingUser.findFirst({
+        const user = await prismaClient_1.default.datingUser.findFirst({
             where: { id: userId },
             select: { id: true, name: true, phoneE164: true },
         });
@@ -214,7 +216,7 @@ Your matchmaker`,
                 return res.status(400).json({ ok: false, error: "New password must be at least 8 characters" });
             }
             const phoneE164 = phone.startsWith("+") ? phone : `+${phone}`;
-            const user = await prisma.datingUser.findFirst({
+            const user = await prismaClient_1.default.datingUser.findFirst({
                 where: { phoneE164 },
                 select: { id: true, name: true },
             });
@@ -222,7 +224,7 @@ Your matchmaker`,
                 return res.status(404).json({ ok: false, error: "No account found with this phone number" });
             }
             const hash = await (0, password_1.hashPassword)(newPassword);
-            await prisma.datingUser.update({
+            await prismaClient_1.default.datingUser.update({
                 where: { id: user.id },
                 data: { passwordHash: hash },
             });

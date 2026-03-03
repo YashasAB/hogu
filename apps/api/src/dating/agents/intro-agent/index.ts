@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../prismaClient";
 import { buildIntroInput } from "./buildInput";
 import { generateIntroMessages } from "./generator";
 
-const prisma = new PrismaClient();
 
 function formatMessageContent(title: string, body: string, cta: string): string {
   return [body, cta].filter(Boolean).join("\n\n");

@@ -1,8 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildIntroInput = buildIntroInput;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const DIET_LABELS = {
     VEG: "Vegetarian",
     NON_VEG: "Non-Vegetarian",
@@ -45,11 +47,11 @@ function getAge(dob) {
     return age;
 }
 async function buildIntroInput(matchId) {
-    const match = await prisma.datingMatch.findUniqueOrThrow({
+    const match = await prismaClient_1.default.datingMatch.findUniqueOrThrow({
         where: { id: matchId },
     });
     const [user1, user2] = await Promise.all([
-        prisma.datingUser.findUniqueOrThrow({
+        prismaClient_1.default.datingUser.findUniqueOrThrow({
             where: { id: match.user1_id },
             include: {
                 photos: true,
@@ -59,7 +61,7 @@ async function buildIntroInput(matchId) {
                 languages: true,
             },
         }),
-        prisma.datingUser.findUniqueOrThrow({
+        prismaClient_1.default.datingUser.findUniqueOrThrow({
             where: { id: match.user2_id },
             include: {
                 photos: true,

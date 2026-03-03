@@ -1,43 +1,45 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prismaClient_1 = __importDefault(require("../../prismaClient"));
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.get("/", async (_req, res) => {
     try {
         const [cuisines, firstDateTypes, diets, drinking, smoking, physicalActivity, dateBudget,] = await Promise.all([
-            prisma.cuisineOption.findMany({
+            prismaClient_1.default.cuisineOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.firstDateTypeOption.findMany({
+            prismaClient_1.default.firstDateTypeOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.dietOption.findMany({
+            prismaClient_1.default.dietOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.drinkingOption.findMany({
+            prismaClient_1.default.drinkingOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.smokingOption.findMany({
+            prismaClient_1.default.smokingOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.physicalActivityOption.findMany({
+            prismaClient_1.default.physicalActivityOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },
             }),
-            prisma.dateBudgetOption.findMany({
+            prismaClient_1.default.dateBudgetOption.findMany({
                 where: { active: true },
                 orderBy: { sortOrder: "asc" },
                 select: { value: true, label: true },

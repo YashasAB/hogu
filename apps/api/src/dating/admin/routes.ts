@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../prismaClient";
 import { runIntroAgent, deletePendingIntro } from "../agents/intro-agent";
 
-const prisma = new PrismaClient();
 const router = Router();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
