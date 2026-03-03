@@ -243,6 +243,12 @@
     height: auto;
   }
 
+  .profile-field--empty {
+    color: var(--ink-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+  }
+
   img[src^="/api/images/"] {
     display: block !important;
     visibility: visible !important;

@@ -1042,34 +1042,31 @@ export default function DatingApp() {
               <h3>
                 {myProfile.name}, {calculateAge(myProfile.dob)}
               </h3>
-              {myProfile.profession && (
-                <p className="hogu-profession">{myProfile.profession}</p>
-              )}
-              {myProfile.gender && (
-                <p className="hogu-detail-line">Gender: {myProfile.gender}</p>
-              )}
-              {myProfile.height && (
-                <p className="hogu-detail-line">Height: {myProfile.height}</p>
-              )}
-              {myProfile.instagramHandle && (
-                <p className="hogu-detail-line">
-                  Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}
-                </p>
-              )}
-              {myProfile.dateCity && (
-                <p className="hogu-detail-line">
-                  Date City: {myProfile.dateCity}
-                </p>
-              )}
-              {myProfile.dateNeighborhoods && (
-                <p className="hogu-detail-line">
-                  Date Neighborhoods: {myProfile.dateNeighborhoods}
-                </p>
-              )}
+              <p className="hogu-profession">
+                {myProfile.profession || <span className="profile-field--empty">Profession not set</span>}
+              </p>
+              <p className="hogu-detail-line">Gender: {myProfile.gender}</p>
+              <p className="hogu-detail-line">
+                Height: {myProfile.height || <span className="profile-field--empty">Not set</span>}
+              </p>
+              <p className="hogu-detail-line">
+                Instagram:{" "}
+                {myProfile.instagramHandle
+                  ? `@${myProfile.instagramHandle.replace(/^@/, "")}`
+                  : <span className="profile-field--empty">Not set</span>}
+              </p>
+              <p className="hogu-detail-line">
+                Date City:{" "}
+                {myProfile.dateCity || <span className="profile-field--empty">Not set</span>}
+              </p>
+              <p className="hogu-detail-line">
+                Date Neighborhoods:{" "}
+                {myProfile.dateNeighborhoods || <span className="profile-field--empty">Not set</span>}
+              </p>
 
-              {myProfile.relationshipType && (
-                <div className="hogu-section">
-                  <h4>Looking for</h4>
+              <div className="hogu-section">
+                <h4>Looking for</h4>
+                {myProfile.relationshipType ? (
                   <p>
                     {myProfile.relationshipType === "serious"
                       ? "Serious relationship"
@@ -1077,12 +1074,14 @@ export default function DatingApp() {
                         ? "Not sure yet"
                         : "Casual dating"}
                   </p>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {(myProfile.agePreferenceMin || myProfile.agePreferenceMax) && (
-                <div className="hogu-section">
-                  <h4>Age preference</h4>
+              <div className="hogu-section">
+                <h4>Age preference</h4>
+                {myProfile.agePreferenceMin || myProfile.agePreferenceMax ? (
                   <p>
                     {myProfile.agePreferenceMin && myProfile.agePreferenceMax
                       ? `${myProfile.agePreferenceMin} – ${myProfile.agePreferenceMax}`
@@ -1090,150 +1089,122 @@ export default function DatingApp() {
                         ? `${myProfile.agePreferenceMin}+`
                         : `Up to ${myProfile.agePreferenceMax}`}
                   </p>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {myProfile.dreams && (
-                <div className="hogu-section">
-                  <h4>Dreams</h4>
-                  <p>{myProfile.dreams}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>Dreams</h4>
+                <p>{myProfile.dreams || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.fiveYearGoal && (
-                <div className="hogu-section">
-                  <h4>5 Year Goal</h4>
-                  <p>{myProfile.fiveYearGoal}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>5 Year Goal</h4>
+                <p>{myProfile.fiveYearGoal || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.whatIWantInPartner && (
-                <div className="hogu-section">
-                  <h4>What I Want in a Partner</h4>
-                  <p>{myProfile.whatIWantInPartner}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>What I Want in a Partner</h4>
+                <p>{myProfile.whatIWantInPartner || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.whyPartnerWouldLikeMe && (
-                <div className="hogu-section">
-                  <h4>Why You'd Like Me</h4>
-                  <p>{myProfile.whyPartnerWouldLikeMe}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>Why You'd Like Me</h4>
+                <p>{myProfile.whyPartnerWouldLikeMe || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.myDayLooksLike && (
-                <div className="hogu-section">
-                  <h4>My Day Looks Like</h4>
-                  <p>{myProfile.myDayLooksLike}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>My Day Looks Like</h4>
+                <p>{myProfile.myDayLooksLike || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.idealFirstDate && (
-                <div className="hogu-section">
-                  <h4>My Ideal First Date</h4>
-                  <p>{myProfile.idealFirstDate}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>My Ideal First Date</h4>
+                <p>{myProfile.idealFirstDate || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {myProfile.nonNegotiables && (
-                <div className="hogu-section">
-                  <h4>Non-Negotiables</h4>
-                  <p>{myProfile.nonNegotiables}</p>
-                </div>
-              )}
+              <div className="hogu-section">
+                <h4>Non-Negotiables</h4>
+                <p>{myProfile.nonNegotiables || <span className="profile-field--empty">Not filled in yet</span>}</p>
+              </div>
 
-              {(myProfile.diet ||
-                myProfile.drinking ||
-                myProfile.smoking ||
-                myProfile.physicalActivity ||
-                myProfile.dateBudget) && (
-                <div className="hogu-section">
-                  <h4>Lifestyle</h4>
+              <div className="hogu-section">
+                <h4>Lifestyle</h4>
+                {myProfile.diet || myProfile.drinking || myProfile.smoking || myProfile.physicalActivity || myProfile.dateBudget ? (
                   <div className="hogu-lifestyle-tags">
                     {myProfile.diet && (
-                      <span>
-                        Diet: {friendlyLabel(myProfile.diet, DIET_LABELS)}
-                      </span>
+                      <span>Diet: {friendlyLabel(myProfile.diet, DIET_LABELS)}</span>
                     )}
                     {myProfile.drinking && (
-                      <span>
-                        Drinking:{" "}
-                        {friendlyLabel(myProfile.drinking, DRINKING_LABELS)}
-                      </span>
+                      <span>Drinking: {friendlyLabel(myProfile.drinking, DRINKING_LABELS)}</span>
                     )}
                     {myProfile.smoking && (
-                      <span>
-                        Smoking:{" "}
-                        {friendlyLabel(myProfile.smoking, SMOKING_LABELS)}
-                      </span>
+                      <span>Smoking: {friendlyLabel(myProfile.smoking, SMOKING_LABELS)}</span>
                     )}
                     {myProfile.physicalActivity && (
-                      <span>
-                        Activity:{" "}
-                        {friendlyLabel(
-                          myProfile.physicalActivity,
-                          ACTIVITY_LABELS,
-                        )}
-                      </span>
+                      <span>Activity: {friendlyLabel(myProfile.physicalActivity, ACTIVITY_LABELS)}</span>
                     )}
                     {myProfile.dateBudget && (
                       <span>Date budget: {myProfile.dateBudget}</span>
                     )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {myProfile.cuisines.length > 0 && (
-                <div className="hogu-section">
-                  <h4>Favourite Cuisines</h4>
+              <div className="hogu-section">
+                <h4>Favourite Cuisines</h4>
+                {myProfile.cuisines.length > 0 ? (
                   <div className="hogu-tags">
                     {myProfile.cuisines.map((c) => (
-                      <span key={c} className="hogu-tag">
-                        {c}
-                      </span>
+                      <span key={c} className="hogu-tag">{c}</span>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {myProfile.firstDateTypes.length > 0 && (
-                <div className="hogu-section">
-                  <h4>First Date Ideas</h4>
+              <div className="hogu-section">
+                <h4>First Date Ideas</h4>
+                {myProfile.firstDateTypes.length > 0 ? (
                   <div className="hogu-tags">
                     {myProfile.firstDateTypes.map((f) => (
-                      <span key={f} className="hogu-tag">
-                        {f}
-                      </span>
+                      <span key={f} className="hogu-tag">{f}</span>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {myProfile.interests.length > 0 && (
-                <div className="hogu-section">
-                  <h4>Interests</h4>
+              <div className="hogu-section">
+                <h4>Interests</h4>
+                {myProfile.interests.length > 0 ? (
                   <div className="hogu-tags">
                     {myProfile.interests.map((i) => (
-                      <span key={i} className="hogu-tag">
-                        {i}
-                      </span>
+                      <span key={i} className="hogu-tag">{i}</span>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
 
-              {myProfile.languages.length > 0 && (
-                <div className="hogu-section">
-                  <h4>Languages</h4>
+              <div className="hogu-section">
+                <h4>Languages</h4>
+                {myProfile.languages.length > 0 ? (
                   <div className="hogu-tags">
                     {myProfile.languages.map((l) => (
-                      <span key={l} className="hogu-tag">
-                        {l}
-                      </span>
+                      <span key={l} className="hogu-tag">{l}</span>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+              </div>
             </div>
           </section>
         )}
