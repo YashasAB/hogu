@@ -423,9 +423,9 @@ export default function DatingApp() {
                 <button
                   className="hogu-btn"
                   style={{ marginTop: "1.25rem" }}
-                  onClick={() => setTab("edit")}
+                  onClick={() => setShowGetToKnow(true)}
                 >
-                  Complete Your Profile
+                  Talk to your live matchmaker to help us get to know you better and get suggestions for what details we need more
                 </button>
               </div>
             ) : (
