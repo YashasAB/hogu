@@ -690,4 +690,19 @@ router.get("/matches/export/csv", requireAdminAuth, async (req: any, res: any) =
   }
 });
 
+router.get("/users/:userId/get-to-know", requireAdminAuth, async (req: any, res: any) => {
+  try {
+    const { userId } = req.params;
+    const messages = await prisma.getToKnowMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, role: true, content: true, createdAt: true },
+    });
+    res.json(messages);
+  } catch (err) {
+    console.error("[Admin] get-to-know messages error:", err);
+    res.status(500).json({ ok: false, error: "Failed to fetch messages" });
+  }
+});
+
 export default router;

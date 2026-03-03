@@ -94,6 +94,10 @@ export default function AdminPortal() {
   const [expandedAvailMatch, setExpandedAvailMatch] = useState<string | null>(null);
   const [addAvailForm, setAddAvailForm] = useState<Record<string, { userId: string; datesFree: string; timesFree: string; neighborhoods: string }>>({});
 
+  const [getToKnowMessages, setGetToKnowMessages] = useState<{ id: string; role: string; content: string; createdAt: string }[]>([]);
+  const [showGetToKnow, setShowGetToKnow] = useState(false);
+  const [loadingGetToKnow, setLoadingGetToKnow] = useState(false);
+
   const [filterCity, setFilterCity] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState<string>("all");
@@ -389,6 +393,19 @@ export default function AdminPortal() {
       }
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function loadGetToKnowMessages(userId: string) {
+    setLoadingGetToKnow(true);
+    setShowGetToKnow(true);
+    try {
+      const data = await fetchWithAuth(`${API_BASE}/users/${userId}/get-to-know`);
+      setGetToKnowMessages(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingGetToKnow(false);
     }
   }
 
@@ -765,13 +782,53 @@ export default function AdminPortal() {
         {tab === "users" && selectedUser && (
           <div className="user-detail">
             <div className="detail-actions">
-              <button className="back-btn" onClick={() => setSelectedUser(null)}>
+              <button className="back-btn" onClick={() => { setSelectedUser(null); setShowGetToKnow(false); setGetToKnowMessages([]); }}>
                 ← Back to Users
+              </button>
+              <button
+                onClick={() => showGetToKnow ? setShowGetToKnow(false) : loadGetToKnowMessages(selectedUser.id)}
+                style={{ background: "#1e1e2e", color: "#c9a84c", border: "1px solid #c9a84c", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}
+              >
+                {showGetToKnow ? "Hide Get to Know Chat" : "Get to Know Chat"}
               </button>
               <button className="delete-btn" onClick={() => deleteUser(selectedUser.id, selectedUser.name)}>
                 Delete User
               </button>
             </div>
+
+            {showGetToKnow && (
+              <div style={{ margin: "1rem 0", background: "#111", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px", maxHeight: 400, overflowY: "auto" }}>
+                <h4 style={{ margin: "0 0 12px", color: "#c9a84c", fontSize: "0.9rem" }}>Get to Know Conversation</h4>
+                {loadingGetToKnow && <p style={{ color: "#a3a3a3" }}>Loading...</p>}
+                {!loadingGetToKnow && getToKnowMessages.length === 0 && (
+                  <p style={{ color: "#a3a3a3", fontSize: "0.85rem" }}>No conversation yet.</p>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {getToKnowMessages.map((msg) => {
+                    const isAgent = msg.role === "agent";
+                    return (
+                      <div key={msg.id} style={{ display: "flex", justifyContent: isAgent ? "flex-start" : "flex-end" }}>
+                        <div style={{
+                          maxWidth: "75%",
+                          padding: "8px 12px",
+                          borderRadius: isAgent ? "4px 12px 12px 12px" : "12px 4px 12px 12px",
+                          background: isAgent ? "#1e1e2e" : "#c9a84c",
+                          color: isAgent ? "#e5e5e5" : "#0f0f0f",
+                          fontSize: "0.82rem",
+                          lineHeight: 1.5,
+                          whiteSpace: "pre-wrap",
+                        }}>
+                          <div style={{ fontSize: "0.7rem", marginBottom: 4, opacity: 0.6 }}>
+                            {isAgent ? "Matchmaker" : selectedUser.name} · {new Date(msg.createdAt).toLocaleString()}
+                          </div>
+                          {msg.content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="user-profile">
               <h2>{selectedUser.name} <span style={{ display: "inline-block", fontSize: "13px", padding: "3px 10px", borderRadius: "6px", background: (selectedUser.city || "BLR") === "NYC" ? "#3b82f6" : "#e32995", color: "#fff", fontWeight: 600, verticalAlign: "middle", marginLeft: "8px" }}>{(selectedUser.city || "BLR") === "NYC" ? "New York" : "Bengaluru"}</span></h2>
               <p className="user-phone">{selectedUser.phoneE164}</p>

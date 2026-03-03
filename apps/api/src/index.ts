@@ -13,6 +13,7 @@ import datingUploadsRouter from "./dating/uploads/routes";
 import datingProfileRouter from "./dating/profile/routes";
 import datingAdminRouter from "./dating/admin/routes";
 import datingOptionsRouter from "./dating/options/routes";
+import datingGetToKnowRouter from "./dating/agents/get-to-know/routes";
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -99,6 +100,7 @@ app.use("/api/dating/uploads", datingUploadsRouter);
 app.use("/api/dating/profile", datingProfileRouter);
 app.use("/api/dating/admin", datingAdminRouter);
 app.use("/api/dating/options", datingOptionsRouter);
+app.use("/api/dating/get-to-know", datingGetToKnowRouter);
 
 // In production, serve the React app for all non-API routes
 if (isProduction) {

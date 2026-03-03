@@ -404,3 +404,25 @@ model PendingIntroMessage {
   @@map("pending_intro_messages")
 }
 
+model RelationshipTypeOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("relationship_type_options")
+}
+
+model GetToKnowMessage {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  role      String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("get_to_know_messages")
+}
+
