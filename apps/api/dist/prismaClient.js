@@ -7,13 +7,21 @@ function buildDatasourceUrl() {
     if (!base)
         throw new Error("DATABASE_URL is not set");
     const url = new URL(base);
-    url.searchParams.set("connection_limit", "3");
-    url.searchParams.set("idle_timeout", "10");
+    url.searchParams.set("connection_limit", "2");
+    url.searchParams.set("idle_timeout", "5");
     return url.toString();
 }
 const prisma = new client_1.PrismaClient({
     datasourceUrl: buildDatasourceUrl(),
-    log: ["warn", "error"],
+    log: [
+        { emit: "event", level: "error" },
+        { emit: "stdout", level: "warn" },
+    ],
+});
+prisma.$on("error", (e) => {
+    if (e.message.includes("E57P01"))
+        return;
+    console.error("[Prisma]", e.message);
 });
 exports.default = prisma;
 function isConnectionError(err) {
