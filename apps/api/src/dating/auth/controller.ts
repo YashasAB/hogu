@@ -1,4 +1,4 @@
-import prisma from "../../prismaClient";
+import prisma, { withRetry } from "../../prismaClient";
 import { hashPassword, verifyPassword } from "../password";
 import { setSessionCookie, clearSessionCookie } from "../session";
 import { requireLoginBody, requireSignupBody } from "./validators";
@@ -187,10 +187,12 @@ Your matchmaker`,
   async login(req: any, res: any, next: any) {
     try {
       const { phoneE164, password } = requireLoginBody(req.body);
-      const user = await prisma.datingUser.findFirst({
-        where: { phoneE164 },
-        select: { id: true, name: true, phoneE164: true, passwordHash: true },
-      });
+      const user = await withRetry(() =>
+        prisma.datingUser.findFirst({
+          where: { phoneE164 },
+          select: { id: true, name: true, phoneE164: true, passwordHash: true },
+        })
+      );
       if (!user)
         return res
           .status(401)
