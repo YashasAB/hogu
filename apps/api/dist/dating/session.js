@@ -62,7 +62,7 @@ function setSessionCookie(req, res, userId) {
         `Max-Age=${MAX_AGE}`,
     ];
     if (secure) {
-        parts.push("SameSite=None", "Secure");
+        parts.push("SameSite=None", "Secure", "Partitioned");
     }
     else {
         parts.push("SameSite=Lax");
@@ -79,7 +79,7 @@ function clearSessionCookie(req, res) {
         `Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
     ];
     if (secure) {
-        parts.push("SameSite=None", "Secure");
+        parts.push("SameSite=None", "Secure", "Partitioned");
     }
     else {
         parts.push("SameSite=Lax");
