@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from "react";
 import GetToKnowChat from "../../components/GetToKnowChat";
 
-const DIET_LABELS: Record<string, string> = { VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-Vegetarian", VEGAN: "Vegan", JAIN: "Jain" };
-const DRINKING_LABELS: Record<string, string> = { NEVER: "Never", SOCIALLY: "Socially", OFTEN: "Often" };
-const SMOKING_LABELS: Record<string, string> = { NO: "No", SOCIALLY: "Socially", YES: "Yes" };
-const ACTIVITY_LABELS: Record<string, string> = { RARELY: "Rarely", SOMETIMES: "Sometimes", REGULAR: "Regular", ATHLETE: "Athlete" };
-const friendlyLabel = (val: string | null | undefined, labels: Record<string, string>) => val ? (labels[val] || val) : null;
+const DIET_LABELS: Record<string, string> = {
+  VEG: "Vegetarian",
+  EGG: "Eggetarian",
+  NON_VEG: "Non-Vegetarian",
+  VEGAN: "Vegan",
+  JAIN: "Jain",
+};
+const DRINKING_LABELS: Record<string, string> = {
+  NEVER: "Never",
+  SOCIALLY: "Socially",
+  OFTEN: "Often",
+};
+const SMOKING_LABELS: Record<string, string> = {
+  NO: "No",
+  SOCIALLY: "Socially",
+  YES: "Yes",
+};
+const ACTIVITY_LABELS: Record<string, string> = {
+  RARELY: "Rarely",
+  SOMETIMES: "Sometimes",
+  REGULAR: "Regular",
+  ATHLETE: "Athlete",
+};
+const friendlyLabel = (
+  val: string | null | undefined,
+  labels: Record<string, string>,
+) => (val ? labels[val] || val : null);
 
 interface Match {
   id: string;
@@ -77,7 +99,13 @@ interface Profile {
 
 type Tab = "matches" | "profile" | "edit" | "messages";
 
-const MATCH_STATUS_ORDER = ["CONFIRMED", "SCHEDULING", "INTERESTED", "MATCHED", "COMPLETED"];
+const MATCH_STATUS_ORDER = [
+  "CONFIRMED",
+  "SCHEDULING",
+  "INTERESTED",
+  "MATCHED",
+  "COMPLETED",
+];
 
 export default function DatingApp() {
   const [tab, setTab] = useState<Tab>("matches");
@@ -90,8 +118,16 @@ export default function DatingApp() {
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
-  const [availabilityByMatch, setAvailabilityByMatch] = useState<Record<string, AvailabilityEntry[]>>({});
-  const [schedForm, setSchedForm] = useState<{ matchId: string; datesFree: string; timesFree: string; neighborhoods: string; editId?: string } | null>(null);
+  const [availabilityByMatch, setAvailabilityByMatch] = useState<
+    Record<string, AvailabilityEntry[]>
+  >({});
+  const [schedForm, setSchedForm] = useState<{
+    matchId: string;
+    datesFree: string;
+    timesFree: string;
+    neighborhoods: string;
+    editId?: string;
+  } | null>(null);
   const [showGetToKnow, setShowGetToKnow] = useState(false);
 
   useEffect(() => {
@@ -106,7 +142,9 @@ export default function DatingApp() {
 
   async function fetchMatches() {
     try {
-      const res = await fetch("/api/dating/profile/matches", { credentials: "include" });
+      const res = await fetch("/api/dating/profile/matches", {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.ok) {
         setMatches(data.matches);
@@ -120,12 +158,14 @@ export default function DatingApp() {
 
   async function fetchMyProfile() {
     try {
-      const res = await fetch("/api/dating/profile/me", { credentials: "include" });
+      const res = await fetch("/api/dating/profile/me", {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.ok) {
         setMyProfile(data.profile);
       } else if (res.status === 401) {
-        window.location.href = "/login";
+        //window.location.href = "/login";
       }
     } catch (err) {
       console.error("Failed to fetch profile:", err);
@@ -134,10 +174,13 @@ export default function DatingApp() {
 
   async function expressInterest(matchId: string) {
     try {
-      const res = await fetch(`/api/dating/profile/matches/${matchId}/interested`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/dating/profile/matches/${matchId}/interested`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
       const data = await res.json();
       if (data.ok) {
         fetchMatches();
@@ -149,10 +192,16 @@ export default function DatingApp() {
 
   async function fetchAvailability(matchId: string) {
     try {
-      const res = await fetch(`/api/dating/profile/matches/${matchId}/availability`, { credentials: "include" });
+      const res = await fetch(
+        `/api/dating/profile/matches/${matchId}/availability`,
+        { credentials: "include" },
+      );
       const data = await res.json();
       if (data.ok) {
-        setAvailabilityByMatch((prev) => ({ ...prev, [matchId]: data.availability }));
+        setAvailabilityByMatch((prev) => ({
+          ...prev,
+          [matchId]: data.availability,
+        }));
       }
     } catch (err) {
       console.error("Failed to fetch availability:", err);
@@ -164,23 +213,43 @@ export default function DatingApp() {
     setSaving(true);
     try {
       if (schedForm.editId) {
-        const res = await fetch(`/api/dating/profile/availability/${schedForm.editId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ datesFree: schedForm.datesFree, timesFree: schedForm.timesFree, neighborhoods: schedForm.neighborhoods }),
-        });
+        const res = await fetch(
+          `/api/dating/profile/availability/${schedForm.editId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              datesFree: schedForm.datesFree,
+              timesFree: schedForm.timesFree,
+              neighborhoods: schedForm.neighborhoods,
+            }),
+          },
+        );
         const data = await res.json();
-        if (!data.ok) { setError(data.error); return; }
+        if (!data.ok) {
+          setError(data.error);
+          return;
+        }
       } else {
-        const res = await fetch(`/api/dating/profile/matches/${schedForm.matchId}/availability`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ datesFree: schedForm.datesFree, timesFree: schedForm.timesFree, neighborhoods: schedForm.neighborhoods }),
-        });
+        const res = await fetch(
+          `/api/dating/profile/matches/${schedForm.matchId}/availability`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              datesFree: schedForm.datesFree,
+              timesFree: schedForm.timesFree,
+              neighborhoods: schedForm.neighborhoods,
+            }),
+          },
+        );
         const data = await res.json();
-        if (!data.ok) { setError(data.error); return; }
+        if (!data.ok) {
+          setError(data.error);
+          return;
+        }
       }
       setSchedForm(null);
       fetchAvailability(schedForm.matchId);
@@ -207,7 +276,9 @@ export default function DatingApp() {
   }
 
   useEffect(() => {
-    const schedulingMatches = matches.filter((m) => m.status === "SCHEDULING" || m.status === "CONFIRMED");
+    const schedulingMatches = matches.filter(
+      (m) => m.status === "SCHEDULING" || m.status === "CONFIRMED",
+    );
     schedulingMatches.forEach((m) => {
       if (!availabilityByMatch[m.matchId]) {
         fetchAvailability(m.matchId);
@@ -218,7 +289,9 @@ export default function DatingApp() {
   async function viewMatchProfile(userId: string) {
     setError(null);
     try {
-      const res = await fetch(`/api/dating/profile/${userId}`, { credentials: "include" });
+      const res = await fetch(`/api/dating/profile/${userId}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.ok) {
         setSelectedMatch(data.profile);
@@ -231,13 +304,18 @@ export default function DatingApp() {
   }
 
   async function handleLogout() {
-    await fetch("/api/dating/auth/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/dating/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     window.location.href = "/";
   }
 
   async function fetchUnreadCount() {
     try {
-      const res = await fetch("/api/dating/profile/messages/unread-count", { credentials: "include" });
+      const res = await fetch("/api/dating/profile/messages/unread-count", {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.ok) {
         setUnreadCount(data.count);
@@ -249,7 +327,9 @@ export default function DatingApp() {
 
   async function fetchMessages() {
     try {
-      const res = await fetch("/api/dating/profile/messages", { credentials: "include" });
+      const res = await fetch("/api/dating/profile/messages", {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data.ok) {
         setMessages(data.messages);
@@ -370,13 +450,19 @@ export default function DatingApp() {
         <nav className="hogu-nav">
           <button
             className={`hogu-tab ${tab === "matches" ? "hogu-tab--active" : ""}`}
-            onClick={() => { setTab("matches"); setSelectedMatch(null); }}
+            onClick={() => {
+              setTab("matches");
+              setSelectedMatch(null);
+            }}
           >
             Matches
           </button>
           <button
             className={`hogu-tab ${tab === "profile" ? "hogu-tab--active" : ""}`}
-            onClick={() => { setTab("profile"); setSelectedMatch(null); }}
+            onClick={() => {
+              setTab("profile");
+              setSelectedMatch(null);
+            }}
           >
             My Profile
           </button>
@@ -384,7 +470,10 @@ export default function DatingApp() {
             className={`hogu-tab ${tab === "messages" ? "hogu-tab--active" : ""}`}
             onClick={() => setTab("messages")}
           >
-            Messages {unreadCount > 0 && <span className="hogu-badge">{unreadCount}</span>}
+            Messages{" "}
+            {unreadCount > 0 && (
+              <span className="hogu-badge">{unreadCount}</span>
+            )}
           </button>
           <button className="hogu-link" onClick={handleLogout}>
             Log out
@@ -398,14 +487,54 @@ export default function DatingApp() {
         {tab === "matches" && !selectedMatch && (
           <section className="hogu-matches">
             <h2>Your Matches</h2>
-            <div style={{ marginBottom: "1.5rem", padding: "1rem 1.25rem", background: "#1a1a2e", borderRadius: 12, border: "1px solid #2a2a3e", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div
+              style={{
+                marginBottom: "1.5rem",
+                padding: "1rem 1.25rem",
+                background: "#1a1a2e",
+                borderRadius: 12,
+                border: "1px solid #2a2a3e",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
               <div>
-                <div style={{ fontSize: "0.8rem", color: "#a3a3a3", marginBottom: 4 }}>Help us get to know you better</div>
-                <div style={{ fontSize: "0.85rem", color: "#e5e5e5", lineHeight: 1.4 }}>The more we know, the better your matches</div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#a3a3a3",
+                    marginBottom: 4,
+                  }}
+                >
+                  Help us get to know you better
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#e5e5e5",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  The more we know, the better your matches
+                </div>
               </div>
               <button
                 onClick={() => setShowGetToKnow(true)}
-                style={{ backgroundColor: "#c9a84c", color: "#0f0f0f", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                style={{
+                  backgroundColor: "#c9a84c",
+                  color: "#0f0f0f",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 18px",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
               >
                 Chat with your live matchmaker
               </button>
@@ -413,146 +542,267 @@ export default function DatingApp() {
             {matches.length === 0 ? (
               <div className="hogu-empty">
                 <p>No matches yet. Check back soon!</p>
-                <p className="hogu-muted" style={{ marginTop: "1.5rem", lineHeight: 1.7, maxWidth: 520 }}>
-                  Hi! We're working on finding you the best possible matches.<br />
-                  To improve your chances, please complete your profile with as much detail as possible.<br />
-                  Adding your diet preferences, interests, profession, and preferred areas to go out in makes a huge difference in helping us curate relevant introductions for you.
+                <p
+                  className="hogu-muted"
+                  style={{
+                    marginTop: "1.5rem",
+                    lineHeight: 1.7,
+                    maxWidth: 520,
+                  }}
+                >
+                  Hi! We're working on finding you the best possible matches.
+                  <br />
+                  To improve your chances, please complete your profile with as
+                  much detail as possible.
+                  <br />
+                  Adding your diet preferences, interests, profession, and
+                  preferred areas to go out in makes a huge difference in
+                  helping us curate relevant introductions for you.
                 </p>
                 <button
                   className="hogu-btn"
                   style={{ marginTop: "1.25rem" }}
                   onClick={() => setShowGetToKnow(true)}
                 >
-                  Talk to your live matchmaker to help us get to know you better and get suggestions for what details we need more
+                  Talk to your live matchmaker to help us get to know you better
+                  and get suggestions for what details we need more
                 </button>
               </div>
             ) : (
               <>
                 {MATCH_STATUS_ORDER.map((status) => {
-                  const statusMatches = matches.filter((m) => m.status === status);
+                  const statusMatches = matches.filter(
+                    (m) => m.status === status,
+                  );
                   if (statusMatches.length === 0) return null;
                   return (
                     <div key={status} className="hogu-status-group">
                       <h3 className="hogu-status-title">
-                        <span className={`status-badge status-${status.toLowerCase()}`}>{status}</span>
+                        <span
+                          className={`status-badge status-${status.toLowerCase()}`}
+                        >
+                          {status}
+                        </span>
                         ({statusMatches.length})
                       </h3>
                       <div className="hogu-match-grid">
                         {statusMatches.map((match) => {
                           const isUser1 = match.myUserId === match.user1_id;
-                          const myInterested = isUser1 ? match.user1Interested : match.user2Interested;
-                          const theirInterested = isUser1 ? match.user2Interested : match.user1Interested;
+                          const myInterested = isUser1
+                            ? match.user1Interested
+                            : match.user2Interested;
+                          const theirInterested = isUser1
+                            ? match.user2Interested
+                            : match.user1Interested;
                           return (
-                          <div
-                            key={match.id}
-                            className="hogu-match-card"
-                            onClick={() => viewMatchProfile(match.id)}
-                          >
-                            {match.photos[0] && (
-                              <img
-                                src={getPhotoUrl(match.photos[0].objectKey)}
-                                alt={match.name}
-                                className="hogu-match-photo"
-                              />
-                            )}
-                            <div className="hogu-match-info">
-                              <h3>{match.name}, {calculateAge(match.dob)}</h3>
-                              {match.profession && <p>{match.profession}</p>}
-                            </div>
-                            {(match.status === "MATCHED" || match.status === "INTERESTED") && !myInterested && (
-                              <button
-                                className="hogu-btn hogu-btn--interest"
-                                onClick={(e) => { e.stopPropagation(); expressInterest(match.matchId); }}
-                              >
-                                {theirInterested ? "They're interested! I am too" : "I'm Interested"}
-                              </button>
-                            )}
-                            {(match.status === "MATCHED" || match.status === "INTERESTED") && myInterested && !theirInterested && (
-                              <div className="hogu-interest-waiting">You're interested - waiting for them</div>
-                            )}
-                            {(match.status === "MATCHED" || match.status === "INTERESTED") && !myInterested && theirInterested && (
-                              <div className="hogu-interest-indicator">They're interested!</div>
-                            )}
-
-                            {(match.status === "SCHEDULING" || match.status === "CONFIRMED") && (
-                              <div className="hogu-scheduling-section" onClick={(e) => e.stopPropagation()}>
-                                <h4 className="hogu-sched-title">Your Availability</h4>
-                                {(availabilityByMatch[match.matchId] || []).length > 0 ? (
-                                  <div className="hogu-avail-list">
-                                    {(availabilityByMatch[match.matchId] || []).map((entry) => (
-                                      <div key={entry.id} className="hogu-avail-entry">
-                                        <div className="hogu-avail-detail"><strong>Dates:</strong> {entry.datesFree}</div>
-                                        <div className="hogu-avail-detail"><strong>Times:</strong> {entry.timesFree}</div>
-                                        <div className="hogu-avail-detail"><strong>Neighborhoods:</strong> {entry.neighborhoods}</div>
-                                        <div className="hogu-avail-actions">
-                                          <button
-                                            className="hogu-btn hogu-btn--small"
-                                            onClick={() => setSchedForm({ matchId: match.matchId, datesFree: entry.datesFree, timesFree: entry.timesFree, neighborhoods: entry.neighborhoods, editId: entry.id })}
-                                          >
-                                            Edit
-                                          </button>
-                                          <button
-                                            className="hogu-btn hogu-btn--small hogu-btn--danger"
-                                            onClick={() => deleteAvailability(entry.id, match.matchId)}
-                                          >
-                                            Remove
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="hogu-muted" style={{ fontSize: "0.85rem", margin: "4px 0" }}>No availability added yet</p>
-                                )}
-
-                                {schedForm && schedForm.matchId === match.matchId ? (
-                                  <div className="hogu-sched-form">
-                                    <label>
-                                      Dates you're free
-                                      <input
-                                        type="text"
-                                        placeholder="e.g. Feb 15, Feb 16, any weekend"
-                                        value={schedForm.datesFree}
-                                        onChange={(e) => setSchedForm({ ...schedForm, datesFree: e.target.value })}
-                                      />
-                                    </label>
-                                    <label>
-                                      Times you're free
-                                      <input
-                                        type="text"
-                                        placeholder="e.g. 7pm-10pm, evenings, after 6pm"
-                                        value={schedForm.timesFree}
-                                        onChange={(e) => setSchedForm({ ...schedForm, timesFree: e.target.value })}
-                                      />
-                                    </label>
-                                    <label>
-                                      Preferred neighborhoods
-                                      <input
-                                        type="text"
-                                        placeholder="e.g. Indiranagar, Koramangala, HSR Layout"
-                                        value={schedForm.neighborhoods}
-                                        onChange={(e) => setSchedForm({ ...schedForm, neighborhoods: e.target.value })}
-                                      />
-                                    </label>
-                                    <div className="hogu-sched-btns">
-                                      <button className="hogu-btn hogu-btn--primary" onClick={saveAvailability} disabled={saving}>
-                                        {saving ? "Saving..." : schedForm.editId ? "Update" : "Save"}
-                                      </button>
-                                      <button className="hogu-btn" onClick={() => setSchedForm(null)}>Cancel</button>
-                                    </div>
-                                  </div>
-                                ) : (
+                            <div
+                              key={match.id}
+                              className="hogu-match-card"
+                              onClick={() => viewMatchProfile(match.id)}
+                            >
+                              {match.photos[0] && (
+                                <img
+                                  src={getPhotoUrl(match.photos[0].objectKey)}
+                                  alt={match.name}
+                                  className="hogu-match-photo"
+                                />
+                              )}
+                              <div className="hogu-match-info">
+                                <h3>
+                                  {match.name}, {calculateAge(match.dob)}
+                                </h3>
+                                {match.profession && <p>{match.profession}</p>}
+                              </div>
+                              {(match.status === "MATCHED" ||
+                                match.status === "INTERESTED") &&
+                                !myInterested && (
                                   <button
                                     className="hogu-btn hogu-btn--interest"
-                                    style={{ marginTop: "8px" }}
-                                    onClick={() => setSchedForm({ matchId: match.matchId, datesFree: "", timesFree: "", neighborhoods: "" })}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      expressInterest(match.matchId);
+                                    }}
                                   >
-                                    + Add Availability
+                                    {theirInterested
+                                      ? "They're interested! I am too"
+                                      : "I'm Interested"}
                                   </button>
                                 )}
-                              </div>
-                            )}
-                          </div>
+                              {(match.status === "MATCHED" ||
+                                match.status === "INTERESTED") &&
+                                myInterested &&
+                                !theirInterested && (
+                                  <div className="hogu-interest-waiting">
+                                    You're interested - waiting for them
+                                  </div>
+                                )}
+                              {(match.status === "MATCHED" ||
+                                match.status === "INTERESTED") &&
+                                !myInterested &&
+                                theirInterested && (
+                                  <div className="hogu-interest-indicator">
+                                    They're interested!
+                                  </div>
+                                )}
+
+                              {(match.status === "SCHEDULING" ||
+                                match.status === "CONFIRMED") && (
+                                <div
+                                  className="hogu-scheduling-section"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <h4 className="hogu-sched-title">
+                                    Your Availability
+                                  </h4>
+                                  {(availabilityByMatch[match.matchId] || [])
+                                    .length > 0 ? (
+                                    <div className="hogu-avail-list">
+                                      {(
+                                        availabilityByMatch[match.matchId] || []
+                                      ).map((entry) => (
+                                        <div
+                                          key={entry.id}
+                                          className="hogu-avail-entry"
+                                        >
+                                          <div className="hogu-avail-detail">
+                                            <strong>Dates:</strong>{" "}
+                                            {entry.datesFree}
+                                          </div>
+                                          <div className="hogu-avail-detail">
+                                            <strong>Times:</strong>{" "}
+                                            {entry.timesFree}
+                                          </div>
+                                          <div className="hogu-avail-detail">
+                                            <strong>Neighborhoods:</strong>{" "}
+                                            {entry.neighborhoods}
+                                          </div>
+                                          <div className="hogu-avail-actions">
+                                            <button
+                                              className="hogu-btn hogu-btn--small"
+                                              onClick={() =>
+                                                setSchedForm({
+                                                  matchId: match.matchId,
+                                                  datesFree: entry.datesFree,
+                                                  timesFree: entry.timesFree,
+                                                  neighborhoods:
+                                                    entry.neighborhoods,
+                                                  editId: entry.id,
+                                                })
+                                              }
+                                            >
+                                              Edit
+                                            </button>
+                                            <button
+                                              className="hogu-btn hogu-btn--small hogu-btn--danger"
+                                              onClick={() =>
+                                                deleteAvailability(
+                                                  entry.id,
+                                                  match.matchId,
+                                                )
+                                              }
+                                            >
+                                              Remove
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p
+                                      className="hogu-muted"
+                                      style={{
+                                        fontSize: "0.85rem",
+                                        margin: "4px 0",
+                                      }}
+                                    >
+                                      No availability added yet
+                                    </p>
+                                  )}
+
+                                  {schedForm &&
+                                  schedForm.matchId === match.matchId ? (
+                                    <div className="hogu-sched-form">
+                                      <label>
+                                        Dates you're free
+                                        <input
+                                          type="text"
+                                          placeholder="e.g. Feb 15, Feb 16, any weekend"
+                                          value={schedForm.datesFree}
+                                          onChange={(e) =>
+                                            setSchedForm({
+                                              ...schedForm,
+                                              datesFree: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </label>
+                                      <label>
+                                        Times you're free
+                                        <input
+                                          type="text"
+                                          placeholder="e.g. 7pm-10pm, evenings, after 6pm"
+                                          value={schedForm.timesFree}
+                                          onChange={(e) =>
+                                            setSchedForm({
+                                              ...schedForm,
+                                              timesFree: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </label>
+                                      <label>
+                                        Preferred neighborhoods
+                                        <input
+                                          type="text"
+                                          placeholder="e.g. Indiranagar, Koramangala, HSR Layout"
+                                          value={schedForm.neighborhoods}
+                                          onChange={(e) =>
+                                            setSchedForm({
+                                              ...schedForm,
+                                              neighborhoods: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </label>
+                                      <div className="hogu-sched-btns">
+                                        <button
+                                          className="hogu-btn hogu-btn--primary"
+                                          onClick={saveAvailability}
+                                          disabled={saving}
+                                        >
+                                          {saving
+                                            ? "Saving..."
+                                            : schedForm.editId
+                                              ? "Update"
+                                              : "Save"}
+                                        </button>
+                                        <button
+                                          className="hogu-btn"
+                                          onClick={() => setSchedForm(null)}
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      className="hogu-btn hogu-btn--interest"
+                                      style={{ marginTop: "8px" }}
+                                      onClick={() =>
+                                        setSchedForm({
+                                          matchId: match.matchId,
+                                          datesFree: "",
+                                          timesFree: "",
+                                          neighborhoods: "",
+                                        })
+                                      }
+                                    >
+                                      + Add Availability
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -566,7 +816,10 @@ export default function DatingApp() {
 
         {tab === "matches" && selectedMatch && (
           <section className="hogu-profile-view">
-            <button className="hogu-back" onClick={() => setSelectedMatch(null)}>
+            <button
+              className="hogu-back"
+              onClick={() => setSelectedMatch(null)}
+            >
               &larr; Back to matches
             </button>
             <div className="hogu-profile-photos">
@@ -580,14 +833,32 @@ export default function DatingApp() {
               ))}
             </div>
             <div className="hogu-profile-details">
-              <h2>{selectedMatch.name}, {calculateAge(selectedMatch.dob)}</h2>
-              {selectedMatch.profession && <p className="hogu-profession">{selectedMatch.profession}</p>}
-              {selectedMatch.gender && <p className="hogu-detail-line">Gender: {selectedMatch.gender}</p>}
-              {selectedMatch.height && <p className="hogu-detail-line">Height: {selectedMatch.height}</p>}
+              <h2>
+                {selectedMatch.name}, {calculateAge(selectedMatch.dob)}
+              </h2>
+              {selectedMatch.profession && (
+                <p className="hogu-profession">{selectedMatch.profession}</p>
+              )}
+              {selectedMatch.gender && (
+                <p className="hogu-detail-line">
+                  Gender: {selectedMatch.gender}
+                </p>
+              )}
+              {selectedMatch.height && (
+                <p className="hogu-detail-line">
+                  Height: {selectedMatch.height}
+                </p>
+              )}
               {selectedMatch.relationshipType && (
                 <div className="hogu-section">
                   <h4>Looking for</h4>
-                  <p>{selectedMatch.relationshipType === "serious" ? "Serious relationship" : selectedMatch.relationshipType === "not_sure" ? "Not sure yet" : "Casual dating"}</p>
+                  <p>
+                    {selectedMatch.relationshipType === "serious"
+                      ? "Serious relationship"
+                      : selectedMatch.relationshipType === "not_sure"
+                        ? "Not sure yet"
+                        : "Casual dating"}
+                  </p>
                 </div>
               )}
 
@@ -640,15 +911,43 @@ export default function DatingApp() {
                 </div>
               )}
 
-              {(selectedMatch.diet || selectedMatch.drinking || selectedMatch.smoking || selectedMatch.physicalActivity || selectedMatch.dateBudget) && (
+              {(selectedMatch.diet ||
+                selectedMatch.drinking ||
+                selectedMatch.smoking ||
+                selectedMatch.physicalActivity ||
+                selectedMatch.dateBudget) && (
                 <div className="hogu-section">
                   <h4>Lifestyle</h4>
                   <div className="hogu-lifestyle-tags">
-                    {selectedMatch.diet && <span>Diet: {friendlyLabel(selectedMatch.diet, DIET_LABELS)}</span>}
-                    {selectedMatch.drinking && <span>Drinking: {friendlyLabel(selectedMatch.drinking, DRINKING_LABELS)}</span>}
-                    {selectedMatch.smoking && <span>Smoking: {friendlyLabel(selectedMatch.smoking, SMOKING_LABELS)}</span>}
-                    {selectedMatch.physicalActivity && <span>Activity: {friendlyLabel(selectedMatch.physicalActivity, ACTIVITY_LABELS)}</span>}
-                    {selectedMatch.dateBudget && <span>Date budget: {selectedMatch.dateBudget}</span>}
+                    {selectedMatch.diet && (
+                      <span>
+                        Diet: {friendlyLabel(selectedMatch.diet, DIET_LABELS)}
+                      </span>
+                    )}
+                    {selectedMatch.drinking && (
+                      <span>
+                        Drinking:{" "}
+                        {friendlyLabel(selectedMatch.drinking, DRINKING_LABELS)}
+                      </span>
+                    )}
+                    {selectedMatch.smoking && (
+                      <span>
+                        Smoking:{" "}
+                        {friendlyLabel(selectedMatch.smoking, SMOKING_LABELS)}
+                      </span>
+                    )}
+                    {selectedMatch.physicalActivity && (
+                      <span>
+                        Activity:{" "}
+                        {friendlyLabel(
+                          selectedMatch.physicalActivity,
+                          ACTIVITY_LABELS,
+                        )}
+                      </span>
+                    )}
+                    {selectedMatch.dateBudget && (
+                      <span>Date budget: {selectedMatch.dateBudget}</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -656,28 +955,52 @@ export default function DatingApp() {
               {selectedMatch.cuisines.length > 0 && (
                 <div className="hogu-section">
                   <h4>Favourite Cuisines</h4>
-                  <div className="hogu-tags">{selectedMatch.cuisines.map((c) => <span key={c} className="hogu-tag">{c}</span>)}</div>
+                  <div className="hogu-tags">
+                    {selectedMatch.cuisines.map((c) => (
+                      <span key={c} className="hogu-tag">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {selectedMatch.firstDateTypes.length > 0 && (
                 <div className="hogu-section">
                   <h4>First Date Ideas</h4>
-                  <div className="hogu-tags">{selectedMatch.firstDateTypes.map((f) => <span key={f} className="hogu-tag">{f}</span>)}</div>
+                  <div className="hogu-tags">
+                    {selectedMatch.firstDateTypes.map((f) => (
+                      <span key={f} className="hogu-tag">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {selectedMatch.interests.length > 0 && (
                 <div className="hogu-section">
                   <h4>Interests</h4>
-                  <div className="hogu-tags">{selectedMatch.interests.map((i) => <span key={i} className="hogu-tag">{i}</span>)}</div>
+                  <div className="hogu-tags">
+                    {selectedMatch.interests.map((i) => (
+                      <span key={i} className="hogu-tag">
+                        {i}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {selectedMatch.languages.length > 0 && (
                 <div className="hogu-section">
                   <h4>Languages</h4>
-                  <div className="hogu-tags">{selectedMatch.languages.map((l) => <span key={l} className="hogu-tag">{l}</span>)}</div>
+                  <div className="hogu-tags">
+                    {selectedMatch.languages.map((l) => (
+                      <span key={l} className="hogu-tag">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -688,7 +1011,10 @@ export default function DatingApp() {
           <section className="hogu-my-profile">
             <div className="hogu-profile-header">
               <h2>My Profile</h2>
-              <button className="hogu-btn hogu-btn--secondary" onClick={() => setTab("edit")}>
+              <button
+                className="hogu-btn hogu-btn--secondary"
+                onClick={() => setTab("edit")}
+              >
                 Edit Profile
               </button>
             </div>
@@ -705,18 +1031,44 @@ export default function DatingApp() {
             </div>
 
             <div className="hogu-profile-details">
-              <h3>{myProfile.name}, {calculateAge(myProfile.dob)}</h3>
-              {myProfile.profession && <p className="hogu-profession">{myProfile.profession}</p>}
-              {myProfile.gender && <p className="hogu-detail-line">Gender: {myProfile.gender}</p>}
-              {myProfile.height && <p className="hogu-detail-line">Height: {myProfile.height}</p>}
-              {myProfile.instagramHandle && <p className="hogu-detail-line">Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}</p>}
-              {myProfile.dateCity && <p className="hogu-detail-line">Date City: {myProfile.dateCity}</p>}
-              {myProfile.dateNeighborhoods && <p className="hogu-detail-line">Date Neighborhoods: {myProfile.dateNeighborhoods}</p>}
+              <h3>
+                {myProfile.name}, {calculateAge(myProfile.dob)}
+              </h3>
+              {myProfile.profession && (
+                <p className="hogu-profession">{myProfile.profession}</p>
+              )}
+              {myProfile.gender && (
+                <p className="hogu-detail-line">Gender: {myProfile.gender}</p>
+              )}
+              {myProfile.height && (
+                <p className="hogu-detail-line">Height: {myProfile.height}</p>
+              )}
+              {myProfile.instagramHandle && (
+                <p className="hogu-detail-line">
+                  Instagram: @{myProfile.instagramHandle.replace(/^@/, "")}
+                </p>
+              )}
+              {myProfile.dateCity && (
+                <p className="hogu-detail-line">
+                  Date City: {myProfile.dateCity}
+                </p>
+              )}
+              {myProfile.dateNeighborhoods && (
+                <p className="hogu-detail-line">
+                  Date Neighborhoods: {myProfile.dateNeighborhoods}
+                </p>
+              )}
 
               {myProfile.relationshipType && (
                 <div className="hogu-section">
                   <h4>Looking for</h4>
-                  <p>{myProfile.relationshipType === "serious" ? "Serious relationship" : myProfile.relationshipType === "not_sure" ? "Not sure yet" : "Casual dating"}</p>
+                  <p>
+                    {myProfile.relationshipType === "serious"
+                      ? "Serious relationship"
+                      : myProfile.relationshipType === "not_sure"
+                        ? "Not sure yet"
+                        : "Casual dating"}
+                  </p>
                 </div>
               )}
 
@@ -782,15 +1134,43 @@ export default function DatingApp() {
                 </div>
               )}
 
-              {(myProfile.diet || myProfile.drinking || myProfile.smoking || myProfile.physicalActivity || myProfile.dateBudget) && (
+              {(myProfile.diet ||
+                myProfile.drinking ||
+                myProfile.smoking ||
+                myProfile.physicalActivity ||
+                myProfile.dateBudget) && (
                 <div className="hogu-section">
                   <h4>Lifestyle</h4>
                   <div className="hogu-lifestyle-tags">
-                    {myProfile.diet && <span>Diet: {friendlyLabel(myProfile.diet, DIET_LABELS)}</span>}
-                    {myProfile.drinking && <span>Drinking: {friendlyLabel(myProfile.drinking, DRINKING_LABELS)}</span>}
-                    {myProfile.smoking && <span>Smoking: {friendlyLabel(myProfile.smoking, SMOKING_LABELS)}</span>}
-                    {myProfile.physicalActivity && <span>Activity: {friendlyLabel(myProfile.physicalActivity, ACTIVITY_LABELS)}</span>}
-                    {myProfile.dateBudget && <span>Date budget: {myProfile.dateBudget}</span>}
+                    {myProfile.diet && (
+                      <span>
+                        Diet: {friendlyLabel(myProfile.diet, DIET_LABELS)}
+                      </span>
+                    )}
+                    {myProfile.drinking && (
+                      <span>
+                        Drinking:{" "}
+                        {friendlyLabel(myProfile.drinking, DRINKING_LABELS)}
+                      </span>
+                    )}
+                    {myProfile.smoking && (
+                      <span>
+                        Smoking:{" "}
+                        {friendlyLabel(myProfile.smoking, SMOKING_LABELS)}
+                      </span>
+                    )}
+                    {myProfile.physicalActivity && (
+                      <span>
+                        Activity:{" "}
+                        {friendlyLabel(
+                          myProfile.physicalActivity,
+                          ACTIVITY_LABELS,
+                        )}
+                      </span>
+                    )}
+                    {myProfile.dateBudget && (
+                      <span>Date budget: {myProfile.dateBudget}</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -798,28 +1178,52 @@ export default function DatingApp() {
               {myProfile.cuisines.length > 0 && (
                 <div className="hogu-section">
                   <h4>Favourite Cuisines</h4>
-                  <div className="hogu-tags">{myProfile.cuisines.map((c) => <span key={c} className="hogu-tag">{c}</span>)}</div>
+                  <div className="hogu-tags">
+                    {myProfile.cuisines.map((c) => (
+                      <span key={c} className="hogu-tag">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {myProfile.firstDateTypes.length > 0 && (
                 <div className="hogu-section">
                   <h4>First Date Ideas</h4>
-                  <div className="hogu-tags">{myProfile.firstDateTypes.map((f) => <span key={f} className="hogu-tag">{f}</span>)}</div>
+                  <div className="hogu-tags">
+                    {myProfile.firstDateTypes.map((f) => (
+                      <span key={f} className="hogu-tag">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {myProfile.interests.length > 0 && (
                 <div className="hogu-section">
                   <h4>Interests</h4>
-                  <div className="hogu-tags">{myProfile.interests.map((i) => <span key={i} className="hogu-tag">{i}</span>)}</div>
+                  <div className="hogu-tags">
+                    {myProfile.interests.map((i) => (
+                      <span key={i} className="hogu-tag">
+                        {i}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {myProfile.languages.length > 0 && (
                 <div className="hogu-section">
                   <h4>Languages</h4>
-                  <div className="hogu-tags">{myProfile.languages.map((l) => <span key={l} className="hogu-tag">{l}</span>)}</div>
+                  <div className="hogu-tags">
+                    {myProfile.languages.map((l) => (
+                      <span key={l} className="hogu-tag">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -830,14 +1234,54 @@ export default function DatingApp() {
           <section className="hogu-edit-profile">
             <h2>Edit Profile</h2>
 
-            <div style={{ marginBottom: "1.5rem", padding: "1rem 1.25rem", background: "#1a1a2e", borderRadius: 12, border: "1px solid #2a2a3e", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div
+              style={{
+                marginBottom: "1.5rem",
+                padding: "1rem 1.25rem",
+                background: "#1a1a2e",
+                borderRadius: 12,
+                border: "1px solid #2a2a3e",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
               <div>
-                <div style={{ fontSize: "0.8rem", color: "#a3a3a3", marginBottom: 4 }}>Help us get to know you better</div>
-                <div style={{ fontSize: "0.85rem", color: "#e5e5e5", lineHeight: 1.4 }}>Our matchmaker can help fill out your profile for you</div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#a3a3a3",
+                    marginBottom: 4,
+                  }}
+                >
+                  Help us get to know you better
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#e5e5e5",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  Our matchmaker can help fill out your profile for you
+                </div>
               </div>
               <button
                 onClick={() => setShowGetToKnow(true)}
-                style={{ backgroundColor: "#c9a84c", color: "#0f0f0f", border: "none", borderRadius: 8, padding: "10px 18px", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                style={{
+                  backgroundColor: "#c9a84c",
+                  color: "#0f0f0f",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 18px",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
               >
                 Chat with your live matchmaker
               </button>
@@ -848,7 +1292,10 @@ export default function DatingApp() {
               <div className="hogu-photo-grid">
                 {myProfile.photos.map((p, i) => (
                   <div key={p.id} className="hogu-photo-slot">
-                    <img src={getPhotoUrl(p.objectKey)} alt={`Photo ${i + 1}`} />
+                    <img
+                      src={getPhotoUrl(p.objectKey)}
+                      alt={`Photo ${i + 1}`}
+                    />
                     <button
                       type="button"
                       className="hogu-photo-delete-btn"
@@ -859,10 +1306,13 @@ export default function DatingApp() {
                         }
                         if (!confirm("Delete this photo?")) return;
                         try {
-                          const res = await fetch(`/api/dating/profile/photos/${p.id}`, {
-                            method: "DELETE",
-                            credentials: "include",
-                          });
+                          const res = await fetch(
+                            `/api/dating/profile/photos/${p.id}`,
+                            {
+                              method: "DELETE",
+                              credentials: "include",
+                            },
+                          );
                           const data = await res.json();
                           if (data.ok) {
                             await fetchMyProfile();
@@ -893,14 +1343,22 @@ export default function DatingApp() {
                         try {
                           setError(null);
                           const contentType = file.type || "image/jpeg";
-                          const presignRes = await fetch("/api/dating/uploads/presign", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            credentials: "include",
-                            body: JSON.stringify({ count: 1, contentTypes: [contentType], userHint: "profile" }),
-                          });
+                          const presignRes = await fetch(
+                            "/api/dating/uploads/presign",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify({
+                                count: 1,
+                                contentTypes: [contentType],
+                                userHint: "profile",
+                              }),
+                            },
+                          );
                           const presignData = await presignRes.json();
-                          if (!presignData.ok || !presignData.items?.length) throw new Error("Presign failed");
+                          if (!presignData.ok || !presignData.items?.length)
+                            throw new Error("Presign failed");
 
                           const item = presignData.items[0];
                           const uploadRes = await fetch(item.uploadUrl, {
@@ -910,12 +1368,17 @@ export default function DatingApp() {
                           });
                           if (!uploadRes.ok) throw new Error("Upload failed");
 
-                          const addRes = await fetch("/api/dating/profile/photos", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            credentials: "include",
-                            body: JSON.stringify({ objectKey: item.objectKey }),
-                          });
+                          const addRes = await fetch(
+                            "/api/dating/profile/photos",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify({
+                                objectKey: item.objectKey,
+                              }),
+                            },
+                          );
                           const addData = await addRes.json();
                           if (addData.ok) {
                             await fetchMyProfile();
@@ -935,32 +1398,60 @@ export default function DatingApp() {
             <form onSubmit={saveProfile} className="hogu-edit-form">
               <div className="hogu-form-group">
                 <label>Name</label>
-                <input type="text" name="name" defaultValue={myProfile.name} required />
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={myProfile.name}
+                  required
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Profession</label>
-                <input type="text" name="profession" defaultValue={myProfile.profession || ""} />
+                <input
+                  type="text"
+                  name="profession"
+                  defaultValue={myProfile.profession || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Instagram Handle</label>
-                <input type="text" name="instagramHandle" defaultValue={myProfile.instagramHandle || ""} />
+                <input
+                  type="text"
+                  name="instagramHandle"
+                  defaultValue={myProfile.instagramHandle || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Height (optional)</label>
-                <input type="text" name="height" placeholder="e.g., 5'10&quot; or 178cm" defaultValue={myProfile.height || ""} />
+                <input
+                  type="text"
+                  name="height"
+                  placeholder="e.g., 5'10&quot; or 178cm"
+                  defaultValue={myProfile.height || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>City you want to go on dates in</label>
-                <input type="text" name="dateCity" placeholder="e.g., Bengaluru" defaultValue={myProfile.dateCity || ""} />
+                <input
+                  type="text"
+                  name="dateCity"
+                  placeholder="e.g., Bengaluru"
+                  defaultValue={myProfile.dateCity || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Neighborhoods you prefer for dates</label>
-                <textarea name="dateNeighborhoods" rows={2} placeholder="e.g., Koramangala, Indiranagar, HSR Layout" defaultValue={myProfile.dateNeighborhoods || ""} />
+                <textarea
+                  name="dateNeighborhoods"
+                  rows={2}
+                  placeholder="e.g., Koramangala, Indiranagar, HSR Layout"
+                  defaultValue={myProfile.dateNeighborhoods || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
@@ -973,7 +1464,10 @@ export default function DatingApp() {
 
               <div className="hogu-form-group">
                 <label>What are you looking for?</label>
-                <select name="relationshipType" defaultValue={myProfile.relationshipType || "serious"}>
+                <select
+                  name="relationshipType"
+                  defaultValue={myProfile.relationshipType || "serious"}
+                >
                   <option value="serious">Serious relationship</option>
                   <option value="casual">Casual dating</option>
                   <option value="not_sure">I'm not sure</option>
@@ -982,52 +1476,108 @@ export default function DatingApp() {
 
               <div className="hogu-form-group">
                 <label>Age preference for dates</label>
-                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                  <input type="number" name="agePreferenceMin" placeholder="Min age" min={18} max={99} defaultValue={myProfile.agePreferenceMin ?? ""} style={{ width: "120px" }} />
+                <div
+                  style={{ display: "flex", gap: "12px", alignItems: "center" }}
+                >
+                  <input
+                    type="number"
+                    name="agePreferenceMin"
+                    placeholder="Min age"
+                    min={18}
+                    max={99}
+                    defaultValue={myProfile.agePreferenceMin ?? ""}
+                    style={{ width: "120px" }}
+                  />
                   <span style={{ color: "#888" }}>to</span>
-                  <input type="number" name="agePreferenceMax" placeholder="Max age" min={18} max={99} defaultValue={myProfile.agePreferenceMax ?? ""} style={{ width: "120px" }} />
+                  <input
+                    type="number"
+                    name="agePreferenceMax"
+                    placeholder="Max age"
+                    min={18}
+                    max={99}
+                    defaultValue={myProfile.agePreferenceMax ?? ""}
+                    style={{ width: "120px" }}
+                  />
                 </div>
               </div>
 
               <div className="hogu-form-group">
                 <label>Dreams</label>
-                <textarea name="dreams" rows={3} placeholder="Share your biggest dreams and aspirations. What do you hope to achieve in life? What drives and motivates you? (Try writing at least 100 characters to give your matches a real sense of who you are)" defaultValue={myProfile.dreams || ""} />
+                <textarea
+                  name="dreams"
+                  rows={3}
+                  placeholder="Share your biggest dreams and aspirations. What do you hope to achieve in life? What drives and motivates you? (Try writing at least 100 characters to give your matches a real sense of who you are)"
+                  defaultValue={myProfile.dreams || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>5 Year Goal</label>
-                <textarea name="fiveYearGoal" rows={3} placeholder="Where do you see yourself in 5 years? What are you working toward in your career, personal life, or relationships? Be specific! (Aim for 100+ characters)" defaultValue={myProfile.fiveYearGoal || ""} />
+                <textarea
+                  name="fiveYearGoal"
+                  rows={3}
+                  placeholder="Where do you see yourself in 5 years? What are you working toward in your career, personal life, or relationships? Be specific! (Aim for 100+ characters)"
+                  defaultValue={myProfile.fiveYearGoal || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>What I Want in a Partner</label>
-                <textarea name="whatIWantInPartner" rows={3} placeholder="Describe the qualities you're looking for in a partner. What values, personality traits, or lifestyle factors matter most to you? (100+ characters helps us find better matches)" defaultValue={myProfile.whatIWantInPartner || ""} />
+                <textarea
+                  name="whatIWantInPartner"
+                  rows={3}
+                  placeholder="Describe the qualities you're looking for in a partner. What values, personality traits, or lifestyle factors matter most to you? (100+ characters helps us find better matches)"
+                  defaultValue={myProfile.whatIWantInPartner || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Why You'd Like Me</label>
-                <textarea name="whyPartnerWouldLikeMe" rows={3} placeholder="What makes you a great partner? Share your personality, interests, and what you bring to a relationship. Help potential matches understand what makes you special! (100+ characters recommended)" defaultValue={myProfile.whyPartnerWouldLikeMe || ""} />
+                <textarea
+                  name="whyPartnerWouldLikeMe"
+                  rows={3}
+                  placeholder="What makes you a great partner? Share your personality, interests, and what you bring to a relationship. Help potential matches understand what makes you special! (100+ characters recommended)"
+                  defaultValue={myProfile.whyPartnerWouldLikeMe || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>My Day Looks Like</label>
-                <textarea name="myDayLooksLike" rows={3} placeholder="Walk us through your typical day! e.g. 'I work in tech till 6, hit the gym, and then I'm free for drinks'" defaultValue={myProfile.myDayLooksLike || ""} />
+                <textarea
+                  name="myDayLooksLike"
+                  rows={3}
+                  placeholder="Walk us through your typical day! e.g. 'I work in tech till 6, hit the gym, and then I'm free for drinks'"
+                  defaultValue={myProfile.myDayLooksLike || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>My Ideal First Date</label>
-                <textarea name="idealFirstDate" rows={3} placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date!)" defaultValue={myProfile.idealFirstDate || ""} />
+                <textarea
+                  name="idealFirstDate"
+                  rows={3}
+                  placeholder="I cannot refuse a person if they plan a first date like... (Tell us your dream first date!)"
+                  defaultValue={myProfile.idealFirstDate || ""}
+                />
               </div>
 
               <div className="hogu-form-group">
                 <label>Non-Negotiables in a Partner</label>
-                <textarea name="nonNegotiables" rows={3} placeholder="What are the things you absolutely need in a partner? e.g. 'Must be active and into fitness, has to love dogs'" defaultValue={myProfile.nonNegotiables || ""} />
+                <textarea
+                  name="nonNegotiables"
+                  rows={3}
+                  placeholder="What are the things you absolutely need in a partner? e.g. 'Must be active and into fitness, has to love dogs'"
+                  defaultValue={myProfile.nonNegotiables || ""}
+                />
               </div>
 
               <div className="hogu-form-row">
                 <div className="hogu-form-group">
                   <label>Physical Activity</label>
-                  <select name="physicalActivity" defaultValue={myProfile.physicalActivity || ""}>
+                  <select
+                    name="physicalActivity"
+                    defaultValue={myProfile.physicalActivity || ""}
+                  >
                     <option value="">Select...</option>
                     <option value="sedentary">Sedentary</option>
                     <option value="light">Light</option>
@@ -1039,7 +1589,10 @@ export default function DatingApp() {
 
                 <div className="hogu-form-group">
                   <label>Date Budget</label>
-                  <select name="dateBudget" defaultValue={myProfile.dateBudget || ""}>
+                  <select
+                    name="dateBudget"
+                    defaultValue={myProfile.dateBudget || ""}
+                  >
                     <option value="">Select...</option>
                     <option value="budget">Budget-friendly</option>
                     <option value="moderate">Moderate</option>
@@ -1063,7 +1616,10 @@ export default function DatingApp() {
 
                 <div className="hogu-form-group">
                   <label>Drinking</label>
-                  <select name="drinking" defaultValue={myProfile.drinking || ""}>
+                  <select
+                    name="drinking"
+                    defaultValue={myProfile.drinking || ""}
+                  >
                     <option value="">Select...</option>
                     <option value="never">Never</option>
                     <option value="occasionally">Occasionally</option>
@@ -1083,10 +1639,18 @@ export default function DatingApp() {
               </div>
 
               <div className="hogu-form-actions">
-                <button type="button" className="hogu-btn hogu-btn--ghost" onClick={() => setTab("profile")}>
+                <button
+                  type="button"
+                  className="hogu-btn hogu-btn--ghost"
+                  onClick={() => setTab("profile")}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="hogu-btn hogu-btn--primary" disabled={saving}>
+                <button
+                  type="submit"
+                  className="hogu-btn hogu-btn--primary"
+                  disabled={saving}
+                >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
@@ -1097,20 +1661,32 @@ export default function DatingApp() {
         {tab === "messages" && (
           <section className="hogu-messages">
             <h2>Messages from Your Matchmaker</h2>
-            <p className="hogu-muted">Chat with your personal matchmaker for advice, scheduling help, and updates on your matches.</p>
-            
+            <p className="hogu-muted">
+              Chat with your personal matchmaker for advice, scheduling help,
+              and updates on your matches.
+            </p>
+
             <div className="hogu-messages-list">
               {messages.length === 0 ? (
                 <div className="hogu-empty">
                   <p>No messages yet.</p>
-                  <p className="hogu-muted">Send a message to start a conversation with your matchmaker!</p>
+                  <p className="hogu-muted">
+                    Send a message to start a conversation with your matchmaker!
+                  </p>
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <div key={msg.id} className={`hogu-message ${msg.fromAdmin ? "from-admin" : "from-me"}`}>
+                  <div
+                    key={msg.id}
+                    className={`hogu-message ${msg.fromAdmin ? "from-admin" : "from-me"}`}
+                  >
                     <div className="hogu-message-header">
-                      <span className="hogu-message-sender">{msg.fromAdmin ? "Matchmaker" : "You"}</span>
-                      <span className="hogu-message-time">{new Date(msg.createdAt).toLocaleString()}</span>
+                      <span className="hogu-message-sender">
+                        {msg.fromAdmin ? "Matchmaker" : "You"}
+                      </span>
+                      <span className="hogu-message-time">
+                        {new Date(msg.createdAt).toLocaleString()}
+                      </span>
                     </div>
                     <p className="hogu-message-content">{msg.content}</p>
                   </div>
@@ -1125,7 +1701,10 @@ export default function DatingApp() {
                 placeholder="Type a message to your matchmaker..."
                 rows={3}
               />
-              <button className="hogu-btn hogu-btn--primary" onClick={sendMessage}>
+              <button
+                className="hogu-btn hogu-btn--primary"
+                onClick={sendMessage}
+              >
                 Send
               </button>
             </div>
@@ -1663,7 +2242,10 @@ export default function DatingApp() {
           }
         }
       `}</style>
-      <GetToKnowChat open={showGetToKnow} onClose={() => setShowGetToKnow(false)} />
+      <GetToKnowChat
+        open={showGetToKnow}
+        onClose={() => setShowGetToKnow(false)}
+      />
     </div>
   );
 }
