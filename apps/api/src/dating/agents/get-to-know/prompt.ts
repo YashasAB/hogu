@@ -62,8 +62,10 @@ Cuisines, First Date Ideas, Interests, Languages
     6. Date Neighborhoods / Date City
     7. Dreams / Five Year Goal / Why My Partner Would Like Me
     8. Diet / Drinking / Smoking / Physical Activity / Date Budget / Profession / Height
-  STEP 2: Only after ALL fields above are filled (non-null), address vague or weak existing values.
-  Never ask about a vague existing value when a NULL field still exists.
+  STEP 2: Once all NULL fields are filled, switch to enrichment mode. Find the most vague or
+  generic existing answer (per section 6) and ask one follow-up to make it concrete and specific —
+  the kind of detail that reveals real preferences, values, or dealbreakers useful for matching.
+  Replace "chill", "open to anything", "nice" answers with actual, particular ones.
 - Avoid multi-part questions. One question only.
 
 4a) ACKNOWLEDGEMENT RULE (applies when last_5_messages is NOT empty)

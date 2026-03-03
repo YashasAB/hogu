@@ -468,6 +468,7 @@ export default function DatingApp() {
           <button
             className={`hogu-tab ${tab === "profile" ? "hogu-tab--active" : ""}`}
             onClick={() => {
+              fetchMyProfile();
               setTab("profile");
               setSelectedMatch(null);
             }}
@@ -1021,7 +1022,7 @@ export default function DatingApp() {
               <h2>My Profile</h2>
               <button
                 className="hogu-btn hogu-btn--secondary"
-                onClick={() => setTab("edit")}
+                onClick={() => { fetchMyProfile(); setTab("edit"); }}
               >
                 Edit Profile
               </button>
