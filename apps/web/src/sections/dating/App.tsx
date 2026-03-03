@@ -110,8 +110,6 @@ export default function DatingApp() {
       const data = await res.json();
       if (data.ok) {
         setMatches(data.matches);
-      } else if (res.status === 401) {
-        window.location.href = "/login";
       }
     } catch (err) {
       console.error("Failed to fetch matches:", err);

@@ -10,7 +10,9 @@ const index_1 = require("./index");
 const router = (0, express_1.Router)();
 router.get("/messages", session_1.datingSessionMiddleware, async (req, res) => {
     try {
-        const userId = req.datingUser.id;
+        const userId = req.datingUserId;
+        if (!userId)
+            return res.status(401).json({ ok: false, error: "Not authenticated" });
         const messages = await prismaClient_1.default.getToKnowMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "asc" },
@@ -26,7 +28,9 @@ router.get("/messages", session_1.datingSessionMiddleware, async (req, res) => {
 });
 router.get("/status", session_1.datingSessionMiddleware, async (req, res) => {
     try {
-        const userId = req.datingUser.id;
+        const userId = req.datingUserId;
+        if (!userId)
+            return res.status(401).json({ ok: false, error: "Not authenticated" });
         const status = await (0, index_1.getGetToKnowStatus)(userId);
         res.json(status);
     }
@@ -37,7 +41,9 @@ router.get("/status", session_1.datingSessionMiddleware, async (req, res) => {
 });
 router.post("/chat", session_1.datingSessionMiddleware, async (req, res) => {
     try {
-        const userId = req.datingUser.id;
+        const userId = req.datingUserId;
+        if (!userId)
+            return res.status(401).json({ ok: false, error: "Not authenticated" });
         const { message } = req.body;
         if (!message || typeof message !== "string" || message.trim().length === 0) {
             return res.status(400).json({ error: "Message is required" });

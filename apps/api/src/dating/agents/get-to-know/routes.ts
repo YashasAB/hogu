@@ -7,7 +7,8 @@ const router = Router();
 
 router.get("/messages", datingSessionMiddleware, async (req: any, res: any) => {
   try {
-    const userId = req.datingUser.id;
+    const userId = (req as any).datingUserId as string | null;
+    if (!userId) return res.status(401).json({ ok: false, error: "Not authenticated" });
     const messages = await prisma.getToKnowMessage.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
@@ -23,7 +24,8 @@ router.get("/messages", datingSessionMiddleware, async (req: any, res: any) => {
 
 router.get("/status", datingSessionMiddleware, async (req: any, res: any) => {
   try {
-    const userId = req.datingUser.id;
+    const userId = (req as any).datingUserId as string | null;
+    if (!userId) return res.status(401).json({ ok: false, error: "Not authenticated" });
     const status = await getGetToKnowStatus(userId);
     res.json(status);
   } catch (err) {
@@ -34,7 +36,8 @@ router.get("/status", datingSessionMiddleware, async (req: any, res: any) => {
 
 router.post("/chat", datingSessionMiddleware, async (req: any, res: any) => {
   try {
-    const userId = req.datingUser.id;
+    const userId = (req as any).datingUserId as string | null;
+    if (!userId) return res.status(401).json({ ok: false, error: "Not authenticated" });
     const { message } = req.body;
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
