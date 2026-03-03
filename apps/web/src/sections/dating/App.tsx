@@ -1028,6 +1028,47 @@ export default function DatingApp() {
               </button>
             </div>
 
+            <div
+              style={{
+                marginBottom: "1.5rem",
+                padding: "1rem 1.25rem",
+                background: "#1a1a2e",
+                borderRadius: 12,
+                border: "1px solid #2a2a3e",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.8rem", color: "#a3a3a3", marginBottom: 4 }}>
+                  Help us get to know you better
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#e5e5e5", lineHeight: 1.4 }}>
+                  Our matchmaker can help fill out your profile for you
+                </div>
+              </div>
+              <button
+                onClick={() => setShowGetToKnow(true)}
+                style={{
+                  backgroundColor: "#c9a84c",
+                  color: "#0f0f0f",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 18px",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                Chat with your live matchmaker
+              </button>
+            </div>
+
             <div className="hogu-profile-photos">
               {myProfile.photos.map((p, i) => (
                 <img
