@@ -3,7 +3,7 @@ import prisma from "../../../prismaClient";
 
 export interface BuiltInput {
   userSchemaJson: Record<string, any>;
-  last5Messages: Array<{ role: string; content: string }>;
+  lastMessages: Array<{ role: string; content: string }>;
   todayUserCount: number;
   userId: string;
 }
@@ -23,6 +23,7 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
   const [
     user,
     messages,
+    todayUserCount,
     dietOpts,
     drinkOpts,
     smokeOpts,
@@ -45,8 +46,11 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     prisma.getToKnowMessage.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { role: true, content: true, createdAt: true },
+      take: 12,
+      select: { role: true, content: true },
+    }),
+    prisma.getToKnowMessage.count({
+      where: { userId, role: "user", createdAt: { gte: todayStart } },
     }),
     prisma.dietOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
     prisma.drinkingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
@@ -58,12 +62,8 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     prisma.relationshipTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
   ]);
 
-  const todayUserCount = messages.filter(
-    (m) => m.role === "user" && new Date(m.createdAt) >= todayStart
-  ).length;
-
   // Reverse to restore chronological order (oldest→newest), latest message last
-  const last5Messages = messages.reverse().map((m) => ({
+  const lastMessages = messages.reverse().map((m) => ({
     role: m.role === "agent" ? "assistant" : m.role,
     content: m.content,
   }));
@@ -116,5 +116,5 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     },
   };
 
-  return { userSchemaJson, last5Messages, todayUserCount, userId };
+  return { userSchemaJson, lastMessages, todayUserCount, userId };
 }

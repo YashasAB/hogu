@@ -14,14 +14,14 @@ export async function runGetToKnowGenerator(
   userMessage: string | null,
   input: BuiltInput
 ): Promise<GeneratorResult> {
-  const last5Messages = userMessage !== null
-    ? [...input.last5Messages, { role: "user", content: userMessage }]
-    : [...input.last5Messages];
+  const lastMessages = userMessage !== null
+    ? [...input.lastMessages, { role: "user", content: userMessage }]
+    : [...input.lastMessages];
 
   const userTurn = JSON.stringify({
     user_id: input.userId,
     user_schema: input.userSchemaJson,
-    last_5_messages: last5Messages,
+    last_messages: lastMessages,
   });
 
   const response = await openai.chat.completions.create({

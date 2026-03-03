@@ -16,7 +16,7 @@ function getAge(dob) {
 async function buildGetToKnowInput(userId) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const [user, messages, dietOpts, drinkOpts, smokeOpts, actOpts, budgetOpts, cuisineOpts, dateTypeOpts, relTypeOpts,] = await Promise.all([
+    const [user, messages, todayUserCount, dietOpts, drinkOpts, smokeOpts, actOpts, budgetOpts, cuisineOpts, dateTypeOpts, relTypeOpts,] = await Promise.all([
         prismaClient_1.default.datingUser.findUniqueOrThrow({
             where: { id: userId },
             include: {
@@ -30,8 +30,11 @@ async function buildGetToKnowInput(userId) {
         prismaClient_1.default.getToKnowMessage.findMany({
             where: { userId },
             orderBy: { createdAt: "desc" },
-            take: 5,
-            select: { role: true, content: true, createdAt: true },
+            take: 12,
+            select: { role: true, content: true },
+        }),
+        prismaClient_1.default.getToKnowMessage.count({
+            where: { userId, role: "user", createdAt: { gte: todayStart } },
         }),
         prismaClient_1.default.dietOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
         prismaClient_1.default.drinkingOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
@@ -42,9 +45,8 @@ async function buildGetToKnowInput(userId) {
         prismaClient_1.default.firstDateTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
         prismaClient_1.default.relationshipTypeOption.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { label: true } }),
     ]);
-    const todayUserCount = messages.filter((m) => m.role === "user" && new Date(m.createdAt) >= todayStart).length;
     // Reverse to restore chronological order (oldest→newest), latest message last
-    const last5Messages = messages.reverse().map((m) => ({
+    const lastMessages = messages.reverse().map((m) => ({
         role: m.role === "agent" ? "assistant" : m.role,
         content: m.content,
     }));
@@ -94,5 +96,5 @@ async function buildGetToKnowInput(userId) {
             "Looking For options": relTypeOpts.map((o) => o.label),
         },
     };
-    return { userSchemaJson, last5Messages, todayUserCount, userId };
+    return { userSchemaJson, lastMessages, todayUserCount, userId };
 }
