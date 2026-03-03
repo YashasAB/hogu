@@ -99,7 +99,17 @@ export function datingSessionMiddleware(
     const i = p.indexOf("=");
     if (i > -1) map.set(p.slice(0, i).trim(), p.slice(i + 1).trim());
   });
-  const userId = parseSessionValue(map.get(COOKIE_NAME));
+  const rawCookieVal = map.get(COOKIE_NAME);
+  const userId = parseSessionValue(rawCookieVal);
   (req as any).datingUserId = userId || null;
+  console.log(
+    "[session-debug]",
+    req.method,
+    req.path,
+    "cookie-header:",
+    req.headers.cookie ? req.headers.cookie.substring(0, 100) : "MISSING",
+    "| parsed-userId:",
+    userId ?? "null",
+  );
   next();
 }
