@@ -372,10 +372,10 @@ router.put("/matches/:matchId/interest", requireAdminAuth, async (req, res) => {
         });
         if (promotedToScheduling) {
             const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
-            await prismaClient_1.default.adminMessage.createMany({
+            await prismaClient_1.default.matchMessage.createMany({
                 data: [
-                    { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
-                    { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
+                    { matchId, userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
+                    { matchId, userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
                 ],
             });
         }
@@ -611,6 +611,35 @@ router.get("/matches/export/csv", requireAdminAuth, async (req, res) => {
     catch (err) {
         console.error("Error exporting matches:", err);
         return res.status(500).json({ ok: false, error: "Failed to export matches" });
+    }
+});
+router.get("/match-messages/:matchId/:userId", requireAdminAuth, async (req, res) => {
+    try {
+        const { matchId, userId } = req.params;
+        const messages = await prismaClient_1.default.matchMessage.findMany({
+            where: { matchId, userId },
+            orderBy: { createdAt: "asc" },
+        });
+        return res.json({ ok: true, messages });
+    }
+    catch (err) {
+        console.error("[Admin] fetch match messages error:", err);
+        return res.status(500).json({ ok: false, error: "Failed to fetch match messages" });
+    }
+});
+router.post("/match-messages", requireAdminAuth, async (req, res) => {
+    try {
+        const { matchId, userId, content } = req.body;
+        if (!matchId || !userId || !content || !content.trim())
+            return res.status(400).json({ ok: false, error: "matchId, userId, and content are required" });
+        const message = await prismaClient_1.default.matchMessage.create({
+            data: { matchId, userId, fromAdmin: true, content: content.trim() },
+        });
+        return res.status(201).json({ ok: true, message });
+    }
+    catch (err) {
+        console.error("[Admin] send match message error:", err);
+        return res.status(500).json({ ok: false, error: "Failed to send match message" });
     }
 });
 router.get("/users/:userId/get-to-know", requireAdminAuth, async (req, res) => {

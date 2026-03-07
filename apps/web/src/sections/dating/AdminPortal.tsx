@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const API_BASE = "/api/dating/admin";
 
@@ -97,6 +97,12 @@ export default function AdminPortal() {
   const [getToKnowMessages, setGetToKnowMessages] = useState<{ id: string; role: string; content: string; createdAt: string }[]>([]);
   const [showGetToKnow, setShowGetToKnow] = useState(false);
   const [loadingGetToKnow, setLoadingGetToKnow] = useState(false);
+
+  const [selectedMatchChat, setSelectedMatchChat] = useState<{ matchId: string; userId: string; userName: string } | null>(null);
+  const [matchChatMessages, setMatchChatMessages] = useState<{ id: string; fromAdmin: boolean; content: string; createdAt: string }[]>([]);
+  const [matchChatInput, setMatchChatInput] = useState("");
+  const [matchChatSending, setMatchChatSending] = useState(false);
+  const matchChatBottomRef = useRef<HTMLDivElement>(null);
 
   const [filterCity, setFilterCity] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -321,6 +327,44 @@ export default function AdminPortal() {
       loadMatches();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function openMatchChat(matchId: string, userId: string, userName: string) {
+    setSelectedMatchChat({ matchId, userId, userName });
+    setMatchChatMessages([]);
+    setMatchChatInput("");
+    try {
+      const data = await fetchWithAuth(`${API_BASE}/match-messages/${matchId}/${userId}`);
+      if (data.ok) setMatchChatMessages(data.messages);
+    } catch (err) {
+      console.error("Failed to load match messages:", err);
+    }
+  }
+
+  useEffect(() => {
+    if (matchChatBottomRef.current) {
+      matchChatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [matchChatMessages]);
+
+  async function sendMatchChatMessage() {
+    if (!matchChatInput.trim() || !selectedMatchChat || matchChatSending) return;
+    setMatchChatSending(true);
+    try {
+      const data = await fetchWithAuth(`${API_BASE}/match-messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId: selectedMatchChat.matchId, userId: selectedMatchChat.userId, content: matchChatInput.trim() }),
+      });
+      if (data.ok) {
+        setMatchChatMessages((prev) => [...prev, data.message]);
+        setMatchChatInput("");
+      }
+    } catch (err) {
+      console.error("Failed to send match message:", err);
+    } finally {
+      setMatchChatSending(false);
     }
   }
 
@@ -935,6 +979,54 @@ export default function AdminPortal() {
           <div className="matches-section">
             <h2>Matches ({matches.length})</h2>
 
+            {selectedMatchChat && (
+              <div style={{ background: "#12121f", border: "1px solid #e879a8", borderRadius: 12, padding: "1rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <h3 style={{ margin: 0, color: "#e879a8" }}>Chat with {selectedMatchChat.userName}</h3>
+                  <button onClick={() => setSelectedMatchChat(null)} style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: "18px" }}>✕</button>
+                </div>
+                <div style={{ maxHeight: 300, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.75rem", background: "#0a0a14", borderRadius: 8, padding: "0.75rem" }}>
+                  {matchChatMessages.length === 0 && (
+                    <p style={{ color: "#666", fontSize: "0.85rem", textAlign: "center", margin: "0.75rem 0" }}>No messages yet</p>
+                  )}
+                  {matchChatMessages.map((msg) => (
+                    <div key={msg.id} style={{ display: "flex", justifyContent: msg.fromAdmin ? "flex-end" : "flex-start" }}>
+                      <div style={{
+                        maxWidth: "80%",
+                        background: msg.fromAdmin ? "#e879a8" : "#1e1e2f",
+                        color: msg.fromAdmin ? "#0f0f0f" : "#fff",
+                        borderRadius: msg.fromAdmin ? "12px 4px 12px 12px" : "4px 12px 12px 12px",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.875rem",
+                        lineHeight: 1.5,
+                      }}>
+                        {!msg.fromAdmin && <div style={{ fontSize: "0.7rem", color: "#a78bfa", marginBottom: "0.2rem", fontWeight: 600 }}>{selectedMatchChat.userName}</div>}
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={matchChatBottomRef} />
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <input
+                    type="text"
+                    value={matchChatInput}
+                    onChange={(e) => setMatchChatInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMatchChatMessage(); } }}
+                    placeholder={`Message ${selectedMatchChat.userName}...`}
+                    style={{ flex: 1, background: "#1a1a2e", border: "1px solid #555", borderRadius: 8, padding: "0.5rem 0.75rem", color: "#fff", fontSize: "0.875rem", outline: "none" }}
+                  />
+                  <button
+                    onClick={sendMatchChatMessage}
+                    disabled={matchChatSending || !matchChatInput.trim()}
+                    style={{ background: "#e879a8", color: "#0f0f0f", border: "none", borderRadius: 8, padding: "0.5rem 1rem", fontWeight: 700, cursor: "pointer", fontSize: "0.875rem", opacity: matchChatSending || !matchChatInput.trim() ? 0.5 : 1 }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="create-match">
               <h3>Create New Match</h3>
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -1070,6 +1162,24 @@ export default function AdminPortal() {
                             <button className="delete-btn" onClick={() => deleteMatch(m.id)}>
                               Delete
                             </button>
+                            {m.user1 && (
+                              <button
+                                className="avail-btn"
+                                style={{ marginLeft: 4, fontSize: "11px", padding: "3px 8px" }}
+                                onClick={() => openMatchChat(m.id, m.user1!.id, m.user1!.name)}
+                              >
+                                Chat {m.user1.name.split(" ")[0]}
+                              </button>
+                            )}
+                            {m.user2 && (
+                              <button
+                                className="avail-btn"
+                                style={{ marginLeft: 4, fontSize: "11px", padding: "3px 8px" }}
+                                onClick={() => openMatchChat(m.id, m.user2!.id, m.user2!.name)}
+                              >
+                                Chat {m.user2.name.split(" ")[0]}
+                              </button>
+                            )}
                             {isScheduling && (
                               <button
                                 className="avail-btn"

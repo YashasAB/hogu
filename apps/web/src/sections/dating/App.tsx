@@ -112,6 +112,11 @@ export default function DatingApp() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [myProfile, setMyProfile] = useState<Profile | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Profile | null>(null);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [matchMessages, setMatchMessages] = useState<{ id: string; fromAdmin: boolean; content: string; createdAt: string }[]>([]);
+  const [matchMsgInput, setMatchMsgInput] = useState("");
+  const [matchMsgSending, setMatchMsgSending] = useState(false);
+  const matchChatBottomRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -293,7 +298,7 @@ export default function DatingApp() {
     });
   }, [matches]);
 
-  async function viewMatchProfile(userId: string) {
+  async function viewMatchProfile(userId: string, matchId: string) {
     setError(null);
     try {
       const res = await fetch(`/api/dating/profile/${userId}`, {
@@ -302,11 +307,51 @@ export default function DatingApp() {
       const data = await res.json();
       if (data.ok) {
         setSelectedMatch(data.profile);
+        setSelectedMatchId(matchId);
+        setMatchMessages([]);
+        setMatchMsgInput("");
       } else {
         setError(data.error || "Failed to load profile");
       }
     } catch (err) {
       setError("Failed to load profile");
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedMatchId) return;
+    fetch(`/api/dating/profile/match-messages/${selectedMatchId}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) setMatchMessages(data.messages);
+      })
+      .catch(() => {});
+  }, [selectedMatchId]);
+
+  useEffect(() => {
+    if (matchChatBottomRef.current) {
+      matchChatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [matchMessages]);
+
+  async function sendMatchMessage() {
+    if (!matchMsgInput.trim() || !selectedMatchId || matchMsgSending) return;
+    setMatchMsgSending(true);
+    try {
+      const res = await fetch(`/api/dating/profile/match-messages/${selectedMatchId}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: matchMsgInput.trim() }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMatchMessages((prev) => [...prev, data.message]);
+        setMatchMsgInput("");
+      }
+    } catch (err) {
+    } finally {
+      setMatchMsgSending(false);
     }
   }
 
@@ -461,6 +506,8 @@ export default function DatingApp() {
             onClick={() => {
               setTab("matches");
               setSelectedMatch(null);
+              setSelectedMatchId(null);
+              setMatchMessages([]);
             }}
           >
             Matches
@@ -471,6 +518,8 @@ export default function DatingApp() {
               fetchMyProfile();
               setTab("profile");
               setSelectedMatch(null);
+              setSelectedMatchId(null);
+              setMatchMessages([]);
             }}
           >
             My Profile
@@ -607,7 +656,7 @@ export default function DatingApp() {
                             <div
                               key={match.id}
                               className="hogu-match-card"
-                              onClick={() => viewMatchProfile(match.id)}
+                              onClick={() => viewMatchProfile(match.id, match.matchId)}
                             >
                               {match.photos[0] && (
                                 <img
@@ -827,7 +876,7 @@ export default function DatingApp() {
           <section className="hogu-profile-view">
             <button
               className="hogu-back"
-              onClick={() => setSelectedMatch(null)}
+              onClick={() => { setSelectedMatch(null); setSelectedMatchId(null); setMatchMessages([]); }}
             >
               &larr; Back to matches
             </button>
@@ -1012,6 +1061,51 @@ export default function DatingApp() {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="hogu-section" style={{ marginTop: "2rem" }}>
+              <h4 style={{ marginBottom: "0.75rem" }}>Your Matchmaker</h4>
+              <div style={{ background: "#0f0f1a", borderRadius: 10, border: "1px solid #2a2a3e", overflow: "hidden" }}>
+                <div style={{ maxHeight: 320, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                  {matchMessages.length === 0 && (
+                    <p style={{ color: "#666", fontSize: "0.85rem", textAlign: "center", margin: "1rem 0" }}>No messages yet</p>
+                  )}
+                  {matchMessages.map((msg) => (
+                    <div key={msg.id} style={{ display: "flex", justifyContent: msg.fromAdmin ? "flex-start" : "flex-end" }}>
+                      <div style={{
+                        maxWidth: "80%",
+                        background: msg.fromAdmin ? "#1a1a2e" : "#7c3aed",
+                        borderRadius: msg.fromAdmin ? "4px 12px 12px 12px" : "12px 4px 12px 12px",
+                        padding: "0.6rem 0.85rem",
+                        fontSize: "0.875rem",
+                        lineHeight: 1.5,
+                        color: "#fff",
+                      }}>
+                        {msg.fromAdmin && <div style={{ fontSize: "0.7rem", color: "#e879a8", marginBottom: "0.2rem", fontWeight: 600 }}>Matchmaker</div>}
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={matchChatBottomRef} />
+                </div>
+                <div style={{ borderTop: "1px solid #2a2a3e", padding: "0.75rem", display: "flex", gap: "0.5rem" }}>
+                  <input
+                    type="text"
+                    value={matchMsgInput}
+                    onChange={(e) => setMatchMsgInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMatchMessage(); } }}
+                    placeholder="Send a message..."
+                    style={{ flex: 1, background: "#1a1a2e", border: "1px solid #2a2a3e", borderRadius: 8, padding: "0.5rem 0.75rem", color: "#fff", fontSize: "0.875rem", outline: "none" }}
+                  />
+                  <button
+                    onClick={sendMatchMessage}
+                    disabled={matchMsgSending || !matchMsgInput.trim()}
+                    style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, padding: "0.5rem 1rem", fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", opacity: matchMsgSending || !matchMsgInput.trim() ? 0.5 : 1 }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         )}

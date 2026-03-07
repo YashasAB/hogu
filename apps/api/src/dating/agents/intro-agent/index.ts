@@ -23,8 +23,8 @@ export async function runIntroAgent(matchId: string): Promise<void> {
       console.warn(`[IntroAgent] Match ${matchId}: could not identify female/male user pair. Delivering both messages immediately.`);
       for (const msg of output.messages) {
         const content = formatMessageContent(msg.title, msg.body, msg.cta);
-        await prisma.adminMessage.create({
-          data: { userId: msg.to_user_id, fromAdmin: true, content },
+        await prisma.matchMessage.create({
+          data: { matchId, userId: msg.to_user_id, fromAdmin: true, content },
         });
       }
       return;
@@ -35,8 +35,8 @@ export async function runIntroAgent(matchId: string): Promise<void> {
 
     if (femaleMessage) {
       const content = formatMessageContent(femaleMessage.title, femaleMessage.body, femaleMessage.cta);
-      await prisma.adminMessage.create({
-        data: { userId: femaleMessage.to_user_id, fromAdmin: true, content },
+      await prisma.matchMessage.create({
+        data: { matchId, userId: femaleMessage.to_user_id, fromAdmin: true, content },
       });
       console.log(`[IntroAgent] Match ${matchId}: intro message delivered to female user ${femaleMessage.to_user_id}`);
     }
@@ -66,8 +66,8 @@ export async function deliverPendingIntroToMale(matchId: string): Promise<void> 
       return;
     }
 
-    await prisma.adminMessage.create({
-      data: { userId: pending.toUserId, fromAdmin: true, content: pending.content },
+    await prisma.matchMessage.create({
+      data: { matchId: pending.matchId, userId: pending.toUserId, fromAdmin: true, content: pending.content },
     });
 
     await prisma.pendingIntroMessage.delete({ where: { matchId } });

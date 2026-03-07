@@ -426,3 +426,16 @@ model GetToKnowMessage {
   @@map("get_to_know_messages")
 }
 
+model MatchMessage {
+  id        String   @id @default(cuid())
+  matchId   String   @map("match_id")
+  userId    String   @map("user_id")
+  fromAdmin Boolean  @default(true) @map("from_admin")
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([matchId, userId])
+  @@map("match_messages")
+}
+

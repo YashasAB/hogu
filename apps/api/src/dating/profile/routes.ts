@@ -183,10 +183,10 @@ router.post("/matches/:matchId/interested", datingSessionMiddleware, async (req:
 
     if (promotedToScheduling) {
       const schedulingMessage = "Great news! Both of you have shown interest. Please head to your Matches tab and fill in your availability (dates, times, and preferred neighborhoods) so we can help schedule your date!";
-      await prisma.adminMessage.createMany({
+      await prisma.matchMessage.createMany({
         data: [
-          { userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
-          { userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
+          { matchId, userId: match.user1_id, fromAdmin: true, content: schedulingMessage },
+          { matchId, userId: match.user2_id, fromAdmin: true, content: schedulingMessage },
         ],
       });
     }
@@ -769,6 +769,56 @@ router.delete("/availability/:entryId", datingSessionMiddleware, async (req: any
   } catch (err) {
     console.error("Error deleting availability:", err);
     return res.status(500).json({ ok: false, error: "Failed to delete availability" });
+  }
+});
+
+router.get("/match-messages/:matchId", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string;
+  const { matchId } = req.params;
+  try {
+    const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+    if (!match) return res.status(404).json({ ok: false, error: "Match not found" });
+    if (match.user1_id !== userId && match.user2_id !== userId)
+      return res.status(403).json({ ok: false, error: "Not a participant in this match" });
+
+    const messages = await prisma.matchMessage.findMany({
+      where: { matchId, userId },
+      orderBy: { createdAt: "asc" },
+    });
+
+    await prisma.matchMessage.updateMany({
+      where: { matchId, userId, fromAdmin: true, read: false },
+      data: { read: true },
+    });
+
+    return res.json({ ok: true, messages });
+  } catch (err) {
+    console.error("Error fetching match messages:", err);
+    return res.status(500).json({ ok: false, error: "Failed to fetch match messages" });
+  }
+});
+
+router.post("/match-messages/:matchId", datingSessionMiddleware, async (req: any, res: any) => {
+  const userId = req.datingUserId as string;
+  const { matchId } = req.params;
+  const { content } = req.body;
+  try {
+    if (!content || !content.trim())
+      return res.status(400).json({ ok: false, error: "Content is required" });
+
+    const match = await prisma.datingMatch.findUnique({ where: { id: matchId } });
+    if (!match) return res.status(404).json({ ok: false, error: "Match not found" });
+    if (match.user1_id !== userId && match.user2_id !== userId)
+      return res.status(403).json({ ok: false, error: "Not a participant in this match" });
+
+    const message = await prisma.matchMessage.create({
+      data: { matchId, userId, fromAdmin: false, content: content.trim() },
+    });
+
+    return res.status(201).json({ ok: true, message });
+  } catch (err) {
+    console.error("Error sending match message:", err);
+    return res.status(500).json({ ok: false, error: "Failed to send match message" });
   }
 });
 

@@ -53,7 +53,7 @@ The database schema supports dating profiles, restaurant details, inventory, res
 - **Restaurants**: Details, photos, areas, seating, operating hours.
 - **Reservations**: Booking details, status, party size.
 - **Dating Matches**: Tracks user interest, match status (MATCHED, INTERESTED, SCHEDULING, CONFIRMED, COMPLETED, UNMATCHED), and scheduling availability.
-- **Messaging**: Admin-to-user messages and AI-generated intro messages.
+- **Messaging**: Admin-to-user messages (generic broadcasts), AI-generated intro messages, and per-match private `MatchMessage` threads between admin and each user.
 
 ## AI Agents
 - **Intro Agent**: Generates personalized AI introduction messages for new matches using OpenAI (gpt-4o). Female messages are delivered immediately; male messages are stored in `PendingIntroMessage` and delivered upon female interest.
