@@ -439,3 +439,10 @@ model MatchMessage {
   @@map("match_messages")
 }
 
+model PhoneVerified {
+  phone      String   @id
+  verifiedAt DateTime @default(now()) @map("verified_at")
+
+  @@map("phone_verified")
+}
+

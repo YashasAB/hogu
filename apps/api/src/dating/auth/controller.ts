@@ -2,6 +2,7 @@ import prisma, { withRetry } from "../../prismaClient";
 import { hashPassword, verifyPassword } from "../password";
 import { setSessionCookie, clearSessionCookie, makeSessionValue } from "../session";
 import { requireLoginBody, requireSignupBody } from "./validators";
+import { checkOtp } from "./otp";
 
 
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
@@ -23,6 +24,22 @@ export const AuthController = {
   async signup(req: any, res: any, next: any) {
     try {
       const data = requireSignupBody(req.body);
+
+      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const verified = await prisma.phoneVerified.findFirst({
+        where: {
+          phone: data.phoneE164,
+          verifiedAt: { gte: thirtyMinsAgo },
+        },
+        select: { phone: true },
+      });
+      if (!verified) {
+        return res.status(403).json({
+          ok: false,
+          error: "Phone verification required. Please verify your phone number before signing up.",
+        });
+      }
+
       const exists = await prisma.datingUser.findFirst({
         where: { phoneE164: data.phoneE164 },
         select: { id: true },
@@ -160,6 +177,8 @@ Your matchmaker`,
         });
       }
 
+      await prisma.phoneVerified.deleteMany({ where: { phone: data.phoneE164 } }).catch(() => {});
+
       setSessionCookie(req, res, user.id);
       return res.status(201).json({ ok: true, sessionToken: makeSessionValue(user.id), user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
     } catch (err) {
@@ -177,7 +196,7 @@ Your matchmaker`,
 
   async login(req: any, res: any, next: any) {
     try {
-      const { phoneE164, password } = requireLoginBody(req.body);
+      const { phoneE164, password, otp } = requireLoginBody(req.body);
       const user = await withRetry(() =>
         prisma.datingUser.findFirst({
           where: { phoneE164 },
@@ -189,20 +208,33 @@ Your matchmaker`,
           .status(401)
           .json({ ok: false, error: "Invalid credentials" });
 
-      const valid = await verifyPassword(password, user.passwordHash);
-      if (!valid)
-        return res
-          .status(401)
-          .json({ ok: false, error: "Invalid credentials" });
+      if (password) {
+        const valid = await verifyPassword(password, user.passwordHash);
+        if (valid) {
+          setSessionCookie(req, res, user.id);
+          return res.status(200).json({
+            ok: true,
+            sessionToken: makeSessionValue(user.id),
+            user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
+          });
+        }
+        return res.status(401).json({ ok: false, error: "Incorrect password. Try again or use a one-time code." });
+      }
 
-      setSessionCookie(req, res, user.id);
-      return res
-        .status(200)
-        .json({
-          ok: true,
-          sessionToken: makeSessionValue(user.id),
-          user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
-        });
+      if (otp) {
+        const valid = await checkOtp(phoneE164, otp);
+        if (valid) {
+          setSessionCookie(req, res, user.id);
+          return res.status(200).json({
+            ok: true,
+            sessionToken: makeSessionValue(user.id),
+            user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
+          });
+        }
+        return res.status(401).json({ ok: false, error: "Invalid or expired code. Please try again." });
+      }
+
+      return res.status(401).json({ ok: false, error: "Please enter your password or use a one-time code." });
     } catch (err) {
       return next(err);
     }

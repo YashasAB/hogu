@@ -1,0 +1,14 @@
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+import { APIResource } from "../resource.mjs";
+export class Transactional extends APIResource {
+    /**
+     * Legacy route maintained for backward compatibility. Migrate to `/v2/notify`
+     * instead.
+     *
+     * @deprecated
+     */
+    send(body, options) {
+        return this._client.post('/v2/transactional', { body, ...options });
+    }
+}
+//# sourceMappingURL=transactional.mjs.map

@@ -38,6 +38,7 @@ const prismaClient_1 = __importStar(require("../../prismaClient"));
 const password_1 = require("../password");
 const session_1 = require("../session");
 const validators_1 = require("./validators");
+const otp_1 = require("./otp");
 const PASSWORD_RESET_TOKEN = process.env.PASSWORD_RESET_TOKEN;
 const LIFESTYLE_CANONICAL = {
     diet: { vegetarian: "VEG", veg: "VEG", eggetarian: "EGG", egg: "EGG", non_vegetarian: "NON_VEG", nonvegetarian: "NON_VEG", "non-vegetarian": "NON_VEG", vegan: "VEGAN", jain: "JAIN" },
@@ -57,6 +58,20 @@ exports.AuthController = {
     async signup(req, res, next) {
         try {
             const data = (0, validators_1.requireSignupBody)(req.body);
+            const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+            const verified = await prismaClient_1.default.phoneVerified.findFirst({
+                where: {
+                    phone: data.phoneE164,
+                    verifiedAt: { gte: thirtyMinsAgo },
+                },
+                select: { phone: true },
+            });
+            if (!verified) {
+                return res.status(403).json({
+                    ok: false,
+                    error: "Phone verification required. Please verify your phone number before signing up.",
+                });
+            }
             const exists = await prismaClient_1.default.datingUser.findFirst({
                 where: { phoneE164: data.phoneE164 },
                 select: { id: true },
@@ -162,6 +177,7 @@ Your matchmaker`,
                     },
                 });
             }
+            await prismaClient_1.default.phoneVerified.deleteMany({ where: { phone: data.phoneE164 } }).catch(() => { });
             (0, session_1.setSessionCookie)(req, res, user.id);
             return res.status(201).json({ ok: true, sessionToken: (0, session_1.makeSessionValue)(user.id), user: { id: user.id, name: user.name, phoneE164: user.phoneE164 } });
         }
@@ -179,7 +195,7 @@ Your matchmaker`,
     },
     async login(req, res, next) {
         try {
-            const { phoneE164, password } = (0, validators_1.requireLoginBody)(req.body);
+            const { phoneE164, password, otp } = (0, validators_1.requireLoginBody)(req.body);
             const user = await (0, prismaClient_1.withRetry)(() => prismaClient_1.default.datingUser.findFirst({
                 where: { phoneE164 },
                 select: { id: true, name: true, phoneE164: true, passwordHash: true },
@@ -188,19 +204,31 @@ Your matchmaker`,
                 return res
                     .status(401)
                     .json({ ok: false, error: "Invalid credentials" });
-            const valid = await (0, password_1.verifyPassword)(password, user.passwordHash);
-            if (!valid)
-                return res
-                    .status(401)
-                    .json({ ok: false, error: "Invalid credentials" });
-            (0, session_1.setSessionCookie)(req, res, user.id);
-            return res
-                .status(200)
-                .json({
-                ok: true,
-                sessionToken: (0, session_1.makeSessionValue)(user.id),
-                user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
-            });
+            if (password) {
+                const valid = await (0, password_1.verifyPassword)(password, user.passwordHash);
+                if (valid) {
+                    (0, session_1.setSessionCookie)(req, res, user.id);
+                    return res.status(200).json({
+                        ok: true,
+                        sessionToken: (0, session_1.makeSessionValue)(user.id),
+                        user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
+                    });
+                }
+                return res.status(401).json({ ok: false, error: "Incorrect password. Try again or use a one-time code." });
+            }
+            if (otp) {
+                const valid = await (0, otp_1.checkOtp)(phoneE164, otp);
+                if (valid) {
+                    (0, session_1.setSessionCookie)(req, res, user.id);
+                    return res.status(200).json({
+                        ok: true,
+                        sessionToken: (0, session_1.makeSessionValue)(user.id),
+                        user: { id: user.id, name: user.name, phoneE164: user.phoneE164 },
+                    });
+                }
+                return res.status(401).json({ ok: false, error: "Invalid or expired code. Please try again." });
+            }
+            return res.status(401).json({ ok: false, error: "Please enter your password or use a one-time code." });
         }
         catch (err) {
             return next(err);

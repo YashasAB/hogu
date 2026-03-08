@@ -54,6 +54,7 @@ The database schema supports dating profiles, restaurant details, inventory, res
 - **Reservations**: Booking details, status, party size.
 - **Dating Matches**: Tracks user interest, match status (MATCHED, INTERESTED, SCHEDULING, CONFIRMED, COMPLETED, UNMATCHED), and scheduling availability.
 - **Messaging**: Admin-to-user messages (generic broadcasts), AI-generated intro messages, and per-match private `MatchMessage` threads between admin and each user.
+- **Phone OTP Verification**: `PhoneVerified` table stores recently verified phone numbers for the signup gate. Prelude (@prelude.so/sdk) handles OTP delivery and checking.
 
 ## AI Agents
 - **Intro Agent**: Generates personalized AI introduction messages for new matches using OpenAI (gpt-4o). Female messages are delivered immediately; male messages are stored in `PendingIntroMessage` and delivered upon female interest.

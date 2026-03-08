@@ -1,0 +1,145 @@
+"use strict";
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var _Prelude_instances, _a, _Prelude_baseURLOverridden;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UnprocessableEntityError = exports.PermissionDeniedError = exports.InternalServerError = exports.AuthenticationError = exports.BadRequestError = exports.RateLimitError = exports.ConflictError = exports.NotFoundError = exports.APIUserAbortError = exports.APIConnectionTimeoutError = exports.APIConnectionError = exports.APIError = exports.PreludeError = exports.fileFromPath = exports.toFile = exports.Prelude = void 0;
+const qs = __importStar(require("./internal/qs/index.js"));
+const Core = __importStar(require("./core.js"));
+const Errors = __importStar(require("./error.js"));
+const Uploads = __importStar(require("./uploads.js"));
+const API = __importStar(require("./resources/index.js"));
+const lookup_1 = require("./resources/lookup.js");
+const notify_1 = require("./resources/notify.js");
+const transactional_1 = require("./resources/transactional.js");
+const verification_1 = require("./resources/verification.js");
+const verification_management_1 = require("./resources/verification-management.js");
+const watch_1 = require("./resources/watch.js");
+/**
+ * API Client for interfacing with the Prelude API.
+ */
+class Prelude extends Core.APIClient {
+    /**
+     * API Client for interfacing with the Prelude API.
+     *
+     * @param {string | undefined} [opts.apiToken=process.env['API_TOKEN'] ?? undefined]
+     * @param {string} [opts.baseURL=process.env['PRELUDE_BASE_URL'] ?? https://api.prelude.dev] - Override the default base URL for the API.
+     * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
+     * @param {number} [opts.httpAgent] - An HTTP agent used to manage HTTP(s) connections.
+     * @param {Core.Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
+     * @param {number} [opts.maxRetries=2] - The maximum number of times the client will retry a request.
+     * @param {Core.Headers} opts.defaultHeaders - Default headers to include with every request to the API.
+     * @param {Core.DefaultQuery} opts.defaultQuery - Default query parameters to include with every request to the API.
+     */
+    constructor({ baseURL = Core.readEnv('PRELUDE_BASE_URL'), apiToken = Core.readEnv('API_TOKEN'), ...opts } = {}) {
+        if (apiToken === undefined) {
+            throw new Errors.PreludeError("The API_TOKEN environment variable is missing or empty; either provide it, or instantiate the Prelude client with an apiToken option, like new Prelude({ apiToken: 'My API Token' }).");
+        }
+        const options = {
+            apiToken,
+            ...opts,
+            baseURL: baseURL || `https://api.prelude.dev`,
+        };
+        super({
+            baseURL: options.baseURL,
+            baseURLOverridden: baseURL ? baseURL !== 'https://api.prelude.dev' : false,
+            timeout: options.timeout ?? 60000 /* 1 minute */,
+            httpAgent: options.httpAgent,
+            maxRetries: options.maxRetries,
+            fetch: options.fetch,
+        });
+        _Prelude_instances.add(this);
+        this.lookup = new API.Lookup(this);
+        this.notify = new API.Notify(this);
+        this.transactional = new API.Transactional(this);
+        this.verification = new API.Verification(this);
+        this.verificationManagement = new API.VerificationManagement(this);
+        this.watch = new API.Watch(this);
+        this._options = options;
+        this.apiToken = apiToken;
+    }
+    defaultQuery() {
+        return this._options.defaultQuery;
+    }
+    defaultHeaders(opts) {
+        return {
+            ...super.defaultHeaders(opts),
+            ...this._options.defaultHeaders,
+        };
+    }
+    authHeaders(opts) {
+        return { Authorization: `Bearer ${this.apiToken}` };
+    }
+    stringifyQuery(query) {
+        return qs.stringify(query, { arrayFormat: 'comma' });
+    }
+}
+exports.Prelude = Prelude;
+_a = Prelude, _Prelude_instances = new WeakSet(), _Prelude_baseURLOverridden = function _Prelude_baseURLOverridden() {
+    return this.baseURL !== 'https://api.prelude.dev';
+};
+Prelude.Prelude = _a;
+Prelude.DEFAULT_TIMEOUT = 60000; // 1 minute
+Prelude.PreludeError = Errors.PreludeError;
+Prelude.APIError = Errors.APIError;
+Prelude.APIConnectionError = Errors.APIConnectionError;
+Prelude.APIConnectionTimeoutError = Errors.APIConnectionTimeoutError;
+Prelude.APIUserAbortError = Errors.APIUserAbortError;
+Prelude.NotFoundError = Errors.NotFoundError;
+Prelude.ConflictError = Errors.ConflictError;
+Prelude.RateLimitError = Errors.RateLimitError;
+Prelude.BadRequestError = Errors.BadRequestError;
+Prelude.AuthenticationError = Errors.AuthenticationError;
+Prelude.InternalServerError = Errors.InternalServerError;
+Prelude.PermissionDeniedError = Errors.PermissionDeniedError;
+Prelude.UnprocessableEntityError = Errors.UnprocessableEntityError;
+Prelude.toFile = Uploads.toFile;
+Prelude.fileFromPath = Uploads.fileFromPath;
+Prelude.Lookup = lookup_1.Lookup;
+Prelude.Notify = notify_1.Notify;
+Prelude.Transactional = transactional_1.Transactional;
+Prelude.Verification = verification_1.Verification;
+Prelude.VerificationManagement = verification_management_1.VerificationManagement;
+Prelude.Watch = watch_1.Watch;
+var uploads_1 = require("./uploads.js");
+Object.defineProperty(exports, "toFile", { enumerable: true, get: function () { return uploads_1.toFile; } });
+Object.defineProperty(exports, "fileFromPath", { enumerable: true, get: function () { return uploads_1.fileFromPath; } });
+var error_1 = require("./error.js");
+Object.defineProperty(exports, "PreludeError", { enumerable: true, get: function () { return error_1.PreludeError; } });
+Object.defineProperty(exports, "APIError", { enumerable: true, get: function () { return error_1.APIError; } });
+Object.defineProperty(exports, "APIConnectionError", { enumerable: true, get: function () { return error_1.APIConnectionError; } });
+Object.defineProperty(exports, "APIConnectionTimeoutError", { enumerable: true, get: function () { return error_1.APIConnectionTimeoutError; } });
+Object.defineProperty(exports, "APIUserAbortError", { enumerable: true, get: function () { return error_1.APIUserAbortError; } });
+Object.defineProperty(exports, "NotFoundError", { enumerable: true, get: function () { return error_1.NotFoundError; } });
+Object.defineProperty(exports, "ConflictError", { enumerable: true, get: function () { return error_1.ConflictError; } });
+Object.defineProperty(exports, "RateLimitError", { enumerable: true, get: function () { return error_1.RateLimitError; } });
+Object.defineProperty(exports, "BadRequestError", { enumerable: true, get: function () { return error_1.BadRequestError; } });
+Object.defineProperty(exports, "AuthenticationError", { enumerable: true, get: function () { return error_1.AuthenticationError; } });
+Object.defineProperty(exports, "InternalServerError", { enumerable: true, get: function () { return error_1.InternalServerError; } });
+Object.defineProperty(exports, "PermissionDeniedError", { enumerable: true, get: function () { return error_1.PermissionDeniedError; } });
+Object.defineProperty(exports, "UnprocessableEntityError", { enumerable: true, get: function () { return error_1.UnprocessableEntityError; } });
+exports = module.exports = Prelude;
+exports.default = Prelude;
+//# sourceMappingURL=index.js.map

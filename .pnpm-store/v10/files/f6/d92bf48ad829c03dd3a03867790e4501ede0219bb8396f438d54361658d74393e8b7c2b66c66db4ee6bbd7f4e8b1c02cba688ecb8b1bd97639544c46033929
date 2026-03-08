@@ -1,0 +1,57 @@
+"use strict";
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Notify = void 0;
+const resource_1 = require("../resource.js");
+const core_1 = require("../core.js");
+class Notify extends resource_1.APIResource {
+    /**
+     * Retrieve a specific subscription management configuration by its ID.
+     */
+    getSubscriptionConfig(configId, options) {
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}`, options);
+    }
+    /**
+     * Retrieve the current subscription status for a specific phone number within a
+     * subscription configuration.
+     */
+    getSubscriptionPhoneNumber(configId, phoneNumber, options) {
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers/${phoneNumber}`, options);
+    }
+    listSubscriptionConfigs(query = {}, options) {
+        if ((0, core_1.isRequestOptions)(query)) {
+            return this.listSubscriptionConfigs({}, query);
+        }
+        return this._client.get('/v2/notify/management/subscriptions', { query, ...options });
+    }
+    listSubscriptionPhoneNumberEvents(configId, phoneNumber, query = {}, options) {
+        if ((0, core_1.isRequestOptions)(query)) {
+            return this.listSubscriptionPhoneNumberEvents(configId, phoneNumber, {}, query);
+        }
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers/${phoneNumber}/events`, { query, ...options });
+    }
+    listSubscriptionPhoneNumbers(configId, query = {}, options) {
+        if ((0, core_1.isRequestOptions)(query)) {
+            return this.listSubscriptionPhoneNumbers(configId, {}, query);
+        }
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers`, {
+            query,
+            ...options,
+        });
+    }
+    /**
+     * Send transactional and marketing messages to your users via SMS and WhatsApp
+     * with automatic compliance enforcement.
+     */
+    send(body, options) {
+        return this._client.post('/v2/notify', { body, ...options });
+    }
+    /**
+     * Send the same message to multiple recipients in a single request.
+     */
+    sendBatch(body, options) {
+        return this._client.post('/v2/notify/batch', { body, ...options });
+    }
+}
+exports.Notify = Notify;
+//# sourceMappingURL=notify.js.map

@@ -1,0 +1,102 @@
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+var _Prelude_instances, _a, _Prelude_baseURLOverridden;
+import * as qs from "./internal/qs/index.mjs";
+import * as Core from "./core.mjs";
+import * as Errors from "./error.mjs";
+import * as Uploads from "./uploads.mjs";
+import * as API from "./resources/index.mjs";
+import { Lookup } from "./resources/lookup.mjs";
+import { Notify, } from "./resources/notify.mjs";
+import { Transactional } from "./resources/transactional.mjs";
+import { Verification, } from "./resources/verification.mjs";
+import { VerificationManagement, } from "./resources/verification-management.mjs";
+import { Watch, } from "./resources/watch.mjs";
+/**
+ * API Client for interfacing with the Prelude API.
+ */
+export class Prelude extends Core.APIClient {
+    /**
+     * API Client for interfacing with the Prelude API.
+     *
+     * @param {string | undefined} [opts.apiToken=process.env['API_TOKEN'] ?? undefined]
+     * @param {string} [opts.baseURL=process.env['PRELUDE_BASE_URL'] ?? https://api.prelude.dev] - Override the default base URL for the API.
+     * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
+     * @param {number} [opts.httpAgent] - An HTTP agent used to manage HTTP(s) connections.
+     * @param {Core.Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
+     * @param {number} [opts.maxRetries=2] - The maximum number of times the client will retry a request.
+     * @param {Core.Headers} opts.defaultHeaders - Default headers to include with every request to the API.
+     * @param {Core.DefaultQuery} opts.defaultQuery - Default query parameters to include with every request to the API.
+     */
+    constructor({ baseURL = Core.readEnv('PRELUDE_BASE_URL'), apiToken = Core.readEnv('API_TOKEN'), ...opts } = {}) {
+        if (apiToken === undefined) {
+            throw new Errors.PreludeError("The API_TOKEN environment variable is missing or empty; either provide it, or instantiate the Prelude client with an apiToken option, like new Prelude({ apiToken: 'My API Token' }).");
+        }
+        const options = {
+            apiToken,
+            ...opts,
+            baseURL: baseURL || `https://api.prelude.dev`,
+        };
+        super({
+            baseURL: options.baseURL,
+            baseURLOverridden: baseURL ? baseURL !== 'https://api.prelude.dev' : false,
+            timeout: options.timeout ?? 60000 /* 1 minute */,
+            httpAgent: options.httpAgent,
+            maxRetries: options.maxRetries,
+            fetch: options.fetch,
+        });
+        _Prelude_instances.add(this);
+        this.lookup = new API.Lookup(this);
+        this.notify = new API.Notify(this);
+        this.transactional = new API.Transactional(this);
+        this.verification = new API.Verification(this);
+        this.verificationManagement = new API.VerificationManagement(this);
+        this.watch = new API.Watch(this);
+        this._options = options;
+        this.apiToken = apiToken;
+    }
+    defaultQuery() {
+        return this._options.defaultQuery;
+    }
+    defaultHeaders(opts) {
+        return {
+            ...super.defaultHeaders(opts),
+            ...this._options.defaultHeaders,
+        };
+    }
+    authHeaders(opts) {
+        return { Authorization: `Bearer ${this.apiToken}` };
+    }
+    stringifyQuery(query) {
+        return qs.stringify(query, { arrayFormat: 'comma' });
+    }
+}
+_a = Prelude, _Prelude_instances = new WeakSet(), _Prelude_baseURLOverridden = function _Prelude_baseURLOverridden() {
+    return this.baseURL !== 'https://api.prelude.dev';
+};
+Prelude.Prelude = _a;
+Prelude.DEFAULT_TIMEOUT = 60000; // 1 minute
+Prelude.PreludeError = Errors.PreludeError;
+Prelude.APIError = Errors.APIError;
+Prelude.APIConnectionError = Errors.APIConnectionError;
+Prelude.APIConnectionTimeoutError = Errors.APIConnectionTimeoutError;
+Prelude.APIUserAbortError = Errors.APIUserAbortError;
+Prelude.NotFoundError = Errors.NotFoundError;
+Prelude.ConflictError = Errors.ConflictError;
+Prelude.RateLimitError = Errors.RateLimitError;
+Prelude.BadRequestError = Errors.BadRequestError;
+Prelude.AuthenticationError = Errors.AuthenticationError;
+Prelude.InternalServerError = Errors.InternalServerError;
+Prelude.PermissionDeniedError = Errors.PermissionDeniedError;
+Prelude.UnprocessableEntityError = Errors.UnprocessableEntityError;
+Prelude.toFile = Uploads.toFile;
+Prelude.fileFromPath = Uploads.fileFromPath;
+Prelude.Lookup = Lookup;
+Prelude.Notify = Notify;
+Prelude.Transactional = Transactional;
+Prelude.Verification = Verification;
+Prelude.VerificationManagement = VerificationManagement;
+Prelude.Watch = Watch;
+export { toFile, fileFromPath } from "./uploads.mjs";
+export { PreludeError, APIError, APIConnectionError, APIConnectionTimeoutError, APIUserAbortError, NotFoundError, ConflictError, RateLimitError, BadRequestError, AuthenticationError, InternalServerError, PermissionDeniedError, UnprocessableEntityError, } from "./error.mjs";
+export default Prelude;
+//# sourceMappingURL=index.mjs.map

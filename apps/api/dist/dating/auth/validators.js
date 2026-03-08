@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isE164 = isE164;
 exports.requireSignupBody = requireSignupBody;
 exports.requireLoginBody = requireLoginBody;
+exports.requireSignupPassword = requireSignupPassword;
 function isE164(phone) {
     return /^\+?[1-9]\d{7,14}$/.test(phone);
 }
@@ -92,15 +93,28 @@ function requireLoginBody(body) {
         throw new Error("Body required");
     const phone = (body.phone || body.phoneE164 || "").toString().trim();
     const password = (body.password || "").toString();
+    const otp = (body.otp || "").toString().trim();
     if (!isE164(phone))
         errors.phone = "Valid phone required";
-    if (!password)
-        errors.password = "Password required";
     if (Object.keys(errors).length) {
         const err = new Error("Validation failed");
         err.status = 400;
         err.details = errors;
         throw err;
     }
-    return { phoneE164: phone.startsWith("+") ? phone : `+${phone}`, password };
+    return {
+        phoneE164: phone.startsWith("+") ? phone : `+${phone}`,
+        password,
+        otp,
+    };
+}
+function requireSignupPassword(body) {
+    const password = (body.password || "").toString();
+    if (password.length < 8) {
+        const err = new Error("Validation failed");
+        err.status = 400;
+        err.details = { password: "Min 8 characters" };
+        throw err;
+    }
+    return password;
 }

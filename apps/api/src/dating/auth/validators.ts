@@ -93,9 +93,9 @@ export function requireLoginBody(body: any) {
   if (!body) throw new Error("Body required");
   const phone = (body.phone || body.phoneE164 || "").toString().trim();
   const password = (body.password || "").toString();
+  const otp = (body.otp || "").toString().trim();
 
   if (!isE164(phone)) errors.phone = "Valid phone required";
-  if (!password) errors.password = "Password required";
 
   if (Object.keys(errors).length) {
     const err = new Error("Validation failed");
@@ -103,5 +103,20 @@ export function requireLoginBody(body: any) {
     (err as any).details = errors;
     throw err;
   }
-  return { phoneE164: phone.startsWith("+") ? phone : `+${phone}`, password };
+  return {
+    phoneE164: phone.startsWith("+") ? phone : `+${phone}`,
+    password,
+    otp,
+  };
+}
+
+export function requireSignupPassword(body: any) {
+  const password = (body.password || "").toString();
+  if (password.length < 8) {
+    const err = new Error("Validation failed");
+    (err as any).status = 400;
+    (err as any).details = { password: "Min 8 characters" };
+    throw err;
+  }
+  return password;
 }

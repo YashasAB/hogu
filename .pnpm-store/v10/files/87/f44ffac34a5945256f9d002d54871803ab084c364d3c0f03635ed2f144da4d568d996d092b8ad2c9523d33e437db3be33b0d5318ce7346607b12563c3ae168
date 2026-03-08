@@ -1,0 +1,53 @@
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+import { APIResource } from "../resource.mjs";
+import { isRequestOptions } from "../core.mjs";
+export class Notify extends APIResource {
+    /**
+     * Retrieve a specific subscription management configuration by its ID.
+     */
+    getSubscriptionConfig(configId, options) {
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}`, options);
+    }
+    /**
+     * Retrieve the current subscription status for a specific phone number within a
+     * subscription configuration.
+     */
+    getSubscriptionPhoneNumber(configId, phoneNumber, options) {
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers/${phoneNumber}`, options);
+    }
+    listSubscriptionConfigs(query = {}, options) {
+        if (isRequestOptions(query)) {
+            return this.listSubscriptionConfigs({}, query);
+        }
+        return this._client.get('/v2/notify/management/subscriptions', { query, ...options });
+    }
+    listSubscriptionPhoneNumberEvents(configId, phoneNumber, query = {}, options) {
+        if (isRequestOptions(query)) {
+            return this.listSubscriptionPhoneNumberEvents(configId, phoneNumber, {}, query);
+        }
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers/${phoneNumber}/events`, { query, ...options });
+    }
+    listSubscriptionPhoneNumbers(configId, query = {}, options) {
+        if (isRequestOptions(query)) {
+            return this.listSubscriptionPhoneNumbers(configId, {}, query);
+        }
+        return this._client.get(`/v2/notify/management/subscriptions/${configId}/phone_numbers`, {
+            query,
+            ...options,
+        });
+    }
+    /**
+     * Send transactional and marketing messages to your users via SMS and WhatsApp
+     * with automatic compliance enforcement.
+     */
+    send(body, options) {
+        return this._client.post('/v2/notify', { body, ...options });
+    }
+    /**
+     * Send the same message to multiple recipients in a single request.
+     */
+    sendBatch(body, options) {
+        return this._client.post('/v2/notify/batch', { body, ...options });
+    }
+}
+//# sourceMappingURL=notify.mjs.map

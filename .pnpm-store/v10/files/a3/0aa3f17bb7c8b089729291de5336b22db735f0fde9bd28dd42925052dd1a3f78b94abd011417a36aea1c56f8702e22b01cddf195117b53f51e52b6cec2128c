@@ -1,0 +1,18 @@
+"use strict";
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Transactional = void 0;
+const resource_1 = require("../resource.js");
+class Transactional extends resource_1.APIResource {
+    /**
+     * Legacy route maintained for backward compatibility. Migrate to `/v2/notify`
+     * instead.
+     *
+     * @deprecated
+     */
+    send(body, options) {
+        return this._client.post('/v2/transactional', { body, ...options });
+    }
+}
+exports.Transactional = Transactional;
+//# sourceMappingURL=transactional.js.map
