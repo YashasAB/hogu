@@ -33,15 +33,20 @@ async function runGetToKnowGenerator(userMessage, input) {
     }
     catch {
         console.error("[GetToKnow] Failed to parse LLM response:", raw);
-        return { reply: null, profilePatch: {} };
+        return { reply: null, profilePatch: {}, relationalPatch: {} };
     }
     console.log("[GetToKnow] raw LLM:", raw);
     console.log("[GetToKnow] parsed updates:", JSON.stringify(parsed.updates));
     const profilePatch = {};
+    const relationalPatch = {};
     for (const update of parsed.updates ?? []) {
         const fieldName = update.field;
         if (types_1.LOCKED_FIELDS.has(fieldName) || types_1.SKIP_FIELDS.has(fieldName))
             continue;
+        if (types_1.RELATIONAL_AGENT_FIELDS.has(fieldName)) {
+            relationalPatch[fieldName] = String(update.value);
+            continue;
+        }
         const prismaCol = types_1.UPDATABLE_FIELD_MAP[fieldName];
         if (!prismaCol)
             continue;
@@ -55,8 +60,10 @@ async function runGetToKnowGenerator(userMessage, input) {
         profilePatch.agePreferenceMax = Number(profilePatch.agePreferenceMax);
     }
     console.log("[GetToKnow] profilePatch:", JSON.stringify(profilePatch));
+    console.log("[GetToKnow] relationalPatch:", JSON.stringify(relationalPatch));
     return {
         reply: parsed.assistant_message ?? null,
         profilePatch,
+        relationalPatch,
     };
 }

@@ -263,6 +263,7 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         dateCity: true,
         dateNeighborhoods: true,
         city: true,
+        interestsText: true,
       },
     });
 
@@ -305,6 +306,7 @@ router.get("/me", datingSessionMiddleware, async (req: any, res: any) => {
         })),
         cuisines: cuisines.map((c) => c.cuisineOption.value),
         interests: interests.map((i) => i.tag),
+        interestsText: user.interestsText ?? "",
         firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
         languages: languages.map((l) => l.lang),
       },
@@ -430,6 +432,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         dateCity: true,
         dateNeighborhoods: true,
         city: true,
+        interestsText: true,
       },
     });
 
@@ -471,6 +474,7 @@ router.get("/:userId", datingSessionMiddleware, async (req: any, res: any) => {
         })),
         cuisines: cuisines.map((c) => c.cuisineOption.value),
         interests: interests.map((i) => i.tag),
+        interestsText: user.interestsText ?? "",
         firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
         languages: languages.map((l) => l.lang),
       },
@@ -509,6 +513,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
       agePreferenceMax,
       cuisines,
       interests,
+      interestsText,
       firstDateTypes,
       languages,
       dateCity,
@@ -541,6 +546,7 @@ router.put("/me", datingSessionMiddleware, async (req: any, res: any) => {
         dateCity,
         dateNeighborhoods,
         city,
+        ...(interestsText !== undefined ? { interestsText } : {}),
       },
     });
 

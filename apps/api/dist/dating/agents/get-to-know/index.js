@@ -18,12 +18,56 @@ class GetToKnowLimitError extends Error {
     }
 }
 exports.GetToKnowLimitError = GetToKnowLimitError;
+async function applyRelationalPatch(userId, relationalPatch) {
+    for (const [field, value] of Object.entries(relationalPatch)) {
+        const tags = value.split(",").map((s) => s.trim()).filter(Boolean);
+        if (field === "Cuisines") {
+            await prismaClient_1.default.datingUserCuisine.deleteMany({ where: { userId } });
+            if (tags.length > 0) {
+                const options = await prismaClient_1.default.cuisineOption.findMany({
+                    where: { label: { in: tags } },
+                    select: { id: true },
+                });
+                if (options.length > 0) {
+                    await prismaClient_1.default.datingUserCuisine.createMany({
+                        data: options.map((opt) => ({ userId, cuisineOptionId: opt.id })),
+                        skipDuplicates: true,
+                    });
+                }
+            }
+        }
+        if (field === "Languages") {
+            await prismaClient_1.default.datingUserLanguage.deleteMany({ where: { userId } });
+            if (tags.length > 0) {
+                await prismaClient_1.default.datingUserLanguage.createMany({
+                    data: tags.map((lang) => ({ userId, lang })),
+                    skipDuplicates: true,
+                });
+            }
+        }
+        if (field === "First Date Ideas") {
+            await prismaClient_1.default.datingUserFirstDateType.deleteMany({ where: { userId } });
+            if (tags.length > 0) {
+                const options = await prismaClient_1.default.firstDateTypeOption.findMany({
+                    where: { label: { in: tags } },
+                    select: { id: true },
+                });
+                if (options.length > 0) {
+                    await prismaClient_1.default.datingUserFirstDateType.createMany({
+                        data: options.map((opt) => ({ userId, firstDateTypeOptionId: opt.id })),
+                        skipDuplicates: true,
+                    });
+                }
+            }
+        }
+    }
+}
 async function runGetToKnow(userId, userMessage) {
     const input = await (0, buildInput_1.buildGetToKnowInput)(userId);
     if (input.todayUserCount >= DAILY_LIMIT) {
         throw new GetToKnowLimitError();
     }
-    const { reply, profilePatch } = await (0, generator_1.runGetToKnowGenerator)(userMessage, input);
+    const { reply, profilePatch, relationalPatch } = await (0, generator_1.runGetToKnowGenerator)(userMessage, input);
     const ops = [
         prismaClient_1.default.getToKnowMessage.create({
             data: { userId, role: "user", content: userMessage },
@@ -46,6 +90,14 @@ async function runGetToKnow(userId, userMessage) {
     catch (err) {
         console.error("[GetToKnow] transaction failed:", err, "patch:", JSON.stringify(profilePatch));
         throw err;
+    }
+    if (Object.keys(relationalPatch).length > 0) {
+        try {
+            await applyRelationalPatch(userId, relationalPatch);
+        }
+        catch (err) {
+            console.error("[GetToKnow] relationalPatch failed:", err, JSON.stringify(relationalPatch));
+        }
     }
     const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));
     return { reply, dailyRemaining };

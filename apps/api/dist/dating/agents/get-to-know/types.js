@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SKIP_FIELDS = exports.LOCKED_FIELDS = exports.UPDATABLE_FIELD_MAP = void 0;
+exports.RELATIONAL_AGENT_FIELDS = exports.SKIP_FIELDS = exports.LOCKED_FIELDS = exports.UPDATABLE_FIELD_MAP = void 0;
 exports.UPDATABLE_FIELD_MAP = {
     "Profession": "profession",
     "Height": "height",
@@ -21,11 +21,15 @@ exports.UPDATABLE_FIELD_MAP = {
     "Non-Negotiables": "nonNegotiables",
     "Age Pref Min": "agePreferenceMin",
     "Age Pref Max": "agePreferenceMax",
+    "Interests": "interestsText",
 };
 exports.LOCKED_FIELDS = new Set([
     "Name", "Phone", "Gender", "Date of Birth", "Age",
     "Instagram", "City", "Photos Count", "Joined",
 ]);
 exports.SKIP_FIELDS = new Set([
-    "Cuisines", "First Date Ideas", "First Date Types", "Interests", "Languages",
+    "First Date Types",
+]);
+exports.RELATIONAL_AGENT_FIELDS = new Set([
+    "Cuisines", "Languages", "First Date Ideas",
 ]);

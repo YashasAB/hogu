@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GET_TO_KNOW_SYSTEM_PROMPT } from "./prompt";
-import { UPDATABLE_FIELD_MAP, LOCKED_FIELDS, SKIP_FIELDS, GetToKnowAgentOutput } from "./types";
+import { UPDATABLE_FIELD_MAP, LOCKED_FIELDS, SKIP_FIELDS, RELATIONAL_AGENT_FIELDS, GetToKnowAgentOutput } from "./types";
 import type { BuiltInput } from "./buildInput";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -8,6 +8,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export interface GeneratorResult {
   reply: string | null;
   profilePatch: Record<string, string | number>;
+  relationalPatch: Record<string, string>;
 }
 
 export async function runGetToKnowGenerator(
@@ -41,17 +42,24 @@ export async function runGetToKnowGenerator(
     parsed = JSON.parse(raw);
   } catch {
     console.error("[GetToKnow] Failed to parse LLM response:", raw);
-    return { reply: null, profilePatch: {} };
+    return { reply: null, profilePatch: {}, relationalPatch: {} };
   }
 
   console.log("[GetToKnow] raw LLM:", raw);
   console.log("[GetToKnow] parsed updates:", JSON.stringify(parsed.updates));
 
   const profilePatch: Record<string, string | number> = {};
+  const relationalPatch: Record<string, string> = {};
 
   for (const update of parsed.updates ?? []) {
     const fieldName = update.field;
     if (LOCKED_FIELDS.has(fieldName) || SKIP_FIELDS.has(fieldName)) continue;
+
+    if (RELATIONAL_AGENT_FIELDS.has(fieldName)) {
+      relationalPatch[fieldName] = String(update.value);
+      continue;
+    }
+
     const prismaCol = UPDATABLE_FIELD_MAP[fieldName];
     if (!prismaCol) continue;
     profilePatch[prismaCol] = update.value;
@@ -66,9 +74,11 @@ export async function runGetToKnowGenerator(
   }
 
   console.log("[GetToKnow] profilePatch:", JSON.stringify(profilePatch));
+  console.log("[GetToKnow] relationalPatch:", JSON.stringify(relationalPatch));
 
   return {
     reply: parsed.assistant_message ?? null,
     profilePatch,
+    relationalPatch,
   };
 }

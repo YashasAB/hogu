@@ -238,6 +238,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 dateCity: true,
                 dateNeighborhoods: true,
                 city: true,
+                interestsText: true,
             },
         });
         if (!user)
@@ -273,6 +274,7 @@ router.get("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 })),
                 cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
+                interestsText: user.interestsText ?? "",
                 firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
             },
@@ -385,6 +387,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                 dateCity: true,
                 dateNeighborhoods: true,
                 city: true,
+                interestsText: true,
             },
         });
         if (!user)
@@ -419,6 +422,7 @@ router.get("/:userId", session_1.datingSessionMiddleware, async (req, res) => {
                 })),
                 cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
+                interestsText: user.interestsText ?? "",
                 firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
             },
@@ -434,7 +438,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
     if (!userId)
         return res.status(401).json({ ok: false, error: "Not authenticated" });
     try {
-        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, firstDateTypes, languages, dateCity, dateNeighborhoods, city, } = req.body;
+        const { name, profession, dreams, fiveYearGoal, whatIWantInPartner, whyPartnerWouldLikeMe, myDayLooksLike, idealFirstDate, nonNegotiables, physicalActivity, dateBudget, instagramHandle, diet, drinking, smoking, relationshipType, gender, agePreferenceMin, agePreferenceMax, cuisines, interests, interestsText, firstDateTypes, languages, dateCity, dateNeighborhoods, city, } = req.body;
         await prismaClient_1.default.datingUser.update({
             where: { id: userId },
             data: {
@@ -460,6 +464,7 @@ router.put("/me", session_1.datingSessionMiddleware, async (req, res) => {
                 dateCity,
                 dateNeighborhoods,
                 city,
+                ...(interestsText !== undefined ? { interestsText } : {}),
             },
         });
         if (cuisines !== undefined) {

@@ -262,6 +262,8 @@ model DatingUser {
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")
 
+  interestsText         String?  @default("") @map("interests_text")
+
   // Relations
   photos         DatingUserPhoto[]
   cuisines       DatingUserCuisine[]

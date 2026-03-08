@@ -94,6 +94,7 @@ interface Profile {
   photos: { id: string; objectKey: string; sortOrder: number }[];
   cuisines: string[];
   interests: string[];
+  interestsText: string | null;
   firstDateTypes: string[];
   languages: string[];
 }
@@ -512,6 +513,10 @@ export default function DatingApp() {
       agePreferenceMax: formData.get("agePreferenceMax") || null,
       dateCity: formData.get("dateCity"),
       dateNeighborhoods: formData.get("dateNeighborhoods"),
+      interestsText: formData.get("interestsText"),
+      cuisines: String(formData.get("cuisines") || "").split(",").map((s) => s.trim()).filter(Boolean),
+      languages: String(formData.get("languages") || "").split(",").map((s) => s.trim()).filter(Boolean),
+      firstDateTypes: String(formData.get("firstDateTypes") || "").split(",").map((s) => s.trim()).filter(Boolean),
     };
 
     try {
@@ -1863,6 +1868,46 @@ export default function DatingApp() {
                     <option value="regularly">Regularly</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Interests</label>
+                <textarea
+                  name="interestsText"
+                  rows={2}
+                  placeholder="e.g., hiking, live music, cooking, photography"
+                  defaultValue={myProfile.interestsText ?? myProfile.interests.join(", ")}
+                />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Cuisines you enjoy</label>
+                <textarea
+                  name="cuisines"
+                  rows={2}
+                  placeholder="e.g., Japanese, South Indian, Italian"
+                  defaultValue={myProfile.cuisines.join(", ")}
+                />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>Languages</label>
+                <textarea
+                  name="languages"
+                  rows={2}
+                  placeholder="e.g., English, Hindi, Kannada"
+                  defaultValue={myProfile.languages.join(", ")}
+                />
+              </div>
+
+              <div className="hogu-form-group">
+                <label>First date ideas</label>
+                <textarea
+                  name="firstDateTypes"
+                  rows={2}
+                  placeholder="e.g., coffee, cocktail bar, walk in a park"
+                  defaultValue={myProfile.firstDateTypes.join(", ")}
+                />
               </div>
 
               <div className="hogu-form-actions">

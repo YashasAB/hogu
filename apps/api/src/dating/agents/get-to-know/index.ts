@@ -12,6 +12,54 @@ export class GetToKnowLimitError extends Error {
   }
 }
 
+async function applyRelationalPatch(userId: string, relationalPatch: Record<string, string>) {
+  for (const [field, value] of Object.entries(relationalPatch)) {
+    const tags = value.split(",").map((s) => s.trim()).filter(Boolean);
+
+    if (field === "Cuisines") {
+      await prisma.datingUserCuisine.deleteMany({ where: { userId } });
+      if (tags.length > 0) {
+        const options = await prisma.cuisineOption.findMany({
+          where: { label: { in: tags } },
+          select: { id: true },
+        });
+        if (options.length > 0) {
+          await prisma.datingUserCuisine.createMany({
+            data: options.map((opt) => ({ userId, cuisineOptionId: opt.id })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
+
+    if (field === "Languages") {
+      await prisma.datingUserLanguage.deleteMany({ where: { userId } });
+      if (tags.length > 0) {
+        await prisma.datingUserLanguage.createMany({
+          data: tags.map((lang) => ({ userId, lang })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    if (field === "First Date Ideas") {
+      await prisma.datingUserFirstDateType.deleteMany({ where: { userId } });
+      if (tags.length > 0) {
+        const options = await prisma.firstDateTypeOption.findMany({
+          where: { label: { in: tags } },
+          select: { id: true },
+        });
+        if (options.length > 0) {
+          await prisma.datingUserFirstDateType.createMany({
+            data: options.map((opt) => ({ userId, firstDateTypeOptionId: opt.id })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
+  }
+}
+
 export async function runGetToKnow(
   userId: string,
   userMessage: string
@@ -22,7 +70,7 @@ export async function runGetToKnow(
     throw new GetToKnowLimitError();
   }
 
-  const { reply, profilePatch } = await runGetToKnowGenerator(userMessage, input);
+  const { reply, profilePatch, relationalPatch } = await runGetToKnowGenerator(userMessage, input);
 
   const ops: any[] = [
     prisma.getToKnowMessage.create({
@@ -52,6 +100,14 @@ export async function runGetToKnow(
   } catch (err) {
     console.error("[GetToKnow] transaction failed:", err, "patch:", JSON.stringify(profilePatch));
     throw err;
+  }
+
+  if (Object.keys(relationalPatch).length > 0) {
+    try {
+      await applyRelationalPatch(userId, relationalPatch);
+    } catch (err) {
+      console.error("[GetToKnow] relationalPatch failed:", err, JSON.stringify(relationalPatch));
+    }
   }
 
   const dailyRemaining = Math.max(0, DAILY_LIMIT - (input.todayUserCount + 1));

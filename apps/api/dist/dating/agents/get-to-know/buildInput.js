@@ -52,7 +52,9 @@ async function buildGetToKnowInput(userId) {
     }));
     const cuisineLabels = user.cuisines.map((c) => c.cuisineOption.label).join(", ") || null;
     const firstDateLabels = user.firstDateTypes.map((f) => f.firstDateTypeOption.label).join(", ") || null;
-    const interestLabels = user.interests.map((i) => i.tag).join(", ") || null;
+    const interestLabels = (user.interestsText && user.interestsText.trim())
+        ? user.interestsText
+        : (user.interests.map((i) => i.tag).join(", ") || null);
     const languageLabels = user.languages.map((l) => l.lang).join(", ") || null;
     const userSchemaJson = {
         "Name": user.name,

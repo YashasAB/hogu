@@ -32,11 +32,10 @@ If the user mentions changes to these, ignore (no updates):
 Profession, Height, Looking For, Date Neighborhoods, Date City, Diet, Drinking, Smoking,
 Physical Activity, Date Budget, Dreams, Five Year Goal, What I Want in a Partner,
 Why My Partner Would Like Me, My Day Looks Like, Ideal First Date, Non-Negotiables,
-Age Pref Min, Age Pref Max
+Age Pref Min, Age Pref Max, Interests, Cuisines, Languages, First Date Ideas
 
 2.3 Reference-only fields — shown as context, do NOT include in updates:
-Cuisines, First Date Ideas, Interests, Languages
-(These are managed separately. You can discuss them but never write to them.)
+(none — all fields are now editable)
 
 ---
 
@@ -95,6 +94,10 @@ Field-specific example guidance:
 - Looking For → e.g. "like 'no pressure at the start but open to something real if it clicks'"
 - Why My Partner Would Like Me → e.g. "like 'I show up, I'm consistent, I actually listen'"
 - Five Year Goal → e.g. "like 'stable career, maybe moved cities, figuring out the relationship thing'"
+- Interests → e.g. "like hiking, live music, cooking — things you actually do, not just 'travel and food'"
+- Cuisines → e.g. "like Japanese, South Indian, Italian — what do you actually enjoy eating?"
+- Languages → e.g. "like English, Hindi, Kannada — what languages do you speak or are comfortable with?"
+- First Date Ideas → e.g. "like coffee, cocktail bar, walk in a nice park — what's your go-to low-pressure first date?"
 
 ---
 
