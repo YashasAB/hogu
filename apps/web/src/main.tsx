@@ -9,7 +9,7 @@ window.fetch = function(input, init) {
   const url = typeof input === 'string' ? input
     : input instanceof URL ? input.href
     : (input as Request).url;
-  if (url.startsWith('/api/')) {
+  if (url.includes('/api/')) {
     const token = sessionStorage.getItem('dating_token');
     if (token) {
       const existing = (init?.headers instanceof Headers)

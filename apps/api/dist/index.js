@@ -78,8 +78,25 @@ if (!process.env.DATABASE_URL) {
 // ---- Health routes FIRST, before anything heavy ----
 app.get("/health", (_req, res) => res.status(200).json({ status: "healthy" }));
 app.get("/ready", (_req, res) => res.status(200).json({ status: "ready" }));
+const ALLOWED_ORIGINS = new Set([
+    "capacitor://localhost",
+    "http://localhost",
+]);
 app.use((0, cors_1.default)({
-    origin: true,
+    origin: (origin, cb) => {
+        if (!origin)
+            return cb(null, true);
+        if (ALLOWED_ORIGINS.has(origin))
+            return cb(null, true);
+        if (/\.replit\.app$/.test(origin))
+            return cb(null, true);
+        if (/\.repl\.co$/.test(origin))
+            return cb(null, true);
+        const devDomain = process.env.REPLIT_DEV_DOMAIN;
+        if (devDomain && origin.includes(devDomain))
+            return cb(null, true);
+        cb(null, true);
+    },
     credentials: true,
 }));
 app.use(express_1.default.json());
