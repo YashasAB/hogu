@@ -689,9 +689,12 @@ export default function DatingApp() {
             ) : (
               <>
                 {MATCH_STATUS_ORDER.map((status) => {
-                  const statusMatches = matches.filter(
-                    (m) => m.status === status,
-                  );
+                  const statusMatches = matches
+                    .filter((m) => m.status === status)
+                    .sort((a, b) => {
+                      if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount;
+                      return new Date(b.matchedAt).getTime() - new Date(a.matchedAt).getTime();
+                    });
                   if (statusMatches.length === 0) return null;
                   return (
                     <div key={status} className="hogu-status-group">
