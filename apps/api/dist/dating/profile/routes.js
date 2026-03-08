@@ -98,6 +98,17 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
                 photosByUser.set(p.userId, []);
             photosByUser.get(p.userId).push(p);
         });
+        const unreadGroups = await prismaClient_1.default.matchMessage.groupBy({
+            by: ["matchId"],
+            where: {
+                userId,
+                fromAdmin: true,
+                read: false,
+                matchId: { in: visibleMatches.map((m) => m.id) },
+            },
+            _count: { id: true },
+        });
+        const unreadByMatch = new Map(unreadGroups.map((g) => [g.matchId, g._count.id]));
         const result = matchedUsers.map((u) => {
             const match = visibleMatches.find((m) => m.user1_id === u.id || m.user2_id === u.id);
             return {
@@ -114,6 +125,7 @@ router.get("/matches", session_1.datingSessionMiddleware, async (req, res) => {
                 user1_id: match?.user1_id,
                 user2_id: match?.user2_id,
                 myUserId: userId,
+                unreadCount: unreadByMatch.get(match?.id ?? "") ?? 0,
             };
         });
         return res.json({ ok: true, matches: result });

@@ -43,6 +43,7 @@ interface Match {
   user1_id: string;
   user2_id: string;
   myUserId: string;
+  unreadCount: number;
 }
 
 interface AvailabilityEntry {
@@ -117,6 +118,13 @@ export default function DatingApp() {
   const [matchMsgInput, setMatchMsgInput] = useState("");
   const [matchMsgSending, setMatchMsgSending] = useState(false);
   const matchChatBottomRef = useRef<HTMLDivElement>(null);
+  const matchChatSectionRef = useRef<HTMLDivElement>(null);
+
+  const [matchChatPopup, setMatchChatPopup] = useState<{ matchId: string; matchName: string } | null>(null);
+  const [popupMessages, setPopupMessages] = useState<{ id: string; fromAdmin: boolean; content: string; createdAt: string }[]>([]);
+  const [popupMsgInput, setPopupMsgInput] = useState("");
+  const [popupMsgSending, setPopupMsgSending] = useState(false);
+  const popupChatBottomRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -353,6 +361,58 @@ export default function DatingApp() {
     } finally {
       setMatchMsgSending(false);
     }
+  }
+
+  async function openMatchChatPopup(matchId: string, matchName: string) {
+    setMatchChatPopup({ matchId, matchName });
+    setPopupMessages([]);
+    setPopupMsgInput("");
+    try {
+      const res = await fetch(`/api/dating/profile/match-messages/${matchId}`, { credentials: "include" });
+      const data = await res.json();
+      if (data.ok) {
+        setPopupMessages(data.messages);
+        setMatches((prev) => prev.map((m) => m.matchId === matchId ? { ...m, unreadCount: 0 } : m));
+      }
+    } catch (err) {}
+  }
+
+  useEffect(() => {
+    if (popupChatBottomRef.current) {
+      popupChatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [popupMessages]);
+
+  async function sendPopupMessage() {
+    if (!popupMsgInput.trim() || !matchChatPopup || popupMsgSending) return;
+    setPopupMsgSending(true);
+    try {
+      const res = await fetch(`/api/dating/profile/match-messages/${matchChatPopup.matchId}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: popupMsgInput.trim() }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPopupMessages((prev) => [...prev, data.message]);
+        setPopupMsgInput("");
+      }
+    } catch (err) {
+    } finally {
+      setPopupMsgSending(false);
+    }
+  }
+
+  function scrollToMatchChat() {
+    if (matchChatSectionRef.current) {
+      matchChatSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+    setTimeout(() => {
+      if (matchChatBottomRef.current) {
+        matchChatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 400);
   }
 
   async function handleLogout() {
@@ -671,6 +731,29 @@ export default function DatingApp() {
                                 </h3>
                                 {match.profession && <p>{match.profession}</p>}
                               </div>
+                              <button
+                                className="hogu-btn hogu-btn--messages"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openMatchChatPopup(match.matchId, match.name);
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}
+                              >
+                                Messages
+                                {match.unreadCount > 0 && (
+                                  <span style={{
+                                    background: "#e879a8",
+                                    color: "#fff",
+                                    borderRadius: "999px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    padding: "1px 7px",
+                                    lineHeight: 1.6,
+                                  }}>
+                                    {match.unreadCount}
+                                  </span>
+                                )}
+                              </button>
                               {(match.status === "MATCHED" ||
                                 match.status === "INTERESTED") &&
                                 !myInterested && (
@@ -874,12 +957,38 @@ export default function DatingApp() {
 
         {tab === "matches" && selectedMatch && (
           <section className="hogu-profile-view">
-            <button
-              className="hogu-back"
-              onClick={() => { setSelectedMatch(null); setSelectedMatchId(null); setMatchMessages([]); }}
-            >
-              &larr; Back to matches
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+              <button
+                className="hogu-back"
+                style={{ margin: 0 }}
+                onClick={() => { setSelectedMatch(null); setSelectedMatchId(null); setMatchMessages([]); }}
+              >
+                &larr; Back to matches
+              </button>
+              <button
+                onClick={scrollToMatchChat}
+                style={{
+                  background: "transparent",
+                  border: "1px solid #e879a8",
+                  color: "#e879a8",
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                Messages
+                {matchMessages.filter((m) => m.fromAdmin).length > 0 && (
+                  <span style={{ background: "#e879a8", color: "#fff", borderRadius: "999px", fontSize: "10px", fontWeight: 700, padding: "1px 6px" }}>
+                    {matchMessages.filter((m) => m.fromAdmin).length}
+                  </span>
+                )}
+              </button>
+            </div>
             <div className="hogu-profile-photos">
               {selectedMatch.photos.map((p, i) => (
                 <img
@@ -1063,7 +1172,7 @@ export default function DatingApp() {
               )}
             </div>
 
-            <div className="hogu-section" style={{ marginTop: "2rem" }}>
+            <div className="hogu-section" ref={matchChatSectionRef} style={{ marginTop: "2rem" }}>
               <h4 style={{ marginBottom: "0.75rem" }}>Your Matchmaker</h4>
               <div style={{ background: "#0f0f1a", borderRadius: 10, border: "1px solid #2a2a3e", overflow: "hidden" }}>
                 <div style={{ maxHeight: 320, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
@@ -1828,6 +1937,68 @@ export default function DatingApp() {
         )}
       </main>
 
+      {matchChatPopup && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
+          onClick={() => setMatchChatPopup(null)}
+        >
+          <div
+            style={{ background: "#12121f", borderRadius: 16, border: "1px solid #2a2a3e", width: "100%", maxWidth: 480, display: "flex", flexDirection: "column", maxHeight: "80vh", overflow: "hidden" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem", borderBottom: "1px solid #2a2a3e" }}>
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "#e879a8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Matchmaker</div>
+                <div style={{ fontWeight: 700, fontSize: "1rem" }}>{matchChatPopup.matchName}</div>
+              </div>
+              <button
+                onClick={() => setMatchChatPopup(null)}
+                style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: "22px", lineHeight: 1 }}
+              >✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {popupMessages.length === 0 && (
+                <p style={{ color: "#555", fontSize: "0.85rem", textAlign: "center", margin: "2rem 0" }}>No messages yet</p>
+              )}
+              {popupMessages.map((msg) => (
+                <div key={msg.id} style={{ display: "flex", justifyContent: msg.fromAdmin ? "flex-start" : "flex-end" }}>
+                  <div style={{
+                    maxWidth: "80%",
+                    background: msg.fromAdmin ? "#1e1e32" : "#7c3aed",
+                    borderRadius: msg.fromAdmin ? "4px 12px 12px 12px" : "12px 4px 12px 12px",
+                    padding: "0.6rem 0.9rem",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.55,
+                    color: "#fff",
+                  }}>
+                    {msg.fromAdmin && <div style={{ fontSize: "0.68rem", color: "#e879a8", marginBottom: "0.2rem", fontWeight: 600 }}>Matchmaker</div>}
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              <div ref={popupChatBottomRef} />
+            </div>
+            <div style={{ borderTop: "1px solid #2a2a3e", padding: "0.75rem 1rem", display: "flex", gap: "0.5rem" }}>
+              <input
+                type="text"
+                value={popupMsgInput}
+                onChange={(e) => setPopupMsgInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendPopupMessage(); } }}
+                placeholder="Send a message..."
+                style={{ flex: 1, background: "#1a1a2e", border: "1px solid #2a2a3e", borderRadius: 8, padding: "0.55rem 0.85rem", color: "#fff", fontSize: "0.875rem", outline: "none" }}
+              />
+              <button
+                onClick={sendPopupMessage}
+                disabled={popupMsgSending || !popupMsgInput.trim()}
+                style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, padding: "0.55rem 1.1rem", fontWeight: 600, cursor: "pointer", fontSize: "0.875rem", opacity: popupMsgSending || !popupMsgInput.trim() ? 0.5 : 1 }}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .hogu-app {
           min-height: 100vh;
@@ -2160,6 +2331,18 @@ export default function DatingApp() {
         }
         .hogu-btn--interest:hover {
           background: #d13350;
+        }
+        .hogu-btn--messages {
+          background: rgba(124, 58, 237, 0.15);
+          color: #a78bfa;
+          border: 1px solid rgba(124, 58, 237, 0.4);
+          width: 100%;
+          font-weight: 600;
+          font-size: 0.85rem;
+          justify-content: center;
+        }
+        .hogu-btn--messages:hover {
+          background: rgba(124, 58, 237, 0.25);
         }
         .hogu-interest-waiting {
           text-align: center;
