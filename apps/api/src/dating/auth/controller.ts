@@ -197,9 +197,10 @@ Your matchmaker`,
   async login(req: any, res: any, next: any) {
     try {
       const { phoneE164, password, otp } = requireLoginBody(req.body);
+      const digits10 = phoneE164.replace(/\D/g, "").slice(-10);
       const user = await withRetry(() =>
         prisma.datingUser.findFirst({
-          where: { phoneE164 },
+          where: { phoneE164: { endsWith: digits10 } },
           select: { id: true, name: true, phoneE164: true, passwordHash: true },
         })
       );

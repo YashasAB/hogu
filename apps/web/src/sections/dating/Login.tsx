@@ -39,7 +39,7 @@ export default function Login() {
 
   async function onSendOtp() {
     setOtpSendError(null);
-    if (!phoneValid) { setOtpSendError("Enter a valid 10-digit phone number above first."); return; }
+    if (!phoneValid) { setOtpSendError("Enter a valid 10-digit phone number first."); return; }
     try {
       setOtpSending(true);
       await postJson("/api/dating/auth/send-otp", { phone: phoneE164 });
@@ -78,6 +78,7 @@ export default function Login() {
         <h1>Welcome back</h1>
         <p className="muted">Sign in to Hogu.</p>
 
+        {/* Phone field — shared by both paths */}
         <div className="hogu-field" style={{ marginTop: 20 }}>
           <label>Phone number</label>
           <div className="phone-row">
@@ -93,33 +94,9 @@ export default function Login() {
           </div>
         </div>
 
-        <form onSubmit={onPasswordLogin} noValidate style={{ marginTop: 16 }}>
-          <div className="hogu-field">
-            <label>Password</label>
-            <input
-              className="hogu-input"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {submitError && <div className="hogu-error" style={{ marginTop: 8 }}>{submitError}</div>}
-          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting} style={{ marginTop: 12, width: "100%" }}>
-            {isSubmitting ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="otp-divider">
-          <span>or</span>
-        </div>
-
-        <div className="otp-section">
-          <p className="otp-hint">
-            No password? No problem — you can sign in with a one-time code sent to your phone.
-            <br />
-            <span className="otp-hint-sub">You don't need to enter a password if you use a code.</span>
-          </p>
+        {/* OTP section — sits directly below the phone field */}
+        <div className="otp-section" style={{ marginTop: 12 }}>
+          <p className="otp-hint">Sign in without a password using a one-time code.</p>
 
           {!otpSent ? (
             <>
@@ -165,13 +142,36 @@ export default function Login() {
                 type="button"
                 onClick={onSendOtp}
                 disabled={otpSending}
-                style={{ marginTop: 10, width: "100%" }}
+                style={{ marginTop: 8, width: "100%" }}
               >
                 {otpSending ? "Resending..." : "Resend code"}
               </button>
             </div>
           )}
         </div>
+
+        {/* Divider */}
+        <div className="otp-divider">
+          <span>or use your password</span>
+        </div>
+
+        {/* Password form */}
+        <form onSubmit={onPasswordLogin} noValidate>
+          <div className="hogu-field">
+            <label>Password</label>
+            <input
+              className="hogu-input"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {submitError && <div className="hogu-error" style={{ marginTop: 8 }}>{submitError}</div>}
+          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting} style={{ marginTop: 12, width: "100%" }}>
+            {isSubmitting ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
 
         <p className="muted tiny" style={{ marginTop: 16 }}>
           <a className="hogu-link" href="/reset-password">Forgot your password?</a>
@@ -276,8 +276,8 @@ const loginCss = `
 .hogu-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .otp-divider {
   display: flex; align-items: center; gap: 12px;
-  margin: 22px 0 18px;
-  color: rgba(255,255,255,0.35); font-size: 13px;
+  margin: 20px 0 16px;
+  color: rgba(255,255,255,0.35); font-size: 12px;
 }
 .otp-divider::before, .otp-divider::after {
   content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
@@ -286,22 +286,18 @@ const loginCss = `
   background: rgba(227,41,149,0.06);
   border: 1px solid rgba(227,41,149,0.2);
   border-radius: 14px;
-  padding: 18px;
+  padding: 14px 16px;
 }
 .otp-hint {
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin: 0 0 10px 0;
   line-height: 1.5;
-}
-.otp-hint-sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
 }
 .otp-sent-msg {
   font-size: 13px;
   color: rgba(255,255,255,0.8);
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   line-height: 1.5;
 }
 .otp-verify-block { display: grid; gap: 8px; }
