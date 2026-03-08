@@ -24,16 +24,19 @@ export async function runGetToKnow(
 
   const { reply, profilePatch } = await runGetToKnowGenerator(userMessage, input);
 
-  const agentContent = reply ?? "";
-
   const ops: any[] = [
     prisma.getToKnowMessage.create({
       data: { userId, role: "user", content: userMessage },
     }),
-    prisma.getToKnowMessage.create({
-      data: { userId, role: "agent", content: agentContent },
-    }),
   ];
+
+  if (reply) {
+    ops.push(
+      prisma.getToKnowMessage.create({
+        data: { userId, role: "agent", content: reply },
+      })
+    );
+  }
 
   if (Object.keys(profilePatch).length > 0) {
     ops.push(

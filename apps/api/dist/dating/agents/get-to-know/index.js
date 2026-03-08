@@ -24,15 +24,16 @@ async function runGetToKnow(userId, userMessage) {
         throw new GetToKnowLimitError();
     }
     const { reply, profilePatch } = await (0, generator_1.runGetToKnowGenerator)(userMessage, input);
-    const agentContent = reply ?? "";
     const ops = [
         prismaClient_1.default.getToKnowMessage.create({
             data: { userId, role: "user", content: userMessage },
         }),
-        prismaClient_1.default.getToKnowMessage.create({
-            data: { userId, role: "agent", content: agentContent },
-        }),
     ];
+    if (reply) {
+        ops.push(prismaClient_1.default.getToKnowMessage.create({
+            data: { userId, role: "agent", content: reply },
+        }));
+    }
     if (Object.keys(profilePatch).length > 0) {
         ops.push(prismaClient_1.default.datingUser.update({
             where: { id: userId },
