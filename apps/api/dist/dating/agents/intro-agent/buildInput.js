@@ -128,10 +128,14 @@ async function buildIntroInput(matchId) {
             profile["First Date Ideas"] = firstDateIdeas;
         const interests = user.interests.map((i) => i.tag).join(", ");
         if (interests)
-            profile.Interests = interests;
+            profile["Interests (from signup)"] = interests;
+        if (user.interestsText)
+            profile["Interests (agent-enriched)"] = user.interestsText;
         const languages = user.languages.map((l) => l.lang).join(", ");
         if (languages)
-            profile.Languages = languages;
+            profile["Languages (from signup)"] = languages;
+        if (user.languagesText)
+            profile["Languages (agent-enriched)"] = user.languagesText;
         return profile;
     }
     const userA = {

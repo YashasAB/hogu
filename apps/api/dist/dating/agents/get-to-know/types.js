@@ -22,6 +22,7 @@ exports.UPDATABLE_FIELD_MAP = {
     "Age Pref Min": "agePreferenceMin",
     "Age Pref Max": "agePreferenceMax",
     "Interests": "interestsText",
+    "Languages": "languagesText",
 };
 exports.LOCKED_FIELDS = new Set([
     "Name", "Phone", "Gender", "Date of Birth", "Age",
@@ -29,7 +30,7 @@ exports.LOCKED_FIELDS = new Set([
 ]);
 exports.SKIP_FIELDS = new Set([
     "First Date Types",
+    "Cuisines",
+    "First Date Ideas",
 ]);
-exports.RELATIONAL_AGENT_FIELDS = new Set([
-    "Cuisines", "Languages", "First Date Ideas",
-]);
+exports.RELATIONAL_AGENT_FIELDS = new Set([]);

@@ -70,10 +70,10 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
 
   const cuisineLabels = user.cuisines.map((c) => c.cuisineOption.label).join(", ") || null;
   const firstDateLabels = user.firstDateTypes.map((f) => f.firstDateTypeOption.label).join(", ") || null;
-  const interestLabels = (user.interestsText && user.interestsText.trim())
-    ? user.interestsText
-    : (user.interests.map((i) => i.tag).join(", ") || null);
-  const languageLabels = user.languages.map((l) => l.lang).join(", ") || null;
+  const interestsRelational = user.interests.map((i) => i.tag).join(", ") || null;
+  const interestsAgent = (user.interestsText && user.interestsText.trim()) ? user.interestsText : null;
+  const languagesRelational = user.languages.map((l) => l.lang).join(", ") || null;
+  const languagesAgent = (user.languagesText && user.languagesText.trim()) ? user.languagesText : null;
 
   const userSchemaJson: Record<string, any> = {
     "Name": user.name,
@@ -94,8 +94,10 @@ export async function buildGetToKnowInput(userId: string): Promise<BuiltInput> {
     "Date Budget": user.dateBudget ?? null,
     "Cuisines": cuisineLabels,
     "First Date Ideas": firstDateLabels,
-    "Interests": interestLabels,
-    "Languages": languageLabels,
+    "Interests": interestsAgent ?? interestsRelational,
+    "Interests (from signup)": interestsRelational,
+    "Languages": languagesAgent ?? languagesRelational,
+    "Languages (from signup)": languagesRelational,
     "Dreams": user.dreams ?? null,
     "Five Year Goal": user.fiveYearGoal ?? null,
     "What I Want in a Partner": user.whatIWantInPartner ?? null,

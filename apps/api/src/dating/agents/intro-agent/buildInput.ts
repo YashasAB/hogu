@@ -63,7 +63,7 @@ export async function buildIntroInput(matchId: string): Promise<IntroInput> {
         firstDateTypes: { include: { firstDateTypeOption: true } },
         languages: true,
       },
-    }),
+    }) as any,
     prisma.datingUser.findUniqueOrThrow({
       where: { id: match.user2_id },
       include: {
@@ -73,7 +73,7 @@ export async function buildIntroInput(matchId: string): Promise<IntroInput> {
         firstDateTypes: { include: { firstDateTypeOption: true } },
         languages: true,
       },
-    }),
+    }) as any,
   ]);
 
   function buildProfile(user: typeof user1): IntroUserProfile {
@@ -106,17 +106,19 @@ export async function buildIntroInput(matchId: string): Promise<IntroInput> {
     if (user.nonNegotiables) profile["Non-Negotiables"] = user.nonNegotiables;
     if (user.city) profile.City = user.city;
 
-    const cuisines = user.cuisines.map((c) => c.cuisineOption.label).join(", ");
+    const cuisines = user.cuisines.map((c: any) => c.cuisineOption.label).join(", ");
     if (cuisines) profile.Cuisines = cuisines;
 
-    const firstDateIdeas = user.firstDateTypes.map((f) => f.firstDateTypeOption.label).join(", ");
+    const firstDateIdeas = user.firstDateTypes.map((f: any) => f.firstDateTypeOption.label).join(", ");
     if (firstDateIdeas) profile["First Date Ideas"] = firstDateIdeas;
 
-    const interests = user.interests.map((i) => i.tag).join(", ");
-    if (interests) profile.Interests = interests;
+    const interests = user.interests.map((i: any) => i.tag).join(", ");
+    if (interests) profile["Interests (from signup)"] = interests;
+    if (user.interestsText) profile["Interests (agent-enriched)"] = user.interestsText;
 
-    const languages = user.languages.map((l) => l.lang).join(", ");
-    if (languages) profile.Languages = languages;
+    const languages = user.languages.map((l: any) => l.lang).join(", ");
+    if (languages) profile["Languages (from signup)"] = languages;
+    if (user.languagesText) profile["Languages (agent-enriched)"] = user.languagesText;
 
     return profile;
   }

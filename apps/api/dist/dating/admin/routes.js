@@ -123,7 +123,7 @@ router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
         const columns = [
             "Name", "Phone", "Gender", "Date of Birth", "Age", "Profession", "Height",
             "Looking For", "Age Pref Min", "Age Pref Max", "Date City", "Date Neighborhoods", "Instagram", "Diet", "Drinking", "Smoking", "Physical Activity",
-            "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Languages",
+            "Date Budget", "Cuisines", "First Date Ideas", "Interests", "Interests (Agent)", "Languages", "Languages (Agent)",
             "Dreams", "Five Year Goal", "What I Want in a Partner",
             "Why My Partner Would Like Me", "My Day Looks Like", "Ideal First Date",
             "Non-Negotiables", "City", "Photos Count", "Joined"
@@ -172,7 +172,9 @@ router.get("/users/export/csv", requireAdminAuth, async (req, res) => {
                 uCuisines,
                 uFirstDates,
                 uInterests,
+                u.interestsText || "",
                 uLangs,
+                u.languagesText || "",
                 u.dreams || "",
                 u.fiveYearGoal || "",
                 u.whatIWantInPartner || "",
@@ -200,6 +202,17 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
         const { userId } = req.params;
         const user = await prismaClient_1.default.datingUser.findUnique({
             where: { id: userId },
+            select: {
+                id: true, phoneE164: true, name: true, dob: true, profession: true,
+                dreams: true, fiveYearGoal: true, whatIWantInPartner: true,
+                whyPartnerWouldLikeMe: true, myDayLooksLike: true, idealFirstDate: true,
+                nonNegotiables: true, physicalActivity: true, dateBudget: true,
+                instagramHandle: true, diet: true, drinking: true, smoking: true,
+                height: true, gender: true, relationshipType: true,
+                agePreferenceMin: true, agePreferenceMax: true, dateCity: true,
+                dateNeighborhoods: true, city: true, createdAt: true, updatedAt: true,
+                interestsText: true, languagesText: true,
+            },
         });
         if (!user) {
             return res.status(404).json({ ok: false, error: "User not found" });
@@ -228,15 +241,16 @@ router.get("/users/:userId", requireAdminAuth, async (req, res) => {
             ok: true,
             user: {
                 ...user,
-                passwordHash: undefined,
                 photos: photos.map((p) => ({
                     objectKey: p.objectKey,
                     sortOrder: p.sortOrder,
                 })),
                 cuisines: cuisines.map((c) => c.cuisineOption.value),
                 interests: interests.map((i) => i.tag),
+                interestsText: user.interestsText ?? "",
                 firstDateTypes: firstDateTypes.map((f) => f.firstDateTypeOption.value),
                 languages: languages.map((l) => l.lang),
+                languagesText: user.languagesText ?? "",
             },
         });
     }

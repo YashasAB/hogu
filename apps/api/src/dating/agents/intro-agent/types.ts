@@ -17,7 +17,11 @@ export interface IntroUserProfile {
   Cuisines?: string;
   "First Date Ideas"?: string;
   Interests?: string;
+  "Interests (from signup)"?: string;
+  "Interests (agent-enriched)"?: string;
   Languages?: string;
+  "Languages (from signup)"?: string;
+  "Languages (agent-enriched)"?: string;
   Dreams?: string;
   "Five Year Goal"?: string;
   "What I Want in a Partner"?: string;

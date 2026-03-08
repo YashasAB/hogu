@@ -18,7 +18,8 @@ export type EnrichableField =
   | "nonNegotiables"
   | "agePreferenceMin"
   | "agePreferenceMax"
-  | "interestsText";
+  | "interestsText"
+  | "languagesText";
 
 export interface AgentUpdate {
   schema: "user_schema";
@@ -52,6 +53,7 @@ export const UPDATABLE_FIELD_MAP: Record<string, EnrichableField> = {
   "Age Pref Min": "agePreferenceMin",
   "Age Pref Max": "agePreferenceMax",
   "Interests": "interestsText",
+  "Languages": "languagesText",
 };
 
 export const LOCKED_FIELDS = new Set([
@@ -61,8 +63,8 @@ export const LOCKED_FIELDS = new Set([
 
 export const SKIP_FIELDS = new Set([
   "First Date Types",
+  "Cuisines",
+  "First Date Ideas",
 ]);
 
-export const RELATIONAL_AGENT_FIELDS = new Set([
-  "Cuisines", "Languages", "First Date Ideas",
-]);
+export const RELATIONAL_AGENT_FIELDS = new Set<string>([]);

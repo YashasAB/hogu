@@ -35,10 +35,14 @@ If the user mentions changes to these, ignore (no updates):
 Profession, Height, Looking For, Date Neighborhoods, Date City, Diet, Drinking, Smoking,
 Physical Activity, Date Budget, Dreams, Five Year Goal, What I Want in a Partner,
 Why My Partner Would Like Me, My Day Looks Like, Ideal First Date, Non-Negotiables,
-Age Pref Min, Age Pref Max, Interests, Cuisines, Languages, First Date Ideas
+Age Pref Min, Age Pref Max, Interests, Languages
 
-2.3 Reference-only fields — shown as context, do NOT include in updates:
-(none — all fields are now editable)
+2.3 Fields to NEVER ask about or update — skip entirely:
+- Cuisines
+- First Date Ideas
+These are set by the user separately and cannot be changed here. Do not ask about them. Do not include them in updates.
+
+Note: "Interests (from signup)" and "Languages (from signup)" are read-only reference fields showing what the user entered at signup. When you update Interests or Languages, write to "Interests" and "Languages" respectively — these map to the enriched text columns.
 
 ---
 
@@ -98,9 +102,7 @@ Field-specific example guidance:
 - Why My Partner Would Like Me → e.g. "like 'I show up, I'm consistent, I actually listen'"
 - Five Year Goal → e.g. "like 'stable career, maybe moved cities, figuring out the relationship thing'"
 - Interests → e.g. "like hiking, live music, cooking — things you actually do, not just 'travel and food'"
-- Cuisines → e.g. "like Japanese, South Indian, Italian — what do you actually enjoy eating?"
 - Languages → e.g. "like English, Hindi, Kannada — what languages do you speak or are comfortable with?"
-- First Date Ideas → e.g. "like coffee, cocktail bar, walk in a nice park — what's your go-to low-pressure first date?"
 
 ---
 
@@ -167,7 +169,9 @@ No additional keys. No extra text outside the JSON.
     "Cuisines": "Japanese, Italian",
     "First Date Ideas": "",
     "Interests": "music, travel",
+    "Interests (from signup)": "music, travel",
     "Languages": "English, Hindi",
+    "Languages (from signup)": "English, Hindi",
     "Dreams": "",
     "Five Year Goal": "",
     "What I Want in a Partner": "good vibes",
@@ -181,7 +185,7 @@ No additional keys. No extra text outside the JSON.
     { "role": "assistant", "content": "Got it — what does 'chill' mean to you here? like no pressure at the start but open to something real if it clicks?" },
     { "role": "user", "content": "By chill I mean no pressure at the start, but I do want a real relationship if it clicks. Also I don't smoke and I'd prefer if she doesn't either." },
     { "role": "assistant", "content": "Makes sense. Any non-negotiables besides smoking? like does diet matter — 'my partner has to be vegetarian' is totally valid." },
-    { "role": "user", "content": "Love Japanese and South Indian. For dates I like coffee, cocktails, or a nice walk somewhere not too crowded." }
+    { "role": "user", "content": "I really love hiking on weekends and discovering live music spots. Also I'm picking up some Kannada." }
   ]
 }
 
@@ -192,6 +196,7 @@ No additional keys. No extra text outside the JSON.
     { "schema": "user_schema", "field": "Date Neighborhoods", "value": "Indiranagar, Koramangala" },
     { "schema": "user_schema", "field": "Looking For", "value": "No pressure at the start; wants a real relationship if it clicks" },
     { "schema": "user_schema", "field": "Smoking", "value": "Does not smoke; prefers partner who does not smoke" },
-    { "schema": "user_schema", "field": "Ideal First Date", "value": "Low-key first date: coffee, cocktails, or a walk somewhere not too crowded" }
+    { "schema": "user_schema", "field": "Interests", "value": "hiking on weekends, live music, picking up Kannada" },
+    { "schema": "user_schema", "field": "Languages", "value": "English, Hindi, learning Kannada" }
   ]
 }`;

@@ -36,15 +36,6 @@ async function applyRelationalPatch(userId, relationalPatch) {
                 }
             }
         }
-        if (field === "Languages") {
-            await prismaClient_1.default.datingUserLanguage.deleteMany({ where: { userId } });
-            if (tags.length > 0) {
-                await prismaClient_1.default.datingUserLanguage.createMany({
-                    data: tags.map((lang) => ({ userId, lang })),
-                    skipDuplicates: true,
-                });
-            }
-        }
         if (field === "First Date Ideas") {
             await prismaClient_1.default.datingUserFirstDateType.deleteMany({ where: { userId } });
             if (tags.length > 0) {

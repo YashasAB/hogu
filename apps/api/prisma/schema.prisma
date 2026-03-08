@@ -263,6 +263,7 @@ model DatingUser {
   updatedAt             DateTime @updatedAt @map("updatedAt")
 
   interestsText         String?  @default("") @map("interests_text")
+  languagesText         String?  @default("") @map("languages_text")
 
   // Relations
   photos         DatingUserPhoto[]

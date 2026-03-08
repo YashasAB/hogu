@@ -32,16 +32,6 @@ async function applyRelationalPatch(userId: string, relationalPatch: Record<stri
       }
     }
 
-    if (field === "Languages") {
-      await prisma.datingUserLanguage.deleteMany({ where: { userId } });
-      if (tags.length > 0) {
-        await prisma.datingUserLanguage.createMany({
-          data: tags.map((lang) => ({ userId, lang })),
-          skipDuplicates: true,
-        });
-      }
-    }
-
     if (field === "First Date Ideas") {
       await prisma.datingUserFirstDateType.deleteMany({ where: { userId } });
       if (tags.length > 0) {

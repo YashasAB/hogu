@@ -95,6 +95,7 @@ interface Profile {
   cuisines: string[];
   interests: string[];
   interestsText: string | null;
+  languagesText: string | null;
   firstDateTypes: string[];
   languages: string[];
 }
@@ -513,7 +514,7 @@ export default function DatingApp() {
       agePreferenceMax: formData.get("agePreferenceMax") || null,
       dateCity: formData.get("dateCity"),
       dateNeighborhoods: formData.get("dateNeighborhoods"),
-      interestsText: formData.get("interestsText"),
+      interests: String(formData.get("interests") || "").split(",").map((s) => s.trim()).filter(Boolean),
       cuisines: String(formData.get("cuisines") || "").split(",").map((s) => s.trim()).filter(Boolean),
       languages: String(formData.get("languages") || "").split(",").map((s) => s.trim()).filter(Boolean),
       firstDateTypes: String(formData.get("firstDateTypes") || "").split(",").map((s) => s.trim()).filter(Boolean),
@@ -1444,6 +1445,9 @@ export default function DatingApp() {
                 ) : (
                   <p><span className="profile-field--empty">Not filled in yet</span></p>
                 )}
+                {myProfile.interestsText && (
+                  <p style={{ marginTop: "6px", fontSize: "0.9rem", color: "#555" }}>{myProfile.interestsText}</p>
+                )}
               </div>
 
               <div className="hogu-section">
@@ -1456,6 +1460,9 @@ export default function DatingApp() {
                   </div>
                 ) : (
                   <p><span className="profile-field--empty">Not filled in yet</span></p>
+                )}
+                {myProfile.languagesText && (
+                  <p style={{ marginTop: "6px", fontSize: "0.9rem", color: "#555" }}>{myProfile.languagesText}</p>
                 )}
               </div>
             </div>
@@ -1873,10 +1880,10 @@ export default function DatingApp() {
               <div className="hogu-form-group">
                 <label>Interests</label>
                 <textarea
-                  name="interestsText"
+                  name="interests"
                   rows={2}
                   placeholder="e.g., hiking, live music, cooking, photography"
-                  defaultValue={myProfile.interestsText ?? myProfile.interests.join(", ")}
+                  defaultValue={myProfile.interests.join(", ")}
                 />
               </div>
 

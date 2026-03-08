@@ -34,7 +34,9 @@ interface DatingUser {
   cuisines?: string[];
   firstDateTypes?: string[];
   interests?: string[];
+  interestsText?: string;
   languages?: string[];
+  languagesText?: string;
   relationshipType?: string;
   agePreferenceMin?: number | null;
   agePreferenceMax?: number | null;
@@ -915,8 +917,8 @@ export default function AdminPortal() {
                   <h4>Interests</h4>
                   <p><strong>Cuisines:</strong> {selectedUser.cuisines?.join(", ") || "-"}</p>
                   <p><strong>First Date Ideas:</strong> {selectedUser.firstDateTypes?.join(", ") || "-"}</p>
-                  <p><strong>Interests:</strong> {selectedUser.interests?.join(", ") || "-"}</p>
-                  <p><strong>Languages:</strong> {selectedUser.languages?.join(", ") || "-"}</p>
+                  <p><strong>Interests:</strong> {selectedUser.interests?.join(", ") || "-"}{selectedUser.interestsText ? ` | Agent: ${selectedUser.interestsText}` : ""}</p>
+                  <p><strong>Languages:</strong> {selectedUser.languages?.join(", ") || "-"}{selectedUser.languagesText ? ` | Agent: ${selectedUser.languagesText}` : ""}</p>
                 </div>
               </div>
 
