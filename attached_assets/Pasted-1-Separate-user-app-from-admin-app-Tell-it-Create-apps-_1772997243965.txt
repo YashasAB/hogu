@@ -1,0 +1,55 @@
+1) Separate user app from admin app
+Tell it:
+Create apps/user-web for the user-facing React + Vite app that will be wrapped by Capacitor.
+Create apps/admin-web for the admin UI if needed.
+Keep server/ for backend APIs.
+The Capacitor/mobile build must use only apps/user-web as its web source.
+If you do not want a refactor right now, tell Replit:
+Keep current structure, but ensure the build used by Capacitor contains only the user-facing app, not the admin UI.
+2) Make frontend API calls environment-based
+Tell Replit:
+In the user frontend, replace hardcoded/same-origin API assumptions with VITE_API_BASE_URL.
+Web build should use /api.
+Mobile build should use the production backend URL.
+Example:
+# apps/user-web/.env.web
+VITE_API_BASE_URL=/api
+# apps/user-web/.env.mobile
+VITE_API_BASE_URL=https://api.yourdomain.com
+Then in code:
+const API = import.meta.env.VITE_API_BASE_URL;
+fetch(`${API}/whatever`);
+That prevents the iOS/Android app from breaking when it is no longer hosted on the same origin as the website.
+3) Add CORS on backend for mobile origins
+Tell Replit:
+Configure backend CORS to allow the website origin and Capacitor origins.
+Allow the production web domain, Replit web domain if still used, capacitor://localhost for iOS, and http://localhost for Android.
+Example in Express:
+import cors from "cors";
+
+const allowed = new Set([
+  "https://your-web-domain.com",
+  "https://your-replit-web-domain.replit.app",
+  "capacitor://localhost",
+  "http://localhost",
+]);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    cb(null, allowed.has(origin));
+  },
+  credentials: true, // only if you use cookie auth
+}));
+If you use JWT bearer auth instead of cookies, life is easier.
+4) Add mobile build scripts
+Tell Replit:
+Add scripts for user web build and mobile build.
+The mobile build must output the user app into the folder used by Capacitor webDir.
+For example:
+{
+  "scripts": {
+    "build:user:web": "cd apps/user-web && VITE_API_BASE_URL=/api vite build",
+    "build:user:mobile": "cd apps/user-web && VITE_API_BASE_URL=https://api.yourdomain.com vite build"
+  }
+}
