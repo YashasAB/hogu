@@ -343,6 +343,7 @@ Error generating stack: `+a.message+`
   background: #0f1115;
   color: #eaeaea;
   padding: 24px 0;
+  padding-top: calc(24px + env(safe-area-inset-top));
 }
 .hogu-auth-card {
   width: min(520px, 92vw);
@@ -511,6 +512,7 @@ Error generating stack: `+a.message+`
   background: #0f1115;
   color: #eaeaea;
   padding: min(5vw, 32px) 0;
+  padding-top: calc(min(5vw, 32px) + env(safe-area-inset-top));
 }
 .hogu-auth-card {
   width: min(900px, 94vw);
@@ -614,6 +616,7 @@ textarea.hogu-input { resize: vertical; }
           min-height: 100vh;
           background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
           color: #fff;
+          padding-top: env(safe-area-inset-top);
         }
         .hogu-loading {
           display: flex;

@@ -195,6 +195,7 @@ const loginCss = `
   background: #0f1115;
   color: #eaeaea;
   padding: 24px 0;
+  padding-top: calc(24px + env(safe-area-inset-top));
 }
 .hogu-auth-card {
   width: min(520px, 92vw);
