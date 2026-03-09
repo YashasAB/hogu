@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import GetToKnowChat from "../../components/GetToKnowChat";
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '';
+
 const DIET_LABELS: Record<string, string> = {
   VEG: "Vegetarian",
   EGG: "Eggetarian",
@@ -542,7 +544,7 @@ export default function DatingApp() {
   }
 
   function getPhotoUrl(objectKey: string) {
-    return `/api/images/storage/${encodeURIComponent(objectKey)}`;
+    return `${API_BASE_URL}/api/images/storage/${encodeURIComponent(objectKey)}`;
   }
 
   function calculateAge(dob: string) {

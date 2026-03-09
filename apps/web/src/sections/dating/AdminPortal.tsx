@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 const API_BASE = "/api/dating/admin";
+const API_IMAGE_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
 const DIET_LABELS: Record<string, string> = { VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-Vegetarian", VEGAN: "Vegan", JAIN: "Jain" };
 const DRINKING_LABELS: Record<string, string> = { NEVER: "Never", SOCIALLY: "Socially", OFTEN: "Often" };
@@ -786,7 +787,7 @@ export default function AdminPortal() {
                         <td>
                           {u.photos[0] && (
                             <img
-                              src={`/api/images/storage/${u.photos[0].objectKey}`}
+                              src={`${API_IMAGE_BASE}/api/images/storage/${u.photos[0].objectKey}`}
                               alt=""
                               className="thumb"
                             />
@@ -883,7 +884,7 @@ export default function AdminPortal() {
                 {selectedUser.photos.map((p) => (
                   <img
                     key={p.objectKey}
-                    src={`/api/images/storage/${p.objectKey}`}
+                    src={`${API_IMAGE_BASE}/api/images/storage/${p.objectKey}`}
                     alt=""
                     className="photo"
                   />
