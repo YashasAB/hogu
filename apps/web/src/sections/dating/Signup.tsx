@@ -53,6 +53,7 @@ export default function Signup() {
       await postJson("/api/dating/auth/verify-otp", { phone: verifyPhoneE164, code: otpCode.trim() });
       set("phone", verifyPhone.replace(/\D/g, ""));
       setStep("form");
+      await submit();
     } catch (err: any) {
       setVerifyError(err?.message || "Invalid code. Please try again.");
     } finally {
@@ -198,8 +199,8 @@ export default function Signup() {
     dateBudget: "Date budget",
   };
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(e?: React.FormEvent) {
+    e?.preventDefault();
     setSubmitError(null);
     setHasAttemptedSubmit(true);
     if (Object.keys(errors).length) return;
@@ -268,89 +269,6 @@ export default function Signup() {
     }
   }
 
-  if (step === "verify") {
-    return (
-      <div className="hogu-auth">
-        <div className="hogu-auth-card" style={{ position: "relative", maxWidth: 480 }}>
-          <a href="/" className="back-btn" aria-label="Back to home">← Back</a>
-          <h1 style={{ marginTop: 28 }}>First, verify your phone</h1>
-          <p className="muted" style={{ marginBottom: 20 }}>We'll send a one-time code to confirm your number. You'll only need to do this once.</p>
-
-          <div className="hogu-field" style={{ marginBottom: 16 }}>
-            <label>Mobile number</label>
-            <div className="phone-row">
-              <span className="phone-prefix">+91</span>
-              <input
-                className="hogu-input phone-input"
-                type="tel"
-                inputMode="numeric"
-                placeholder="98765 43210"
-                value={verifyPhone}
-                onChange={(e) => setVerifyPhone(e.target.value)}
-                disabled={otpSent}
-              />
-            </div>
-          </div>
-
-          {!otpSent ? (
-            <>
-              {verifyError && <div className="hogu-error" style={{ marginBottom: 10 }}>{verifyError}</div>}
-              <button
-                className="hogu-btn hogu-btn--primary"
-                type="button"
-                onClick={onSendOtp}
-                disabled={otpSending}
-                style={{ width: "100%" }}
-              >
-                {otpSending ? "Sending code..." : "Send OTP"}
-              </button>
-            </>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              <p className="otp-sent-msg">A code was sent to <strong>+91 {verifyPhone}</strong>. Enter it below.</p>
-              <div className="hogu-field">
-                <label>Verification code</label>
-                <input
-                  className="hogu-input otp-input"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  autoFocus
-                />
-              </div>
-              {verifyError && <div className="hogu-error">{verifyError}</div>}
-              <button
-                className="hogu-btn hogu-btn--primary"
-                type="button"
-                onClick={onVerifyOtp}
-                disabled={otpVerifying}
-                style={{ width: "100%" }}
-              >
-                {otpVerifying ? "Verifying..." : "Verify & Continue"}
-              </button>
-              <button
-                className="resend-link"
-                type="button"
-                onClick={onSendOtp}
-                disabled={otpSending}
-              >
-                {otpSending ? "Resending..." : "Resend code"}
-              </button>
-            </div>
-          )}
-
-          <p className="muted tiny" style={{ marginTop: 16 }}>
-            Already have an account? <a className="hogu-link" href="/login">Log in</a>
-          </p>
-        </div>
-        <style>{signupCss}</style>
-      </div>
-    );
-  }
-
   return (
     <div className="hogu-auth">
       <div className="hogu-auth-card" style={{ position: "relative" }}>
@@ -360,17 +278,94 @@ export default function Signup() {
           Serious connections. Curated experiences. Built for real dates.
         </p>
 
+        {/* Phone verification widget — always at top */}
+        {step === "verify" ? (
+          <div className="otp-widget">
+            <div className="otp-widget-label">Step 1 — Verify your phone number</div>
+            <p className="muted" style={{ marginBottom: 12, fontSize: 13 }}>We'll send a one-time code. Fill in the form below while you wait.</p>
+            <div className="hogu-field" style={{ marginBottom: 12 }}>
+              <label>Mobile number</label>
+              <div className="phone-row">
+                <span className="phone-prefix">+91</span>
+                <input
+                  className="hogu-input phone-input"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98765 43210"
+                  value={verifyPhone}
+                  onChange={(e) => setVerifyPhone(e.target.value)}
+                  disabled={otpSent}
+                />
+              </div>
+            </div>
+            {!otpSent ? (
+              <>
+                {verifyError && <div className="hogu-error" style={{ marginBottom: 10 }}>{verifyError}</div>}
+                <button
+                  className="hogu-btn hogu-btn--primary"
+                  type="button"
+                  onClick={onSendOtp}
+                  disabled={otpSending}
+                  style={{ width: "100%" }}
+                >
+                  {otpSending ? "Sending code..." : "Send OTP"}
+                </button>
+              </>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                <p className="otp-sent-msg">A code was sent to <strong>+91 {verifyPhone}</strong>. Enter it below.</p>
+                <div className="hogu-field">
+                  <label>Verification code</label>
+                  <input
+                    className="hogu-input otp-input"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    autoFocus
+                  />
+                </div>
+                {verifyError && <div className="hogu-error">{verifyError}</div>}
+                <button
+                  className="hogu-btn hogu-btn--primary"
+                  type="button"
+                  onClick={onVerifyOtp}
+                  disabled={otpVerifying}
+                  style={{ width: "100%" }}
+                >
+                  {otpVerifying ? "Verifying & signing up..." : "Verify & Sign Up"}
+                </button>
+                <button
+                  className="resend-link"
+                  type="button"
+                  onClick={onSendOtp}
+                  disabled={otpSending}
+                >
+                  {otpSending ? "Resending..." : "Resend code"}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="otp-widget otp-widget--verified">
+            <span style={{ color: "#4cde9a", fontWeight: 700 }}>✓ Phone verified</span>
+            <span style={{ color: "#aaa", marginLeft: 8 }}>+91 {form.phone}</span>
+          </div>
+        )}
+
         <form className="hogu-form" onSubmit={submit} noValidate>
           {/* Contact / Security */}
           <div className="grid-two">
             <div className="hogu-field">
-              <label>Phone number <span style={{ color: "#4cde9a", fontWeight: 600 }}>Verified ✓</span></label>
+              <label>Phone number</label>
               <div className="phone-row" style={{ opacity: 0.75, pointerEvents: "none" }}>
                 <span className="phone-prefix">+91</span>
                 <input
                   className="hogu-input phone-input"
                   type="tel"
-                  value={form.phone}
+                  value={step === "form" ? form.phone : verifyPhone}
                   readOnly
                 />
               </div>
@@ -816,7 +811,12 @@ export default function Signup() {
             </div>
           )}
           {submitError && <div className="hogu-error" style={{marginTop:8}}>{submitError}</div>}
-          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting}>
+          {step === "verify" && (
+            <p className="muted tiny" style={{ marginBottom: 8, textAlign: "center" }}>
+              Verify your phone number above to submit.
+            </p>
+          )}
+          <button className="hogu-btn hogu-btn--primary" type="submit" disabled={isSubmitting || step === "verify"}>
             {isSubmitting ? "Creating..." : "Create account"}
           </button>
 
@@ -933,6 +933,27 @@ const signupCss = `
 }
 .resend-link:hover { color: rgba(255,255,255,0.8); }
 .resend-link:disabled { opacity: 0.4; cursor: not-allowed; }
+/* OTP widget */
+.otp-widget {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.otp-widget--verified {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+.otp-widget-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4cde9a;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 /* container */
 .hogu-auth {
   min-height: 100dvh;
