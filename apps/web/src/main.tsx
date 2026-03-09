@@ -4,11 +4,17 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './shells/App'
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '';
+
 const _originalFetch = window.fetch.bind(window);
 window.fetch = function(input, init) {
-  const url = typeof input === 'string' ? input
+  let url = typeof input === 'string' ? input
     : input instanceof URL ? input.href
     : (input as Request).url;
+  if (API_BASE && url.startsWith('/api/')) {
+    url = API_BASE + url;
+    input = url;
+  }
   if (url.includes('/api/')) {
     const token = sessionStorage.getItem('dating_token');
     if (token) {
