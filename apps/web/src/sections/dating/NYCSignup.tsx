@@ -750,6 +750,7 @@ const signupCss = `
   background: #0f1115;
   color: #eaeaea;
   padding: min(5vw, 32px) 0;
+  padding-top: calc(min(5vw, 32px) + env(safe-area-inset-top));
 }
 .hogu-auth-card {
   width: min(900px, 94vw);

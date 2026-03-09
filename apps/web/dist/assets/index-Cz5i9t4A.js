@@ -81,6 +81,7 @@ Error generating stack: `+a.message+`
           background: #0f1115;
           position: relative;
           overflow-x: hidden;
+          padding-top: env(safe-area-inset-top);
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
         }
 
@@ -1160,6 +1161,7 @@ textarea.hogu-input { resize: vertical; }
   place-items: center;
   background: #0f1115;
   color: #eaeaea;
+  padding-top: env(safe-area-inset-top);
 }
 .hogu-auth-card {
   width: min(560px, 92vw);
@@ -1219,6 +1221,7 @@ textarea.hogu-input { resize: vertical; }
           background: #0f1115;
           position: relative;
           overflow-x: hidden;
+          padding-top: env(safe-area-inset-top);
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
         }
 
@@ -1479,6 +1482,7 @@ textarea.hogu-input { resize: vertical; }
   background: #0f1115;
   color: #eaeaea;
   padding: min(5vw, 32px) 0;
+  padding-top: calc(min(5vw, 32px) + env(safe-area-inset-top));
 }
 .hogu-auth-card {
   width: min(900px, 94vw);

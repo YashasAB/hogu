@@ -153,6 +153,7 @@ const resetCss = `
   place-items: center;
   background: #0f1115;
   color: #eaeaea;
+  padding-top: env(safe-area-inset-top);
 }
 .hogu-auth-card {
   width: min(560px, 92vw);

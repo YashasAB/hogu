@@ -152,6 +152,7 @@ export default function DatingHome() {
           background: #0f1115;
           position: relative;
           overflow-x: hidden;
+          padding-top: env(safe-area-inset-top);
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
         }
 
