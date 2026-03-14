@@ -575,8 +575,6 @@ export default function DatingApp() {
     return `${API_BASE_URL}/api/images/storage/${encodeURIComponent(objectKey)}`;
   }
 
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
   async function uploadFileAsPhoto(file: File) {
     setError(null);
     const contentType = file.type || "image/jpeg";
@@ -611,33 +609,33 @@ export default function DatingApp() {
     }
   }
 
-  async function handleTakePhoto() {
-    if (isNative()) {
-      try {
-        setError(null);
-        const photo = await Camera.getPhoto({
-          quality: 90,
-          resultType: CameraResultType.Base64,
-          source: CameraSource.Camera,
-        });
-        if (!photo.base64String) throw new Error("No photo captured");
+  async function handleNativeAddPhoto() {
+    try {
+      setError(null);
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Prompt,
+      });
+      if (!photo.base64String) throw new Error("No photo captured");
 
-        const byteChars = atob(photo.base64String);
-        const byteArray = new Uint8Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) {
-          byteArray[i] = byteChars.charCodeAt(i);
-        }
-        const contentType = `image/${photo.format || "jpeg"}`;
-        const blob = new Blob([byteArray], { type: contentType });
-        const file = new File([blob], `camera_${Date.now()}.${photo.format || "jpeg"}`, { type: contentType });
-        await uploadFileAsPhoto(file);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "";
-        if (msg.includes("cancelled") || msg.includes("User cancelled")) return;
-        setError("Failed to capture photo");
+      const byteChars = atob(photo.base64String);
+      const byteArray = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) {
+        byteArray[i] = byteChars.charCodeAt(i);
       }
-    } else {
-      cameraInputRef.current?.click();
+      const contentType = `image/${photo.format || "jpeg"}`;
+      const blob = new Blob([byteArray], { type: contentType });
+      const file = new File([blob], `photo_${Date.now()}.${photo.format || "jpeg"}`, { type: contentType });
+      await uploadFileAsPhoto(file);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (
+        msg.includes("cancelled") ||
+        msg.includes("User cancelled") ||
+        String(err).includes("cancelled")
+      ) return;
+      setError("Failed to add photo");
     }
   }
 
@@ -1664,35 +1662,17 @@ export default function DatingApp() {
                   </div>
                 ))}
 
-                {myProfile.photos.length < 6 && (
+                {myProfile.photos.length < 6 && isNative() && (
                   <button
                     type="button"
                     className="hogu-photo-add-slot"
-                    onClick={handleTakePhoto}
+                    onClick={handleNativeAddPhoto}
                   >
-                    <span>📷 Take Photo</span>
+                    <span>+ Add Photo</span>
                   </button>
                 )}
 
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  style={{ display: "none" }}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    e.target.value = "";
-                    try {
-                      await uploadFileAsPhoto(file);
-                    } catch {
-                      setError("Failed to upload photo");
-                    }
-                  }}
-                />
-
-                {myProfile.photos.length < 6 && (
+                {myProfile.photos.length < 6 && !isNative() && (
                   <label className="hogu-photo-add-slot">
                     <span>+ Add Photo</span>
                     <input
