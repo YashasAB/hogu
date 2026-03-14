@@ -576,6 +576,7 @@ export default function DatingApp() {
   }
 
   async function handleTakePhoto() {
+    if (!isNative()) return;
     try {
       setError(null);
       const photo = await Camera.getPhoto({
@@ -623,8 +624,9 @@ export default function DatingApp() {
       } else {
         setError(addData.error || "Failed to add photo");
       }
-    } catch (err: any) {
-      if (err?.message?.includes("cancelled") || err?.message?.includes("User cancelled")) return;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("cancelled") || msg.includes("User cancelled")) return;
       setError("Failed to capture photo");
     }
   }
