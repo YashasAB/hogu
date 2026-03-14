@@ -1,6 +1,7 @@
 import { Router } from "express";
 import prisma from "../../prismaClient";
 import { runIntroAgent, deletePendingIntro } from "../agents/intro-agent";
+import { sendPushToUser } from "../push/sendPush";
 
 const router = Router();
 
@@ -726,6 +727,9 @@ router.post("/match-messages", requireAdminAuth, async (req: any, res: any) => {
     const message = await prisma.matchMessage.create({
       data: { matchId, userId, fromAdmin: true, content: content.trim() },
     });
+
+    sendPushToUser(userId, "New message from your matchmaker", "You have a new message from your matchmaker.");
+
     return res.status(201).json({ ok: true, message });
   } catch (err) {
     console.error("[Admin] send match message error:", err);

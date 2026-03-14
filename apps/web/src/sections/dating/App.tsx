@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import GetToKnowChat from "../../components/GetToKnowChat";
 import { clearToken, restoreToken, isNative } from "../../lib/tokenStorage";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { initOneSignalAndRegister } from "../../lib/oneSignalInit";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -178,6 +179,7 @@ export default function DatingApp() {
       fetchMatches();
       fetchMyProfile();
       fetchUnreadCount();
+      initOneSignalAndRegister();
     }
     initSession();
     const interval = setInterval(() => {

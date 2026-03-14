@@ -9,6 +9,7 @@ exports.deletePendingIntro = deletePendingIntro;
 const prismaClient_1 = __importDefault(require("../../../prismaClient"));
 const buildInput_1 = require("./buildInput");
 const generator_1 = require("./generator");
+const sendPush_1 = require("../../push/sendPush");
 function formatMessageContent(title, body, cta) {
     return [body, cta].filter(Boolean).join("\n\n");
 }
@@ -37,6 +38,7 @@ async function runIntroAgent(matchId) {
             await prismaClient_1.default.matchMessage.create({
                 data: { matchId, userId: femaleMessage.to_user_id, fromAdmin: true, content },
             });
+            (0, sendPush_1.sendPushToUser)(femaleMessage.to_user_id, "\u{1F389} You have a new match!", "Congrats! You have a new match \u2014 check them out now.");
             console.log(`[IntroAgent] Match ${matchId}: intro message delivered to female user ${femaleMessage.to_user_id}`);
         }
         if (maleMessage) {
@@ -66,6 +68,7 @@ async function deliverPendingIntroToMale(matchId) {
             data: { matchId: pending.matchId, userId: pending.toUserId, fromAdmin: true, content: pending.content },
         });
         await prismaClient_1.default.pendingIntroMessage.delete({ where: { matchId } });
+        (0, sendPush_1.sendPushToUser)(pending.toUserId, "\u{1F389} You have a new match!", "Congrats! You have a new match \u2014 check them out now.");
         console.log(`[IntroAgent] Match ${matchId}: pending intro delivered to male user ${pending.toUserId}`);
     }
     catch (err) {

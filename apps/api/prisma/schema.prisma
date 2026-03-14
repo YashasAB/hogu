@@ -258,6 +258,7 @@ model DatingUser {
   dateCity              String?  @map("dateCity")
   dateNeighborhoods     String?  @map("dateNeighborhoods")
   city                  String   @default("BLR")
+  oneSignalId           String?  @map("oneSignalId")
 
   createdAt             DateTime @default(now()) @map("createdAt")
   updatedAt             DateTime @updatedAt @map("updatedAt")

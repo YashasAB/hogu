@@ -1,6 +1,7 @@
 import prisma from "../../../prismaClient";
 import { buildIntroInput } from "./buildInput";
 import { generateIntroMessages } from "./generator";
+import { sendPushToUser } from "../../push/sendPush";
 
 
 function formatMessageContent(title: string, body: string, cta: string): string {
@@ -38,6 +39,7 @@ export async function runIntroAgent(matchId: string): Promise<void> {
       await prisma.matchMessage.create({
         data: { matchId, userId: femaleMessage.to_user_id, fromAdmin: true, content },
       });
+      sendPushToUser(femaleMessage.to_user_id, "\u{1F389} You have a new match!", "Congrats! You have a new match \u2014 check them out now.");
       console.log(`[IntroAgent] Match ${matchId}: intro message delivered to female user ${femaleMessage.to_user_id}`);
     }
 
@@ -72,6 +74,7 @@ export async function deliverPendingIntroToMale(matchId: string): Promise<void> 
 
     await prisma.pendingIntroMessage.delete({ where: { matchId } });
 
+    sendPushToUser(pending.toUserId, "\u{1F389} You have a new match!", "Congrats! You have a new match \u2014 check them out now.");
     console.log(`[IntroAgent] Match ${matchId}: pending intro delivered to male user ${pending.toUserId}`);
   } catch (err) {
     console.error(`[IntroAgent] Match ${matchId}: failed to deliver pending intro —`, err);

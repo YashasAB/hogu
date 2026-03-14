@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const prismaClient_1 = __importDefault(require("../../prismaClient"));
 const intro_agent_1 = require("../agents/intro-agent");
+const sendPush_1 = require("../push/sendPush");
 const router = (0, express_1.Router)();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) {
@@ -649,6 +650,7 @@ router.post("/match-messages", requireAdminAuth, async (req, res) => {
         const message = await prismaClient_1.default.matchMessage.create({
             data: { matchId, userId, fromAdmin: true, content: content.trim() },
         });
+        (0, sendPush_1.sendPushToUser)(userId, "New message from your matchmaker", "You have a new message from your matchmaker.");
         return res.status(201).json({ ok: true, message });
     }
     catch (err) {

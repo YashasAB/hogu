@@ -723,4 +723,23 @@ router.post("/match-messages/:matchId", session_1.datingSessionMiddleware, async
         return res.status(500).json({ ok: false, error: "Failed to send match message" });
     }
 });
+router.post("/onesignal-id", session_1.datingSessionMiddleware, async (req, res) => {
+    const userId = req.datingUserId;
+    if (!userId)
+        return res.status(401).json({ ok: false, error: "Not authenticated" });
+    try {
+        const { oneSignalId } = req.body;
+        if (!oneSignalId || typeof oneSignalId !== "string")
+            return res.status(400).json({ ok: false, error: "oneSignalId is required" });
+        await prismaClient_1.default.datingUser.update({
+            where: { id: userId },
+            data: { oneSignalId },
+        });
+        return res.json({ ok: true });
+    }
+    catch (err) {
+        console.error("Error saving OneSignal ID:", err);
+        return res.status(500).json({ ok: false, error: "Failed to save OneSignal ID" });
+    }
+});
 exports.default = router;
