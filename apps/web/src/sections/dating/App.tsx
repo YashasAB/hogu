@@ -1679,57 +1679,14 @@ export default function DatingApp() {
                     <span>+ Add Photo</span>
                     <input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp"
+                      accept="image/*"
                       style={{ display: "none" }}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         e.target.value = "";
                         try {
-                          setError(null);
-                          const contentType = file.type || "image/jpeg";
-                          const presignRes = await fetch(
-                            "/api/dating/uploads/presign",
-                            {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              credentials: "include",
-                              body: JSON.stringify({
-                                count: 1,
-                                contentTypes: [contentType],
-                                userHint: "profile",
-                              }),
-                            },
-                          );
-                          const presignData = await presignRes.json();
-                          if (!presignData.ok || !presignData.items?.length)
-                            throw new Error("Presign failed");
-
-                          const item = presignData.items[0];
-                          const uploadRes = await fetch(item.uploadUrl, {
-                            method: "PUT",
-                            headers: { "Content-Type": item.contentType },
-                            body: file,
-                          });
-                          if (!uploadRes.ok) throw new Error("Upload failed");
-
-                          const addRes = await fetch(
-                            "/api/dating/profile/photos",
-                            {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              credentials: "include",
-                              body: JSON.stringify({
-                                objectKey: item.objectKey,
-                              }),
-                            },
-                          );
-                          const addData = await addRes.json();
-                          if (addData.ok) {
-                            await fetchMyProfile();
-                          } else {
-                            setError(addData.error || "Failed to add photo");
-                          }
+                          await uploadFileAsPhoto(file);
                         } catch {
                           setError("Failed to upload photo");
                         }
