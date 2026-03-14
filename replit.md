@@ -57,6 +57,9 @@ The database schema supports dating profiles, restaurant details, inventory, res
 - **Messaging**: Admin-to-user messages (generic broadcasts), AI-generated intro messages, and per-match private `MatchMessage` threads between admin and each user.
 - **Phone OTP Verification**: `PhoneVerified` table stores recently verified phone numbers for the signup gate. Prelude (@prelude.so/sdk) handles OTP delivery and checking.
 
+## Push Notifications
+- **OneSignal**: Push notifications for iOS via OneSignal REST API. Backend helper `sendPushToUser()` at `apps/api/src/dating/push/sendPush.ts` looks up the user's `oneSignalId` and calls OneSignal's API. Fires on: admin match messages ("New message from your matchmaker") and intro agent deliveries ("You have a new match!"). Frontend initializes OneSignal via `onesignal-cordova-plugin` on native only, registers subscription ID to `POST /api/dating/profile/onesignal-id`. Requires `VITE_ONESIGNAL_APP_ID` and `ONESIGNAL_REST_API_KEY` secrets.
+
 ## AI Agents
 - **Intro Agent**: Generates personalized AI introduction messages for new matches using OpenAI (gpt-4o). Female messages are delivered immediately; male messages are stored in `PendingIntroMessage` and delivered upon female interest.
 - **Get to Know Agent**: Facilitates guided conversations between matched users, allowing them to update profile fields during interaction. Uses OpenAI (gpt-4o) in JSON mode, applying atomic updates via Prisma transactions. Limited to 5 messages per user per day.
