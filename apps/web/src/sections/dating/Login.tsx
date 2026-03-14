@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { postJson } from "../../lib/api";
+import { persistToken } from "../../lib/tokenStorage";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -28,7 +29,9 @@ export default function Login() {
         phone: phoneE164,
         password,
       });
-      if (data.sessionToken) sessionStorage.setItem("dating_token", data.sessionToken);
+      if (data.sessionToken) {
+        await persistToken(data.sessionToken);
+      }
       window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Login failed. Please check your password.");
@@ -61,7 +64,9 @@ export default function Login() {
         phone: phoneE164,
         otp: otp.trim(),
       });
-      if (data.sessionToken) sessionStorage.setItem("dating_token", data.sessionToken);
+      if (data.sessionToken) {
+        await persistToken(data.sessionToken);
+      }
       window.location.href = "/app";
     } catch (err: any) {
       setOtpError(err?.message || "Invalid code. Please try again.");

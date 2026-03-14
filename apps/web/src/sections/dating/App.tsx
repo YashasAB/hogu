@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import GetToKnowChat from "../../components/GetToKnowChat";
+import { clearToken, restoreToken, isNative } from "../../lib/tokenStorage";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '';
 
@@ -147,11 +148,37 @@ export default function DatingApp() {
   } | null>(null);
   const [showGetToKnow, setShowGetToKnow] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sessionReady, setSessionReady] = useState(!isNative());
 
   useEffect(() => {
-    fetchMatches();
-    fetchMyProfile();
-    fetchUnreadCount();
+    async function initSession() {
+      if (isNative()) {
+        const token = await restoreToken();
+        if (token) {
+          try {
+            const res = await fetch("/api/dating/auth/me", { credentials: "include" });
+            const data = await res.json();
+            if (!data.ok) {
+              await clearToken();
+              window.location.href = "/login";
+              return;
+            }
+          } catch {
+            await clearToken();
+            window.location.href = "/login";
+            return;
+          }
+        } else {
+          window.location.href = "/login";
+          return;
+        }
+        setSessionReady(true);
+      }
+      fetchMatches();
+      fetchMyProfile();
+      fetchUnreadCount();
+    }
+    initSession();
     const interval = setInterval(() => {
       fetchUnreadCount();
     }, 15000);
@@ -424,7 +451,7 @@ export default function DatingApp() {
       method: "POST",
       credentials: "include",
     });
-    sessionStorage.removeItem("dating_token");
+    await clearToken();
     window.location.href = "/";
   }
 
@@ -556,7 +583,7 @@ export default function DatingApp() {
     return age;
   }
 
-  if (loading) {
+  if (!sessionReady || loading) {
     return (
       <div className="hogu-app">
         <div className="hogu-loading">Loading...</div>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { postJson, fetchJson } from "../../lib/api";
 import { presignPhotos, putToPresignedUrl } from "../../lib/uploads";
+import { persistToken } from "../../lib/tokenStorage";
 
 interface Option {
   value: string;
@@ -260,7 +261,9 @@ export default function Signup() {
       const resp = await postJson<{ ok: boolean; sessionToken?: string; user: { id: string } }>("/api/dating/auth/signup", body);
 
       // 5) store token and redirect on success
-      if (resp.sessionToken) sessionStorage.setItem("dating_token", resp.sessionToken);
+      if (resp.sessionToken) {
+        await persistToken(resp.sessionToken);
+      }
       window.location.href = "/app";
     } catch (err: any) {
       setSubmitError(err?.message || "Failed to create account");

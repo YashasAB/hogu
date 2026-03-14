@@ -23,8 +23,9 @@ The system is built as a monorepo using PNPM workspaces, separating `web` (front
 - **Database**: PostgreSQL, managed by Prisma ORM.
 - **Styling**: Tailwind CSS for a utility-first approach with custom branding.
 - **State Management**: React hooks and context API.
-- **Authentication**: JWT-based authentication with bcrypt for password hashing.
+- **Authentication**: HMAC-signed session tokens with bcrypt for password hashing. On mobile (Capacitor), tokens are persisted in `@capacitor/preferences` for auto-login across app launches; on web, `sessionStorage` is used.
 - **Image Storage**: Replit Object Storage (Google Cloud Storage) for user photos and restaurant images.
+- **Mobile**: Capacitor wraps the web app for iOS. `@capacitor/core` and `@capacitor/preferences` are installed. Token persistence helper at `apps/web/src/lib/tokenStorage.ts`.
 
 ## Frontend Design
 - **UI/UX**: Custom components adhering to a mobile-first responsive design.
