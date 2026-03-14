@@ -575,59 +575,69 @@ export default function DatingApp() {
     return `${API_BASE_URL}/api/images/storage/${encodeURIComponent(objectKey)}`;
   }
 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  async function uploadFileAsPhoto(file: File) {
+    setError(null);
+    const contentType = file.type || "image/jpeg";
+    const presignRes = await fetch("/api/dating/uploads/presign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ count: 1, contentTypes: [contentType], userHint: "profile" }),
+    });
+    const presignData = await presignRes.json();
+    if (!presignData.ok || !presignData.items?.length) throw new Error("Presign failed");
+
+    const item = presignData.items[0];
+    const uploadRes = await fetch(item.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": item.contentType },
+      body: file,
+    });
+    if (!uploadRes.ok) throw new Error("Upload failed");
+
+    const addRes = await fetch("/api/dating/profile/photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ objectKey: item.objectKey }),
+    });
+    const addData = await addRes.json();
+    if (addData.ok) {
+      await fetchMyProfile();
+    } else {
+      setError(addData.error || "Failed to add photo");
+    }
+  }
+
   async function handleTakePhoto() {
-    if (!isNative()) return;
-    try {
-      setError(null);
-      const photo = await Camera.getPhoto({
-        quality: 90,
-        resultType: CameraResultType.Base64,
-        source: CameraSource.Camera,
-      });
-      if (!photo.base64String) throw new Error("No photo captured");
+    if (isNative()) {
+      try {
+        setError(null);
+        const photo = await Camera.getPhoto({
+          quality: 90,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Camera,
+        });
+        if (!photo.base64String) throw new Error("No photo captured");
 
-      const byteChars = atob(photo.base64String);
-      const byteArray = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) {
-        byteArray[i] = byteChars.charCodeAt(i);
+        const byteChars = atob(photo.base64String);
+        const byteArray = new Uint8Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteArray[i] = byteChars.charCodeAt(i);
+        }
+        const contentType = `image/${photo.format || "jpeg"}`;
+        const blob = new Blob([byteArray], { type: contentType });
+        const file = new File([blob], `camera_${Date.now()}.${photo.format || "jpeg"}`, { type: contentType });
+        await uploadFileAsPhoto(file);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("cancelled") || msg.includes("User cancelled")) return;
+        setError("Failed to capture photo");
       }
-      const contentType = `image/${photo.format || "jpeg"}`;
-      const blob = new Blob([byteArray], { type: contentType });
-      const file = new File([blob], `camera_${Date.now()}.${photo.format || "jpeg"}`, { type: contentType });
-
-      const presignRes = await fetch("/api/dating/uploads/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ count: 1, contentTypes: [contentType], userHint: "profile" }),
-      });
-      const presignData = await presignRes.json();
-      if (!presignData.ok || !presignData.items?.length) throw new Error("Presign failed");
-
-      const item = presignData.items[0];
-      const uploadRes = await fetch(item.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": item.contentType },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error("Upload failed");
-
-      const addRes = await fetch("/api/dating/profile/photos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ objectKey: item.objectKey }),
-      });
-      const addData = await addRes.json();
-      if (addData.ok) {
-        await fetchMyProfile();
-      } else {
-        setError(addData.error || "Failed to add photo");
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("cancelled") || msg.includes("User cancelled")) return;
-      setError("Failed to capture photo");
+    } else {
+      cameraInputRef.current?.click();
     }
   }
 
@@ -1654,7 +1664,7 @@ export default function DatingApp() {
                   </div>
                 ))}
 
-                {myProfile.photos.length < 6 && isNative() && (
+                {myProfile.photos.length < 6 && (
                   <button
                     type="button"
                     className="hogu-photo-add-slot"
@@ -1663,6 +1673,24 @@ export default function DatingApp() {
                     <span>📷 Take Photo</span>
                   </button>
                 )}
+
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    e.target.value = "";
+                    try {
+                      await uploadFileAsPhoto(file);
+                    } catch {
+                      setError("Failed to upload photo");
+                    }
+                  }}
+                />
 
                 {myProfile.photos.length < 6 && (
                   <label className="hogu-photo-add-slot">
