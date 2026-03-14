@@ -857,10 +857,13 @@ router.post("/onesignal-id", datingSessionMiddleware, async (req: any, res: any)
     if (!oneSignalId || typeof oneSignalId !== "string")
       return res.status(400).json({ ok: false, error: "oneSignalId is required" });
 
-    await prisma.datingUser.update({
+    const updated = await prisma.datingUser.updateMany({
       where: { id: userId },
       data: { oneSignalId },
     });
+    if (updated.count === 0) {
+      return res.status(404).json({ ok: false, error: "User not found" });
+    }
 
     return res.json({ ok: true });
   } catch (err) {

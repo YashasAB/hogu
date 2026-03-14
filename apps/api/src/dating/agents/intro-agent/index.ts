@@ -27,6 +27,7 @@ export async function runIntroAgent(matchId: string): Promise<void> {
         await prisma.matchMessage.create({
           data: { matchId, userId: msg.to_user_id, fromAdmin: true, content },
         });
+        sendPushToUser(msg.to_user_id, "\u{1F389} You have a new match!", "Congrats! You have a new match \u2014 check them out now.");
       }
       return;
     }

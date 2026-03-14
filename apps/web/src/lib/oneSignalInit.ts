@@ -1,24 +1,5 @@
 import { isNative } from "./tokenStorage";
 
-declare global {
-  interface Window {
-    plugins?: {
-      OneSignal?: {
-        initialize(appId: string): void;
-        Notifications: {
-          requestPermission(): Promise<boolean>;
-        };
-        User: {
-          pushSubscription: {
-            id: string | null | undefined;
-            addEventListener(event: string, callback: (change: { current: { id?: string | null } }) => void): void;
-          };
-        };
-      };
-    };
-  }
-}
-
 let initialized = false;
 
 export async function initOneSignalAndRegister(): Promise<void> {
@@ -28,28 +9,19 @@ export async function initOneSignalAndRegister(): Promise<void> {
   const appId = import.meta.env.VITE_ONESIGNAL_APP_ID as string;
   if (!appId) return;
 
-  const maxWait = 5000;
-  const start = Date.now();
-  while (!window.plugins?.OneSignal && Date.now() - start < maxWait) {
-    await new Promise((r) => setTimeout(r, 200));
-  }
-
-  const OneSignal = window.plugins?.OneSignal;
-  if (!OneSignal) {
-    console.warn("[OneSignal] Plugin not available");
-    return;
-  }
-
   try {
-    OneSignal.initialize(appId);
-    await OneSignal.Notifications.requestPermission();
+    const OneSignalModule = await import("onesignal-cordova-plugin");
+    const OneSignal = OneSignalModule.default || OneSignalModule;
 
-    const subId = OneSignal.User.pushSubscription.id;
+    OneSignal.initialize(appId);
+    OneSignal.Notifications.requestPermission(true);
+
+    const subId = OneSignal.User?.pushSubscription?.id;
     if (subId) {
       await postOneSignalId(subId);
     }
 
-    OneSignal.User.pushSubscription.addEventListener("change", (change) => {
+    OneSignal.User?.pushSubscription?.addEventListener("change", (change: { current?: { id?: string | null } }) => {
       const newId = change?.current?.id;
       if (newId) {
         postOneSignalId(newId);
