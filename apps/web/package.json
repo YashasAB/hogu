@@ -11,6 +11,8 @@
     "preview": "vite preview --host 0.0.0.0 --port 5000"
   },
   "dependencies": {
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/preferences": "^8.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.26.1",
