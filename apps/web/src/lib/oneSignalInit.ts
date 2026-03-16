@@ -10,8 +10,11 @@ export async function initOneSignalAndRegister(): Promise<void> {
   if (!appId) return;
 
   try {
-    const OneSignalModule = await import("onesignal-cordova-plugin");
-    const OneSignal = OneSignalModule.default || OneSignalModule;
+    const OneSignal = (window as any).plugins?.OneSignal;
+    if (!OneSignal) {
+      console.warn("[OneSignal] Plugin not available on this device");
+      return;
+    }
 
     OneSignal.initialize(appId);
     OneSignal.Notifications.requestPermission(true);
