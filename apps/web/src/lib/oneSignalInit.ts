@@ -13,6 +13,7 @@ export async function initOneSignalAndRegister(): Promise<void> {
     const OneSignal = (window as any).plugins?.OneSignal;
     if (!OneSignal) {
       console.warn("[OneSignal] Plugin not available on this device");
+      initialized = false;
       return;
     }
 
