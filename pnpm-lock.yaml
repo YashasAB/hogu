@@ -124,12 +124,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@capacitor/android':
+        specifier: ^8.0.0
+        version: 8.2.0(@capacitor/core@8.2.0)
       '@capacitor/camera':
         specifier: ^8.0.2
         version: 8.0.2(@capacitor/core@8.2.0)
       '@capacitor/core':
         specifier: ^8.2.0
         version: 8.2.0
+      '@capacitor/ios':
+        specifier: ^8.0.0
+        version: 8.2.0(@capacitor/core@8.2.0)
       '@capacitor/preferences':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.2.0)
@@ -281,6 +287,11 @@ packages:
     resolution: {integrity: sha512-ruv7Ae4J5dUYULmeXw1gmb7rYRz57OWCPM57pHojnLq/3Z1CK2lNSLTCVjxVk1F/TZHwOZZrOWi0ur95BbLxNQ==}
     engines: {node: '>=6.9.0'}
 
+  '@capacitor/android@8.2.0':
+    resolution: {integrity: sha512-XLm5OsWLPfXQxDxzFS7SOdMEgGvW+2c7TGLXkTR2cSKdkWK5Abns4imlT5qghKYhjM9r74IrDkBWg/9ALUGNKQ==}
+    peerDependencies:
+      '@capacitor/core': ^8.2.0
+
   '@capacitor/camera@8.0.2':
     resolution: {integrity: sha512-v2BsKFjJSg0dMl/UO7jEvrAvjChCGrzQG5jx4yN2t8LnC7eFDh0YkSg1t+AMNveSDSKCvAsTk/JUzzr5VAvzmg==}
     peerDependencies:
@@ -293,6 +304,11 @@ packages:
 
   '@capacitor/core@8.2.0':
     resolution: {integrity: sha512-oKaoNeNtH2iIZMDFVrb1atoyRECDGHcfLMunJ5KWN8DtvpVBeeA4c41e20NTuhMxw1cSYbpq2PV2hb+/9CJxlQ==}
+
+  '@capacitor/ios@8.2.0':
+    resolution: {integrity: sha512-X2/VtM4qP/R1SM0VQ5W/VotEc6PS/KTooD33EijsfAHWBdee+xmBapW8SeNLnu16wJ+tsfWlvtipaJEyfKbRKQ==}
+    peerDependencies:
+      '@capacitor/core': ^8.2.0
 
   '@capacitor/preferences@8.0.1':
     resolution: {integrity: sha512-T6no3ebi79XJCk91U3Jp/liJUwgBdvHR+s6vhvPkPxSuch7z3zx5Rv1bdWM6sWruNx+pViuEGqZvbfCdyBvcHQ==}
@@ -2629,6 +2645,10 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
+  '@capacitor/android@8.2.0(@capacitor/core@8.2.0)':
+    dependencies:
+      '@capacitor/core': 8.2.0
+
   '@capacitor/camera@8.0.2(@capacitor/core@8.2.0)':
     dependencies:
       '@capacitor/core': 8.2.0
@@ -2658,6 +2678,10 @@ snapshots:
   '@capacitor/core@8.2.0':
     dependencies:
       tslib: 2.8.1
+
+  '@capacitor/ios@8.2.0(@capacitor/core@8.2.0)':
+    dependencies:
+      '@capacitor/core': 8.2.0
 
   '@capacitor/preferences@8.0.1(@capacitor/core@8.2.0)':
     dependencies:
