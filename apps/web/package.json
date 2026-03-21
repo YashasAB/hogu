@@ -19,7 +19,6 @@
     "@capacitor/ios": "^8.0.0",
     "@capacitor/preferences": "^8.0.1",
     "leaflet": "^1.9.4",
-    "onesignal-cordova-plugin": "^5.3.4",
     "react": "^19.0.0",
     "react-day-picker": "^9.8.1",
     "react-dom": "^19.0.0",
