@@ -1,4 +1,5 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+const isCapacitor = typeof window !== 'undefined' && window.location.protocol === 'capacitor:';
+export const API_BASE = isCapacitor ? 'https://hogu.club' : (import.meta.env.VITE_API_BASE_URL ?? "");
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const token = sessionStorage.getItem("dating_token");
